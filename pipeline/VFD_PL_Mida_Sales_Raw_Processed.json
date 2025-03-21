@@ -4,6 +4,9 @@
 		"parameters": {
 			"p_fileName": {
 				"type": "string"
+			},
+			"p_folderPath": {
+				"type": "string"
 			}
 		},
 		"folder": {
