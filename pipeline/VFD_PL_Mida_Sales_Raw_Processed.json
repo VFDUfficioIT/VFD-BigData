@@ -1,0 +1,14 @@
+{
+	"name": "VFD_PL_Mida_Sales_Raw_Processed",
+	"properties": {
+		"parameters": {
+			"p_Date": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Mida/Sales"
+		},
+		"annotations": []
+	}
+}

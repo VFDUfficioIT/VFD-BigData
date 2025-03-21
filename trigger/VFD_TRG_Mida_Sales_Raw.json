@@ -1,0 +1,26 @@
+{
+	"name": "VFD_TRG_Mida_Sales_Raw",
+	"properties": {
+		"description": "Trigger al caricamento di un file nella cartella di raw/Mida/Sales",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "VFD_PL_Mida_Sales_Raw_Processed",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/raw/blobs/Mida/Sales",
+			"blobPathEndsWith": ".csv",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/c2248906-95e2-4e61-8e85-384854f9ff18/resourceGroups/BigData/providers/Microsoft.Storage/storageAccounts/vfdbigdataarchiviazione",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
