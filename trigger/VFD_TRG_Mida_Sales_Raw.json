@@ -9,6 +9,9 @@
 				"pipelineReference": {
 					"referenceName": "VFD_PL_Mida_Sales_Raw_Processed",
 					"type": "PipelineReference"
+				},
+				"parameters": {
+					"p_fileName": "@triggerBody().folderPath"
 				}
 			}
 		],

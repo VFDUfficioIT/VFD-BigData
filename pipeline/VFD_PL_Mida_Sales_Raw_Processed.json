@@ -2,7 +2,7 @@
 	"name": "VFD_PL_Mida_Sales_Raw_Processed",
 	"properties": {
 		"parameters": {
-			"p_Date": {
+			"p_fileName": {
 				"type": "string"
 			}
 		},
