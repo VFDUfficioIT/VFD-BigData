@@ -12,7 +12,7 @@
 				},
 				"parameters": {
 					"p_fileName": "@triggerBody().fileName",
-					"p_folderPath": "@triggerBody().folderPath"
+					"p_folderPath": "@replace(triggerBody().folderPath, 'raw/', '')"
 				}
 			}
 		],
