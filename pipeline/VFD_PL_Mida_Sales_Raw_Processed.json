@@ -15,6 +15,32 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"Raw": {
+								"p_fileName": {
+									"value": "@pipeline().parameters.p_fileName",
+									"type": "Expression"
+								},
+								"p_folderPath": {
+									"value": "@pipeline().parameters.p_folderPath",
+									"type": "Expression"
+								}
+							},
+							"Processed": {
+								"p_fileName": {
+									"value": "@replace(pipeline().parameters.p_fileName, '.csv', '.parquet')",
+									"type": "Expression"
+								},
+								"p_folderPath": {
+									"value": "@pipeline().parameters.p_folderPath",
+									"type": "Expression"
+								}
+							}
+						}
+					},
 					"compute": {
 						"coreCount": 8,
 						"computeType": "General"
@@ -29,7 +55,8 @@
 				"defaultValue": "@triggerBody().fileName"
 			},
 			"p_folderPath": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "@replace(triggerBody().folderPath, 'raw/', '')"
 			}
 		},
 		"folder": {
