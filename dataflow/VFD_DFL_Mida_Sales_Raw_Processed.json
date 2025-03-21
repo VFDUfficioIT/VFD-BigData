@@ -26,6 +26,9 @@
 			],
 			"transformations": [],
 			"scriptLines": [
+				"parameters{",
+				"     p_fileName as string",
+				"}",
 				"source(output(",
 				"          guid_pk as string,",
 				"          reservation_progressiveCode as string,",
@@ -116,6 +119,7 @@
 				"Raw sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
+				"     filePattern:($p_fileName),",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
