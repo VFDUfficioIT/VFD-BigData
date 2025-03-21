@@ -11,6 +11,12 @@
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"value": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
 		},
+		"VFD_TRG_Mida_Sales_Raw_properties_VFD_PL_Mida_Sales_Raw_Processed_parameters_p_sourceFileName": {
+			"value": "@triggerBody().fileName"
+		},
+		"VFD_TRG_Mida_Sales_Raw_properties_VFD_PL_Mida_Sales_Raw_Processed_parameters_p_sourceFolderPath": {
+			"value": "@replace(triggerBody().folderPath, 'raw/', '')"
+		},
 		"VFD_TRG_Mida_Sales_Raw_properties_typeProperties_scope": {
 			"value": "/subscriptions/c2248906-95e2-4e61-8e85-384854f9ff18/resourceGroups/BigData/providers/Microsoft.Storage/storageAccounts/vfdbigdataarchiviazione"
 		},

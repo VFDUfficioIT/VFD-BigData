@@ -15,6 +15,14 @@
 			"type": "string",
 			"defaultValue": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
 		},
+		"VFD_TRG_Mida_Sales_Raw_properties_VFD_PL_Mida_Sales_Raw_Processed_parameters_p_sourceFileName": {
+			"type": "string",
+			"defaultValue": "@triggerBody().fileName"
+		},
+		"VFD_TRG_Mida_Sales_Raw_properties_VFD_PL_Mida_Sales_Raw_Processed_parameters_p_sourceFolderPath": {
+			"type": "string",
+			"defaultValue": "@replace(triggerBody().folderPath, 'raw/', '')"
+		},
 		"VFD_TRG_Mida_Sales_Raw_properties_typeProperties_scope": {
 			"type": "string",
 			"defaultValue": "/subscriptions/c2248906-95e2-4e61-8e85-384854f9ff18/resourceGroups/BigData/providers/Microsoft.Storage/storageAccounts/vfdbigdataarchiviazione"
@@ -615,21 +623,21 @@
 								"datasetParameters": {
 									"Raw": {
 										"p_fileName": {
-											"value": "@pipeline().parameters.p_fileName",
+											"value": "@pipeline().parameters.p_sourceFileName",
 											"type": "Expression"
 										},
 										"p_folderPath": {
-											"value": "@pipeline().parameters.p_folderPath",
+											"value": "@pipeline().parameters.p_sourceFolderPath",
 											"type": "Expression"
 										}
 									},
 									"Processed": {
 										"p_fileName": {
-											"value": "@replace(pipeline().parameters.p_fileName, '.csv', '.parquet')",
+											"value": "@replace(pipeline().parameters.p_sourceFileName, '.csv', '.parquet')",
 											"type": "Expression"
 										},
 										"p_folderPath": {
-											"value": "@pipeline().parameters.p_folderPath",
+											"value": "@pipeline().parameters.p_sourceFolderPath",
 											"type": "Expression"
 										}
 									}
@@ -649,13 +657,11 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"p_fileName": {
-						"type": "string",
-						"defaultValue": "@triggerBody().fileName"
+					"p_sourceFileName": {
+						"type": "string"
 					},
-					"p_folderPath": {
-						"type": "string",
-						"defaultValue": "@replace(triggerBody().folderPath, 'raw/', '')"
+					"p_sourceFolderPath": {
+						"type": "string"
 					}
 				},
 				"folder": {
@@ -681,7 +687,10 @@
 							"referenceName": "VFD_PL_Mida_Sales_Raw_Processed",
 							"type": "PipelineReference"
 						},
-						"parameters": {}
+						"parameters": {
+							"p_sourceFileName": "[parameters('VFD_TRG_Mida_Sales_Raw_properties_VFD_PL_Mida_Sales_Raw_Processed_parameters_p_sourceFileName')]",
+							"p_sourceFolderPath": "[parameters('VFD_TRG_Mida_Sales_Raw_properties_VFD_PL_Mida_Sales_Raw_Processed_parameters_p_sourceFolderPath')]"
+						}
 					}
 				],
 				"type": "BlobEventsTrigger",
