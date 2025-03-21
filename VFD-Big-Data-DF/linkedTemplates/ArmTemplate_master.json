@@ -1,0 +1,63 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nome Data Factory",
+			"defaultValue": "VFD-Big-Data-DF"
+		},
+		"VFD_Big_Data_DL_accountKey": {
+			"type": "secureString",
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+		},
+		"VFD_Big_Data_DL_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
+		},
+		"VFD_TRG_Mida_Sales_Raw_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/c2248906-95e2-4e61-8e85-384854f9ff18/resourceGroups/BigData/providers/Microsoft.Storage/storageAccounts/vfdbigdataarchiviazione"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI dell'account di archiviazione contenente i modelli di ARM collegati"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Token di firma di accesso condiviso per l'account di archiviazione contenente i modelli di ARM collegati"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "VFD-Big-Data-DF_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"VFD_Big_Data_DL_accountKey": {
+						"value": "[parameters('VFD_Big_Data_DL_accountKey')]"
+					},
+					"VFD_Big_Data_DL_properties_typeProperties_url": {
+						"value": "[parameters('VFD_Big_Data_DL_properties_typeProperties_url')]"
+					},
+					"VFD_TRG_Mida_Sales_Raw_properties_typeProperties_scope": {
+						"value": "[parameters('VFD_TRG_Mida_Sales_Raw_properties_typeProperties_scope')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
