@@ -25,7 +25,8 @@
 		],
 		"parameters": {
 			"p_fileName": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "@triggerBody().fileName"
 			},
 			"p_folderPath": {
 				"type": "string"
