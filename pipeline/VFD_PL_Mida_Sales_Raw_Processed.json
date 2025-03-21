@@ -21,21 +21,21 @@
 						"datasetParameters": {
 							"Raw": {
 								"p_fileName": {
-									"value": "@pipeline().parameters.p_fileName",
+									"value": "@pipeline().parameters.p_sourceFileName",
 									"type": "Expression"
 								},
 								"p_folderPath": {
-									"value": "@pipeline().parameters.p_folderPath",
+									"value": "@pipeline().parameters.p_sourceFolderPath",
 									"type": "Expression"
 								}
 							},
 							"Processed": {
 								"p_fileName": {
-									"value": "@replace(pipeline().parameters.p_fileName, '.csv', '.parquet')",
+									"value": "@replace(pipeline().parameters.p_sourceFileName, '.csv', '.parquet')",
 									"type": "Expression"
 								},
 								"p_folderPath": {
-									"value": "@pipeline().parameters.p_folderPath",
+									"value": "@pipeline().parameters.p_sourceFolderPath",
 									"type": "Expression"
 								}
 							}
@@ -51,12 +51,10 @@
 		],
 		"parameters": {
 			"p_sourceFileName": {
-				"type": "string",
-				"defaultValue": "@triggerBody().fileName"
+				"type": "string"
 			},
 			"p_sourceFolderPath": {
-				"type": "string",
-				"defaultValue": "@replace(triggerBody().folderPath, 'raw/', '')"
+				"type": "string"
 			}
 		},
 		"folder": {
