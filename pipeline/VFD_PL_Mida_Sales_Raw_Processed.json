@@ -50,11 +50,11 @@
 			}
 		],
 		"parameters": {
-			"p_fileName": {
+			"p_sourceFileName": {
 				"type": "string",
 				"defaultValue": "@triggerBody().fileName"
 			},
-			"p_folderPath": {
+			"p_sourceFolderPath": {
 				"type": "string",
 				"defaultValue": "@replace(triggerBody().folderPath, 'raw/', '')"
 			}
