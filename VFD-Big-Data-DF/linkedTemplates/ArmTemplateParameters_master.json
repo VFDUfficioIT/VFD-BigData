@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "VFD-Big-Data-DF"
+		},
+		"VFD_Big_Data_DL_accountKey": {
+			"value": ""
+		},
+		"VFD_Big_Data_DL_properties_typeProperties_url": {
+			"value": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
+		},
+		"VFD_TRG_Mida_Sales_Raw_properties_typeProperties_scope": {
+			"value": "/subscriptions/c2248906-95e2-4e61-8e85-384854f9ff18/resourceGroups/BigData/providers/Microsoft.Storage/storageAccounts/vfdbigdataarchiviazione"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
