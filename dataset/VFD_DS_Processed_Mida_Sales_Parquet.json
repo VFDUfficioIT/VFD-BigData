@@ -6,11 +6,13 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"p_fileName": {
-				"type": "string"
-			},
 			"p_folderPath": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "Mida/Sales"
+			},
+			"p_fileName": {
+				"type": "string",
+				"defaultValue": "sales_data.parquet"
 			}
 		},
 		"folder": {
@@ -26,7 +28,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@dataset().p_folderPath",
+					"value": "@concat('processed/', dataset().p_folderPath)",
 					"type": "Expression"
 				},
 				"fileSystem": "processed"
