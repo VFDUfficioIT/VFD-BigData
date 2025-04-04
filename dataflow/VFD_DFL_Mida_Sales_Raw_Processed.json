@@ -12,7 +12,7 @@
 						"referenceName": "VFD_DS_Raw_Mida_Sales_CSV",
 						"type": "DatasetReference"
 					},
-					"name": "Raw"
+					"name": "sourceRaw"
 				}
 			],
 			"sinks": [
@@ -21,12 +21,20 @@
 						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "Processed"
+					"name": "sinkProcessed"
 				}
 			],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "dataTypeConversions"
+				},
+				{
+					"name": "addMetadata"
+				}
+			],
 			"scriptLines": [
 				"parameters{",
+				"     p_folderPath as string,",
 				"     p_fileName as string",
 				"}",
 				"source(output(",
@@ -34,12 +42,12 @@
 				"          reservation_progressiveCode as string,",
 				"          reservation_code as string,",
 				"          reservation_status as string,",
-				"          invoiceRequired as string,",
+				"          invoiceRequired as boolean,",
 				"          customer as string,",
 				"          visitDate as string,",
 				"          reservationPayment_guid as string,",
 				"          parentPayment_guid as string,",
-				"          sliced as string,",
+				"          sliced as boolean,",
 				"          reservation_guid as string,",
 				"          group_guid as string,",
 				"          group_label as string,",
@@ -56,8 +64,8 @@
 				"          transactionType_text as string,",
 				"          paymentLimitDate as string,",
 				"          paymentDate as string,",
-				"          refund as string,",
-				"          refunded as string,",
+				"          refund as boolean,",
+				"          refunded as boolean,",
 				"          convention_label as string,",
 				"          receiptCode as string,",
 				"          insertTimestamp as string,",
@@ -114,18 +122,45 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     inferDriftedColumnTypes: true,",
-				"     ignoreNoFilesFound: false) ~> Raw",
-				"Raw sink(allowSchemaDrift: true,",
+				"     ignoreNoFilesFound: false,",
+				"     delimiter: ';',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"') ~> sourceRaw",
+				"sourceRaw derive(visitDate = iif(isNull(visitDate) || equals(trim(visitDate), ''), toDate('01/01/1901', 'dd/MM/yyyy'), toDate(visitDate, 'dd/MM/yyyy')),",
+				"          paymentLimitDate = iif(isNull(paymentLimitDate) || equals(trim(paymentLimitDate), ''), null(), toDate(paymentLimitDate, 'dd/MM/yyyy')),",
+				"          paymentDate = iif(isNull(paymentDate) || equals(trim(paymentDate), ''), null(), toDate(paymentDate, 'dd/MM/yyyy')),",
+				"          insertTimestamp = iif(isNull(insertTimestamp) || equals(trim(insertTimestamp), ''), null(), toDate(insertTimestamp, 'dd/MM/yyyy')),",
+				"          updateTimestamp = iif(isNull(updateTimestamp) || equals(trim(updateTimestamp), ''), null(), toDate(updateTimestamp, 'dd/MM/yyyy')),",
+				"          olapUpdateTimestamp = iif(isNull(olapUpdateTimestamp) || equals(trim(olapUpdateTimestamp), ''), null(), toDate(olapUpdateTimestamp, 'dd/MM/yyyy')),",
+				"          reservation_amount = iif(isNull(reservation_amount) || equals(trim(reservation_amount), ''), null(), toDecimal(reservation_amount)),",
+				"          reservation_amountTax = iif(isNull(reservation_amountTax) || equals(trim(reservation_amountTax), ''), null(), toDecimal(reservation_amountTax)),",
+				"          detail_count = iif(isNull(detail_count) || equals(trim(detail_count), ''), null(), toInteger(detail_count)),",
+				"          detail_payingPartecipants = iif(isNull(detail_payingPartecipants) || equals(trim(detail_payingPartecipants), ''), null(), toInteger(detail_payingPartecipants)),",
+				"          detail_quantity = iif(isNull(detail_quantity) || equals(trim(detail_quantity), ''), null(), toInteger(detail_quantity)),",
+				"          tickets_quantity = iif(isNull(tickets_quantity) || equals(trim(tickets_quantity), ''), null(), toInteger(tickets_quantity)),",
+				"          pax_quantity = iif(isNull(pax_quantity) || equals(trim(pax_quantity), ''), null(), toInteger(pax_quantity)),",
+				"          object_amount = iif(isNull(object_amount) || equals(trim(object_amount), ''), null(), toDecimal(object_amount)),",
+				"          object_taxPercentage = iif(isNull(object_taxPercentage) || equals(trim(object_taxPercentage), ''), null(), toDecimal(object_taxPercentage)),",
+				"          amount = iif(isNull(amount) || equals(trim(amount), ''), null(), toDecimal(amount)),",
+				"          amountNet = iif(isNull(amountNet) || equals(trim(amountNet), ''), null(), toDecimal(amountNet)),",
+				"          amountPresale = iif(isNull(amountPresale) || equals(trim(amountPresale), ''), null(), toDecimal(amountPresale)),",
+				"          amountSold = iif(isNull(amountSold) || equals(trim(amountSold), ''), null(), toDecimal(amountSold)),",
+				"          amountPayed = iif(isNull(amountPayed) || equals(trim(amountPayed), ''), null(), toDecimal(amountPayed)),",
+				"          amountPending = iif(isNull(amountPending) || equals(trim(amountPending), ''), null(), toDecimal(amountPending)),",
+				"          amountCanceled = iif(isNull(amountCanceled) || equals(trim(amountCanceled), ''), null(), toDecimal(amountCanceled)),",
+				"          amountRefunded = iif(isNull(amountRefunded) || equals(trim(amountRefunded), ''), null(), toDecimal(amountRefunded))) ~> dataTypeConversions",
+				"dataTypeConversions derive(processing_date = currentUTC(),",
+				"          source_file = concatWS('/', 'raw', $p_folderPath, $p_fileName),",
+				"          data_source = 'export_vw_summary_reservationPayments') ~> addMetadata",
+				"addMetadata sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     filePattern:($p_fileName),",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> Processed"
+				"     compressionCodec: 'snappy') ~> sinkProcessed"
 			]
 		}
 	}
