@@ -22,6 +22,10 @@
 							"sourceProcessed": {
 								"p_folderPath": "Mida/Sales",
 								"p_fileName": "sales_data.parquet"
+							},
+							"sinkCuratedDaily": {
+								"p_Year": "2025",
+								"p_Month": "03"
 							}
 						}
 					},
