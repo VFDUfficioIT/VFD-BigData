@@ -1,0 +1,67 @@
+{
+	"name": "VFD_DFL_Mida_Sales_Processed_Curated_Monthly",
+	"properties": {
+		"folder": {
+			"name": "Mida/Sales"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "sourceProcessed"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Sales_Monthly_Delta",
+						"type": "DatasetReference"
+					},
+					"name": "sinkCuratedMonthly"
+				}
+			],
+			"transformations": [
+				{
+					"name": "formatDate"
+				},
+				{
+					"name": "extractDateComponents"
+				},
+				{
+					"name": "aggregateMonthly"
+				},
+				{
+					"name": "addMetadata"
+				}
+			],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> sourceProcessed",
+				"sourceProcessed derive(visitDate_formatted = toDate(visitDate, 'dd/MM/yyyy')) ~> formatDate",
+				"formatDate derive(month = month(visitDate_formatted),",
+				"          year = year(visitDate_formatted)) ~> extractDateComponents",
+				"extractDateComponents aggregate(groupBy(month,",
+				"          year),",
+				"     tickets_sold = sum(tickets_quantity),",
+				"          economic_value = sum(amount)) ~> aggregateMonthly",
+				"aggregateMonthly derive(processing_date = currentUTC(),",
+				"          data_source = 'ticket_sales_monthly') ~> addMetadata",
+				"addMetadata sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     format: 'delta',",
+				"     compressionCodec: 'snappy') ~> sinkCuratedMonthly"
+			]
+		}
+	}
+}
