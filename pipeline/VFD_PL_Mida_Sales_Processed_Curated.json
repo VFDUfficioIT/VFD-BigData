@@ -1,0 +1,97 @@
+{
+	"name": "VFD_PL_Mida_Sales_Processed_Curated",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute_Daily_Aggregation",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Mida_Sales_Processed_Curated_Daily",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sourceProcessed": {
+								"p_folderPath": "Mida/Sales",
+								"p_fileName": "sales_data.parquet"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "Execute_Monthly_Aggregation",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "Execute_Daily_Aggregation",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Mida_Sales_Processed_Curated_Monthly",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sourceProcessed": {
+								"p_folderPath": "Mida/Sales",
+								"p_fileName": "sales_data.parquet"
+							},
+							"sinkCuratedMonthly": {
+								"p_Year": "2025"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"p_Year": {
+				"type": "string",
+				"defaultValue": "2025"
+			},
+			"p_Month": {
+				"type": "string",
+				"defaultValue": "03"
+			},
+			"p_ProcessedFolderPath": {
+				"type": "string"
+			},
+			"p_ProcessedFileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Mida/Sales"
+		},
+		"annotations": []
+	}
+}
