@@ -11,8 +11,8 @@
 					"type": "PipelineReference"
 				},
 				"parameters": {
-					"p_sourceFileName": "@triggerBody().fileName",
-					"p_sourceFolderPath": "@replace(triggerBody().folderPath, 'raw/', '')"
+					"p_sourceFolderPath": "@replace(triggerBody().folderPath, 'raw/',   '')",
+					"p_sourceFileName": "@triggerBody().fileName"
 				}
 			}
 		],
