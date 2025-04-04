@@ -28,7 +28,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('processed/', dataset().p_folderPath)",
+					"value": "@dataset().p_folderPath",
 					"type": "Expression"
 				},
 				"fileSystem": "processed"
