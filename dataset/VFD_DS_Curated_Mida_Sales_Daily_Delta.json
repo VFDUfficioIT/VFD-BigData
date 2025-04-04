@@ -1,0 +1,36 @@
+{
+	"name": "VFD_DS_Curated_Mida_Sales_Daily_Delta",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"p_Year": {
+				"type": "string",
+				"defaultValue": "2025"
+			},
+			"p_Month": {
+				"type": "string",
+				"defaultValue": "03"
+			}
+		},
+		"folder": {
+			"name": "Mida/Sales"
+		},
+		"annotations": [],
+		"type": "Delta",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@concat('curated/Mida/Sales/daily/', dataset().p_Year, '/', dataset().p_Month)",
+					"type": "Expression"
+				},
+				"fileSystem": "curated"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
