@@ -152,7 +152,7 @@
 				"dataTypeConversions derive(processing_date = currentUTC(),",
 				"          source_file = concatWS('/', 'raw', $p_folderPath, $p_fileName),",
 				"          data_source = 'export_vw_summary_reservationPayments') ~> addMetadata",
-				"addMetadata sink(allowSchemaDrift: true,",
+				"sourceRaw sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
 				"     filePattern:($p_fileName),",
