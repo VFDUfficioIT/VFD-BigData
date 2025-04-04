@@ -127,7 +127,7 @@
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"') ~> sourceRaw",
 				"sourceRaw derive(visitDate = iif(isNull(visitDate) || equals(trim(visitDate), ''), toDate('01/01/1901', 'dd/MM/yyyy'), toDate(visitDate, 'dd/MM/yyyy')),",
-				"          paymentLimitDate = iif(isNull(paymentLimitDate) || equals(trim(paymentLimitDate), ''), null(), toDate(paymentLimitDate, 'dd/MM/yyyy')),",
+				"          paymentLimitDate = iif(isNull(paymentLimitDate) || equals(trim(paymentLimitDate), ''), toDate('01/01/1901', 'dd/MM/yyyy'), toDate(paymentLimitDate, 'dd/MM/yyyy')),",
 				"          paymentDate = iif(isNull(paymentDate) || equals(trim(paymentDate), ''), null(), toDate(paymentDate, 'dd/MM/yyyy')),",
 				"          insertTimestamp = iif(isNull(insertTimestamp) || equals(trim(insertTimestamp), ''), null(), toDate(insertTimestamp, 'dd/MM/yyyy')),",
 				"          updateTimestamp = iif(isNull(updateTimestamp) || equals(trim(updateTimestamp), ''), null(), toDate(updateTimestamp, 'dd/MM/yyyy')),",
