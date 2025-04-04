@@ -50,11 +50,11 @@
 		"parameters": {
 			"p_sourceFolderPath": {
 				"type": "string",
-				"defaultValue": "Mida/Sales"
+				"defaultValue": "Mida/Sales/2025/03/"
 			},
 			"p_sourceFileName": {
 				"type": "string",
-				"defaultValue": "export_vw_summary_reservationPayments.csv"
+				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
 			}
 		},
 		"folder": {
