@@ -152,7 +152,7 @@
 				"addMetadata sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     filePattern:(p_fileName),",
+				"     filePattern:($p_sourceFileName),",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
