@@ -4,14 +4,7 @@
 		"description": "Trigger per la pipeline di trasformazione da Processed a Curated.\nViene triggerato quando viene generato un file processed, crea poi le aggregazioni daily e monthly",
 		"annotations": [],
 		"runtimeState": "Started",
-		"pipelines": [
-			{
-				"pipelineReference": {
-					"referenceName": "VFD_PL_Mida_Sales_Processed_Curated",
-					"type": "PipelineReference"
-				}
-			}
-		],
+		"pipelines": [],
 		"type": "BlobEventsTrigger",
 		"typeProperties": {
 			"blobPathBeginsWith": "/processed/blobs/Mida/Sales",
