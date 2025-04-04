@@ -1,0 +1,73 @@
+{
+	"name": "VFD_PL_Mida_Sales_Raw_Processed",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
+						"type": "DataFlowReference",
+						"parameters": {
+							"p_fileName": {
+								"value": "'@{replace(pipeline().parameters.p_sourceFileName, '.csv', '.parquet')}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"Raw": {
+								"p_fileName": {
+									"value": "@pipeline().parameters.p_sourceFileName",
+									"type": "Expression"
+								},
+								"p_folderPath": {
+									"value": "@pipeline().parameters.p_sourceFolderPath",
+									"type": "Expression"
+								}
+							},
+							"Processed": {
+								"p_fileName": {
+									"value": "@replace(pipeline().parameters.p_sourceFileName, '.csv', '.parquet')",
+									"type": "Expression"
+								},
+								"p_folderPath": {
+									"value": "@pipeline().parameters.p_sourceFolderPath",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"p_sourceFileName": {
+				"type": "string"
+			},
+			"p_sourceFolderPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Mida/Sales"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-21T16:49:32Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

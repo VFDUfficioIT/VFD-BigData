@@ -1,0 +1,9 @@
+{
+	"name": "VFD-Big-Data-DF",
+	"location": "italynorth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "40e8256a-655f-461a-9166-b1ccfbb24e55",
+		"tenantId": "261a41ce-316b-4547-bd97-4ef7e4cec454"
+	}
+}

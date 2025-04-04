@@ -1,0 +1,39 @@
+{
+	"name": "VFD_DS_Processed_Mida_Sales_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"p_fileName": {
+				"type": "string"
+			},
+			"p_folderPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Mida/Sales"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().p_fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().p_folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "processed"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
