@@ -26,9 +26,6 @@
 			],
 			"transformations": [
 				{
-					"name": "formatDate"
-				},
-				{
 					"name": "extractDateComponents"
 				},
 				{
@@ -43,10 +40,9 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet') ~> sourceProcessed",
-				"sourceProcessed derive(visitDate_formatted = toDate(visitDate, 'dd/MM/yyyy')) ~> formatDate",
-				"formatDate derive(day = dayOfMonth(visitDate_formatted),",
-				"          month = month(visitDate_formatted),",
-				"          year = year(visitDate_formatted)) ~> extractDateComponents",
+				"sourceProcessed derive(day = dayOfMonth(visitDate),",
+				"          month = month(visitDate),",
+				"          year = year(visitDate)) ~> extractDateComponents",
 				"extractDateComponents aggregate(groupBy(day,",
 				"          month,",
 				"          year),",
