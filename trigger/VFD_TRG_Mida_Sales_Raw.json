@@ -3,7 +3,7 @@
 	"properties": {
 		"description": "Trigger al caricamento di un file nella cartella di raw/Mida/Sales",
 		"annotations": [],
-		"runtimeState": "Started",
+		"runtimeState": "Stopped",
 		"pipelines": [],
 		"type": "BlobEventsTrigger",
 		"typeProperties": {
