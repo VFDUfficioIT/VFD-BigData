@@ -3,12 +3,12 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Data flow1",
+				"name": "Data Flow Raw to Processed",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
-					"retry": 0,
+					"retry": 3,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
 					"secureInput": false
@@ -48,11 +48,13 @@
 			}
 		],
 		"parameters": {
-			"p_sourceFileName": {
-				"type": "string"
-			},
 			"p_sourceFolderPath": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "Mida/Sales"
+			},
+			"p_sourceFileName": {
+				"type": "string",
+				"defaultValue": "export_vw_summary_reservationPayments.csv"
 			}
 		},
 		"folder": {
