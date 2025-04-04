@@ -31,11 +31,11 @@
 						"datasetParameters": {
 							"sourceRaw": {
 								"p_folderPath": {
-									"value": "@pipeline().parameters.p_sourceFileName",
+									"value": "@pipeline().parameters.p_sourceFolderPath",
 									"type": "Expression"
 								},
 								"p_fileName": {
-									"value": "@pipeline().parameters.p_sourceFolderPath",
+									"value": "@pipeline().parameters.p_sourceFileName",
 									"type": "Expression"
 								}
 							},
