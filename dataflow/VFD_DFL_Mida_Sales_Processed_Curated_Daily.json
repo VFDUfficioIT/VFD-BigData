@@ -17,10 +17,6 @@
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Sales_Daily_Delta",
-						"type": "DatasetReference"
-					},
 					"name": "sinkCuratedDaily"
 				}
 			],
@@ -56,13 +52,12 @@
 				"          data_source = 'ticket_sales_daily') ~> addMetadata",
 				"addMetadata sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     umask: 0022,",
-				"     preCommands: [],",
-				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     format: 'delta',",
-				"     compressionCodec: 'snappy') ~> sinkCuratedDaily"
+				"     compressionCodec: 'snappy',",
+				"     preCommands: [],",
+				"     postCommands: []) ~> sinkCuratedDaily"
 			]
 		}
 	}
