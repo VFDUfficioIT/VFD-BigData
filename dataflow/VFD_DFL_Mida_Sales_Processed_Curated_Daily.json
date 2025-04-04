@@ -18,7 +18,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Sales_Monthly_Delta",
+						"referenceName": "VFD_DS_Curated_Mida_Sales_Daily_Delta",
 						"type": "DatasetReference"
 					},
 					"name": "sinkCuratedDaily"
