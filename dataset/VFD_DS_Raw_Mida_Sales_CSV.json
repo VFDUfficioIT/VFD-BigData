@@ -15,6 +15,9 @@
 				"defaultValue": "export_vw_summary_reservationPayments.csv"
 			}
 		},
+		"folder": {
+			"name": "Mida/Sales"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
