@@ -27,16 +27,6 @@
 								"value": "@pipeline().parameters.p_sourceFileName",
 								"type": "Expression"
 							}
-						},
-						"datasetParameters": {
-							"sourceTest": {
-								"p_folderPath": "@pipeline().parameters.p_sourceFolderPath",
-								"p_fileName": "@pipeline().parameters.p_sourceFileName"
-							},
-							"sinkTest": {
-								"p_folderPath": "@pipeline().parameters.p_sourceFolderPath",
-								"p_fileName": "@replace(pipeline().parameters.p_sourceFileName,'.csv','.parquet')"
-							}
 						}
 					},
 					"compute": {
