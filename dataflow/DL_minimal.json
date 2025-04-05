@@ -1,9 +1,6 @@
 {
 	"name": "DL_minimal",
 	"properties": {
-		"folder": {
-			"name": "Mida/Sales"
-		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
@@ -43,11 +40,11 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> sourceTest",
 				"sourceTest derive(test_column = 'Test Value',",
-				"          param_debug = concatWS('/', 'Params:', $p_folderPath, $p_fileName)) ~> addTestColumn",
+				"          param_debug = concat('Params: ', $p_folderPath, '/', $p_fileName)) ~> addTestColumn",
 				"addTestColumn sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     umask: 0022,",
+				"     umask: 00022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
