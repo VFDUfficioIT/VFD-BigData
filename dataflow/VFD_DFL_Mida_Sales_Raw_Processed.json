@@ -1,7 +1,7 @@
 {
 	"name": "VFD_DFL_Mida_Sales_Raw_Processed",
 	"properties": {
-		"description": "Dataflow with dynamic fileNameParquet output for single file parquet write.",
+		"description": "Dataflow to convert raw CSV to typed Parquet using parameterized paths.",
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
@@ -27,7 +27,7 @@
 					"name": "SelectFields"
 				}
 			],
-			"script": "source(output(\n\t\tid_reservation as integer,\n\t\tid_agency as integer,\n\t\tagency_name as string,\n\t\tpayment_date as date,\n\t\tcurrency as string,\n\t\tamount as decimal(10,2),\n\t\tpayment_method as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> SourceCSV\nSourceCSV select(mapColumn(\n\t\tid_reservation,\n\t\tid_agency,\n\t\tagency_name,\n\t\tpayment_date,\n\t\tcurrency,\n\t\tamount,\n\t\tpayment_method\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> SelectFields\nSelectFields sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tpartitionFileNames:[($fileNameParquet\n)],\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tpartitionBy('hash', 1),\n\tfileName: $fileNameParquet) ~> SinkParquet"
+			"script": "parameters{\n\tfolderPath as string,\n\tfileName as string,\n\tfileNameParquet as string\n}\nsource(output(\n\t\tid_reservation as integer,\n\t\tid_agency as integer,\n\t\tagency_name as string,\n\t\tpayment_date as date,\n\t\tcurrency as string,\n\t\tamount as decimal(10,2),\n\t\tpayment_method as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> SourceCSV\nSourceCSV select(mapColumn(\n\t\tid_reservation,\n\t\tid_agency,\n\t\tagency_name,\n\t\tpayment_date,\n\t\tcurrency,\n\t\tamount,\n\t\tpayment_method\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> SelectFields\nSelectFields sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tpartitionFileNames:[($fileNameParquet)],\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: []) ~> SinkParquet"
 		}
 	}
 }
