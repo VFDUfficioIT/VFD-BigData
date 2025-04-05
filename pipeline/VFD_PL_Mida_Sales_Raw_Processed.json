@@ -17,7 +17,27 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "DL_minimal",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"parameters": {
+							"p_folderPath": {
+								"value": "@pipeline().parameters.p_sourceFolderPath",
+								"type": "Expression"
+							},
+							"p_fileName": {
+								"value": "@pipeline().parameters.p_sourceFileName",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"sourceTest": {
+								"p_folderPath": "folder",
+								"p_fileName": "file"
+							},
+							"sinkTest": {
+								"p_folderPath": "Mida/Sales",
+								"p_fileName": "sales_data.parquet"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
