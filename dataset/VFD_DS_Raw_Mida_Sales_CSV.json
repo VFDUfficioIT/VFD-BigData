@@ -8,11 +8,11 @@
 		"parameters": {
 			"p_folderPath": {
 				"type": "string",
-				"defaultValue": "@dataset().p_folderPath"
+				"defaultValue": "folder"
 			},
 			"p_fileName": {
 				"type": "string",
-				"defaultValue": "@dataset().p_fileName"
+				"defaultValue": "file"
 			}
 		},
 		"folder": {
