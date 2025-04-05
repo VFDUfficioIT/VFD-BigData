@@ -19,10 +19,6 @@
 						"referenceName": "VFD_DFL_Mida_Sales_Processed_Curated_Daily",
 						"type": "DataFlowReference",
 						"datasetParameters": {
-							"sourceProcessed": {
-								"p_folderPath": "Mida/Sales",
-								"p_fileName": "sales_data.parquet"
-							},
 							"sinkCuratedDaily": {
 								"p_Year": "2025",
 								"p_Month": "03"
@@ -60,10 +56,6 @@
 						"referenceName": "VFD_DFL_Mida_Sales_Processed_Curated_Monthly",
 						"type": "DataFlowReference",
 						"datasetParameters": {
-							"sourceProcessed": {
-								"p_folderPath": "Mida/Sales",
-								"p_fileName": "sales_data.parquet"
-							},
 							"sinkCuratedMonthly": {
 								"p_Year": "2025"
 							}

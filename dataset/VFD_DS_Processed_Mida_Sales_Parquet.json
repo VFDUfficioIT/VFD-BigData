@@ -6,32 +6,18 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"p_folderPath": {
-				"type": "string",
-				"defaultValue": "Mida/Sales"
+			"folderPath": {
+				"type": "String"
 			},
-			"p_fileName": {
-				"type": "string",
-				"defaultValue": "sales_data.parquet"
+			"fileName": {
+				"type": "String"
 			}
-		},
-		"folder": {
-			"name": "Mida/Sales"
 		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@dataset().p_fileName",
-					"type": "Expression"
-				},
-				"folderPath": {
-					"value": "@dataset().p_folderPath",
-					"type": "Expression"
-				},
-				"fileSystem": "processed"
+				"type": "AzureBlobFSLocation"
 			},
 			"compressionCodec": "snappy"
 		},
