@@ -29,7 +29,8 @@
 			"scriptLines": [
 				"parameters{",
 				"     p_folderPath as string,",
-				"     p_fileName as string",
+				"     p_fileName as string,",
+				"     p_fileNameParquet as string",
 				"}",
 				"source(output(",
 				"          guid_pk as string,",
