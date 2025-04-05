@@ -29,8 +29,7 @@
 			"scriptLines": [
 				"parameters{",
 				"     p_folderPath as string,",
-				"     p_fileName as string,",
-				"     p_fileNameParquet as string",
+				"     p_fileName as string",
 				"}",
 				"source(output(",
 				"          guid_pk as string,",
@@ -45,7 +44,7 @@
 				"addTestColumn sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     umask: 00022,",
+				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
