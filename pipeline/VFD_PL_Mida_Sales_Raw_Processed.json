@@ -20,12 +20,12 @@
 						"type": "DataFlowReference",
 						"datasetParameters": {
 							"sourceTest": {
-								"p_folderPath": "Mida/Sales",
-								"p_fileName": "export_vw_summary_reservationPayments.csv"
+								"p_folderPath": "@pipeline().parameters.p_sourceFolderPath",
+								"p_fileName": "@pipeline().parameters.p_sourceFileName"
 							},
 							"sinkTest": {
-								"p_folderPath": "Mida/Sales",
-								"p_fileName": "sales_data.parquet"
+								"p_folderPath": "@pipeline().parameters.p_sourceFolderPath",
+								"p_fileName": "@replace(pipeline().parameters.p_sourceFileName,'.csv','.parquet')"
 							}
 						}
 					},
