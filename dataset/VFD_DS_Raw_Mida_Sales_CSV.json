@@ -8,11 +8,11 @@
 		"parameters": {
 			"p_folderPath": {
 				"type": "string",
-				"defaultValue": "Mida/Sales"
+				"defaultValue": "@dataset().p_folderPath"
 			},
 			"p_fileName": {
 				"type": "string",
-				"defaultValue": "export_vw_summary_reservationPayments.csv"
+				"defaultValue": "@dataset().p_fileName"
 			}
 		},
 		"folder": {
