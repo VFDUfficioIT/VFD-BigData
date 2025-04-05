@@ -18,7 +18,17 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"SourceCSV": {
+								"folderPath": "@pipeline().parameters.folderPath",
+								"fileName": "@pipeline().parameters.fileName"
+							},
+							"SinkParquet": {
+								"folderPath": "@pipeline().parameters.folderPath",
+								"fileName": "@pipeline().parameters.fileName"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
