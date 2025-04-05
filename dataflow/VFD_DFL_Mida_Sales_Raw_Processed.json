@@ -27,7 +27,7 @@
 					"name": "SelectFields"
 				}
 			],
-			"script": "source(output(\n\t\tid_reservation as integer,\n\t\tid_agency as integer,\n\t\tagency_name as string,\n\t\tpayment_date as date,\n\t\tcurrency as string,\n\t\tamount as decimal(10,2),\n\t\tpayment_method as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> SourceCSV\nSourceCSV select(mapColumn(\n\t\tid_reservation,\n\t\tid_agency,\n\t\tagency_name,\n\t\tpayment_date,\n\t\tcurrency,\n\t\tamount,\n\t\tpayment_method\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> SelectFields\nSelectFields sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: []) ~> SinkParquet"
+			"script": "source(output(\n\t\tid_reservation as integer,\n\t\tid_agency as integer,\n\t\tagency_name as string,\n\t\tpayment_date as date,\n\t\tcurrency as string,\n\t\tamount as decimal(10,2),\n\t\tpayment_method as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false) ~> SourceCSV\nSourceCSV select(mapColumn(\n\t\tid_reservation,\n\t\tid_agency,\n\t\tagency_name,\n\t\tpayment_date,\n\t\tcurrency,\n\t\tamount,\n\t\tpayment_method\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> SelectFields\nSelectFields sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tpartitionFileNames:['replace($fileName, \\'.csv\\', \\'.parquet\\')'],\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tpartitionBy('hash', 1)) ~> SinkParquet"
 		}
 	}
 }
