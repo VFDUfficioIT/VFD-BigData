@@ -1,12 +1,14 @@
 {
 	"name": "VFD_PL_Mida_Sales_Raw_Processed",
 	"properties": {
+		"description": "Pipeline parametrica per convertire CSV in Parquet usando Data Flow",
 		"activities": [
 			{
 				"name": "RunDataFlow",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
+					"timeout": "7.00:00:00",
 					"retry": 0,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
@@ -38,11 +40,11 @@
 		],
 		"parameters": {
 			"folderPath": {
-				"type": "string",
+				"type": "String",
 				"defaultValue": "Mida/Sales/2025/03"
 			},
 			"fileName": {
-				"type": "string",
+				"type": "String",
 				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
 			}
 		},
