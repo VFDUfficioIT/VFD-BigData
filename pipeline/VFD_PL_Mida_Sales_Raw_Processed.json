@@ -26,7 +26,7 @@
 							},
 							"SinkParquet": {
 								"folderPath": "@pipeline().parameters.folderPath",
-								"fileName": "@pipeline().parameters.fileName"
+								"fileName": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')"
 							}
 						}
 					},
