@@ -2,6 +2,9 @@
 	"name": "VFD_DFL_Mida_Sales_Raw_Processed",
 	"properties": {
 		"description": "Dataflow with full schema from CSV to Parquet with dynamic file name.",
+		"folder": {
+			"name": "Mida/Sales"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
