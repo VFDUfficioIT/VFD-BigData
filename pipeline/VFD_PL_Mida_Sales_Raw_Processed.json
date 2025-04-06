@@ -40,8 +40,12 @@
 							"value": "@pipeline().parameters.folderPath",
 							"type": "Expression"
 						},
-						"fileName": {
+						"sourcefileName": {
 							"value": "@pipeline().parameters.fileName",
+							"type": "Expression"
+						},
+						"destfileName": {
+							"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
 							"type": "Expression"
 						}
 					}
