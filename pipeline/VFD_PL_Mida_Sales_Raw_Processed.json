@@ -192,6 +192,9 @@
 				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
 			}
 		},
+		"folder": {
+			"name": "Mida/Sales"
+		},
 		"annotations": []
 	}
 }
