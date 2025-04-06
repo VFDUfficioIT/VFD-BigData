@@ -19,6 +19,11 @@
 					"dataflow": {
 						"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
 						"type": "DataFlowReference",
+						"parameters": {
+							"folderPath": "\"folder\"",
+							"sourcefileName": "\"source\"",
+							"destfileName": "\"dest\""
+						},
 						"datasetParameters": {
 							"SourceCSV": {
 								"folderPath": "@pipeline().parameters.folderPath",
@@ -50,6 +55,86 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "CopyData",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "RunDataFlow",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@pipeline().parameters.folderPath",
+								"type": "Expression"
+							},
+							"fileName": "VFD_DFL_Mida_Sales_Raw_Processed_output.parquet"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@pipeline().parameters.folderPath",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@replace(pipeline().parameters.fileName,'.csv','.parquet')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
 			}
 		],
 		"parameters": {
