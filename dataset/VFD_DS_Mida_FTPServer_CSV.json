@@ -1,0 +1,24 @@
+{
+	"name": "VFD_DS_Mida_FTPServer_CSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_Mida_FtpServer",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Mida"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FtpServerLocation"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
