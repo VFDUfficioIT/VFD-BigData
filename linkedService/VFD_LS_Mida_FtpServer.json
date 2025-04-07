@@ -1,0 +1,17 @@
+{
+	"name": "VFD_LS_Mida_FtpServer",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "FtpServer",
+		"typeProperties": {
+			"host": "ftpserver.com",
+			"port": 21,
+			"enableSsl": true,
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Basic",
+			"userName": "user",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIlZGRC1CSUctREFUQS1ERl83ZjEyMzk1Zi1iZjM0LTRmMGItYTEzMC1mMzNkOTVmM2Y3NGUiDQp9"
+		}
+	}
+}
