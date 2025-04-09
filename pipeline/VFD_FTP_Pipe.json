@@ -93,7 +93,14 @@
 								},
 								"fieldList": [
 									"exists"
-								]
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
 							}
 						},
 						{
@@ -127,10 +134,17 @@
 										"userProperties": [],
 										"typeProperties": {
 											"source": {
-												"type": "DelimitedTextSource"
-											},
-											"sink": {
-												"type": "DelimitedTextSink"
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "FtpReadSettings",
+													"recursive": true,
+													"enablePartitionDiscovery": false,
+													"useBinaryTransfer": true,
+													"disableChunking": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
 											},
 											"enableStaging": false,
 											"dataset": {
