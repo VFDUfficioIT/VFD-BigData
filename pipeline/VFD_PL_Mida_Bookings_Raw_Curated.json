@@ -304,7 +304,10 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
-							"fileName": "@concat('Mida_Merged_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)"
+							"fileName": {
+								"value": "@concat('Mida_Merged_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
+								"type": "Expression"
+							}
 						}
 					}
 				]

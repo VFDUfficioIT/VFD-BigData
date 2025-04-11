@@ -1,0 +1,24 @@
+{
+	"name": "VFD_TRG_Mida_Bookings_FTP_Schedule",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "VFD_PL_Mida_Bookings_FTP",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 1,
+				"startTime": "2025-04-11T18:22:00",
+				"timeZone": "W. Europe Standard Time"
+			}
+		}
+	}
+}
