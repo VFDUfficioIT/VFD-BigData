@@ -9,7 +9,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference"
 					},
 					"name": "sourceProcessed"
@@ -18,7 +18,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Sales_Monthly_Delta",
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Monthly_Delta",
 						"type": "DatasetReference"
 					},
 					"name": "sinkCuratedMonthly"

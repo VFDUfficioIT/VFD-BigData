@@ -1,10 +1,10 @@
 {
-	"name": "VFD_PL_Mida_Sales_Raw_Processed",
+	"name": "VFD_PL_Mida_Sales_Raw_Curated",
 	"properties": {
 		"description": "Pipeline parametrica per convertire CSV in Parquet usando Data Flow",
 		"activities": [
 			{
-				"name": "Raw to Processed",
+				"name": "Raw to Processed Transformation",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -57,11 +57,11 @@
 				}
 			},
 			{
-				"name": "CopyData",
+				"name": "Copy Data from Temporary File",
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Raw to Processed",
+						"activity": "Raw to Processed Transformation",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -108,7 +108,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": {
@@ -121,7 +121,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": {
@@ -137,11 +137,11 @@
 				]
 			},
 			{
-				"name": "DeleteFile",
+				"name": "Delete Temporary File",
 				"type": "Delete",
 				"dependsOn": [
 					{
-						"activity": "CopyData",
+						"activity": "Copy Data from Temporary File",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -157,7 +157,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": {
@@ -212,17 +212,17 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "VFD_DS_Mida_Sales_FTPServer_CSV",
+						"referenceName": "VFD_DS_Mida_Bookings_FTPServer_CSV",
 						"type": "DatasetReference"
 					}
 				]
 			},
 			{
-				"name": "Processed to Curated",
+				"name": "Processed to Curated Transformation",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
-						"activity": "DeleteFile",
+						"activity": "Delete Temporary File",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -275,8 +275,13 @@
 				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
 			}
 		},
+		"variables": {
+			"year": {
+				"type": "String"
+			}
+		},
 		"folder": {
-			"name": "Mida/Sales"
+			"name": "Mida/Bookings"
 		},
 		"annotations": []
 	}

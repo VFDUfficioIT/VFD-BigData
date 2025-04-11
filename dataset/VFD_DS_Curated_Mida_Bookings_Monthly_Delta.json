@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Curated_Mida_Sales_Monthly_Delta",
+	"name": "VFD_DS_Curated_Mida_Bookings_Monthly_Delta",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
@@ -12,7 +12,7 @@
 			}
 		},
 		"folder": {
-			"name": "Mida/Sales"
+			"name": "Mida/Bookings"
 		},
 		"annotations": [],
 		"type": "Delta",

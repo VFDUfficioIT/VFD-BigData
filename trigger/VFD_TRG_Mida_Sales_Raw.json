@@ -7,12 +7,8 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "VFD_PL_Mida_Sales_Raw_Processed",
+					"referenceName": "VFD_PL_Mida_Sales_Raw_Curated",
 					"type": "PipelineReference"
-				},
-				"parameters": {
-					"p_sourceFolderPath": "@replace(triggerBody().folderPath, 'raw/',   '')",
-					"p_sourceFileName": "@triggerBody().fileName"
 				}
 			}
 		],

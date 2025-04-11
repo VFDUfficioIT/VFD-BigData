@@ -10,7 +10,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "VFD_DS_Raw_Mida_Sales_CSV",
+						"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
 						"type": "DatasetReference"
 					},
 					"name": "SourceCSV"
@@ -19,7 +19,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
+						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference"
 					},
 					"name": "SinkParquet"

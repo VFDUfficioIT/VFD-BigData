@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Processed_Mida_Sales_Parquet",
+	"name": "VFD_DS_Processed_Mida_Bookings_Parquet",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
@@ -14,7 +14,7 @@
 			}
 		},
 		"folder": {
-			"name": "Mida/Sales"
+			"name": "Mida/Bookings"
 		},
 		"annotations": [],
 		"type": "Parquet",

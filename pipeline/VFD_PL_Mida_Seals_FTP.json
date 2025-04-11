@@ -1,5 +1,5 @@
 {
-	"name": "VFD_PL_Mida_Sales_FTP",
+	"name": "VFD_PL_Mida_Seals_FTP",
 	"properties": {
 		"description": "Pipeline arricchita: FTP → ADLS solo se nuovo → Data Flow → Copy → Delete",
 		"activities": [
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
+						"referenceName": "VFD_DS_Mida_FTPServer_CSV",
 						"type": "DatasetReference"
 					},
 					"fieldList": [
@@ -29,7 +29,7 @@
 						"disableChunking": false
 					},
 					"formatSettings": {
-						"type": "BinaryReadSettings"
+						"type": "DelimitedTextReadSettings"
 					}
 				}
 			},
@@ -61,7 +61,6 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"variableName": "",
 								"value": ""
 							}
 						},
@@ -94,14 +93,7 @@
 								},
 								"fieldList": [
 									"exists"
-								],
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
+								]
 							}
 						},
 						{
@@ -147,26 +139,7 @@
 													"type": "DelimitedTextReadSettings"
 												}
 											},
-											"sink": {
-												"type": "DelimitedTextSink",
-												"storeSettings": {
-													"type": "AzureBlobFSWriteSettings"
-												},
-												"formatSettings": {
-													"type": "DelimitedTextWriteSettings",
-													"quoteAllText": true,
-													"fileExtension": ".txt"
-												}
-											},
 											"enableStaging": false,
-											"translator": {
-												"type": "TabularTranslator",
-												"typeConversion": true,
-												"typeConversionSettings": {
-													"allowDataTruncation": true,
-													"treatBooleanAsNumber": false
-												}
-											},
 											"dataset": {
 												"referenceName": "VFD_DS_Raw_Mida_Sales_CSV",
 												"type": "DatasetReference",
@@ -180,22 +153,6 @@
 											{
 												"referenceName": "VFD_DS_Mida_FTPServer_CSV",
 												"type": "DatasetReference"
-											}
-										],
-										"outputs": [
-											{
-												"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": {
-														"value": "@variables('folderPathVar')",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@variables('fileName')",
-														"type": "Expression"
-													}
-												}
 											}
 										]
 									},
@@ -239,6 +196,16 @@
 				}
 			}
 		],
+		"parameters": {
+			"folderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Sales/2025/03"
+			},
+			"fileName": {
+				"type": "String",
+				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
+			}
+		},
 		"variables": {
 			"fileName": {
 				"type": "String"
@@ -254,7 +221,7 @@
 			}
 		},
 		"folder": {
-			"name": "Mida/Bookings"
+			"name": "Mida/Seals"
 		},
 		"annotations": []
 	}
