@@ -24,6 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "FtpReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false,
 						"useBinaryTransfer": true,
 						"disableChunking": false
@@ -52,7 +53,7 @@
 					},
 					"activities": [
 						{
-							"name": "SetVariables",
+							"name": "SetFileName",
 							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
@@ -61,7 +62,62 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"value": ""
+								"variableName": "fileName",
+								"value": {
+									"value": "@item().name",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetYear",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "year",
+								"value": {
+									"value": "@substring(item().name, 44, 4)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetMonth",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "month",
+								"value": {
+									"value": "@substring(item().name, 48, 2)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetFolderPathVar",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "folderPathVar",
+								"value": {
+									"value": "@concat('Mida/Seals/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								}
 							}
 						},
 						{
@@ -69,7 +125,7 @@
 							"type": "GetMetadata",
 							"dependsOn": [
 								{
-									"activity": "SetVariables",
+									"activity": "SetFolderPathVar",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -85,15 +141,19 @@
 							"typeProperties": {
 								"dataset": {
 									"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@variables('folderPathVar')",
-										"fileName": "@variables('fileName')"
-									}
+									"type": "DatasetReference"
 								},
 								"fieldList": [
 									"exists"
-								]
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
 							}
 						},
 						{
@@ -139,9 +199,17 @@
 													"type": "DelimitedTextReadSettings"
 												}
 											},
+											"sink": {
+												"type": "DelimitedTextSink",
+												"formatSettings": {
+													"type": "DelimitedTextWriteSettings",
+													"quoteAllText": true,
+													"fileExtension": ".txt"
+												}
+											},
 											"enableStaging": false,
 											"dataset": {
-												"referenceName": "VFD_DS_Raw_Mida_Sales_CSV",
+												"referenceName": "VFD_DS_Raw_Mida_Seals_CSV",
 												"type": "DatasetReference",
 												"parameters": {
 													"folderPath": "@variables('folderPathVar')",
@@ -151,7 +219,7 @@
 										},
 										"inputs": [
 											{
-												"referenceName": "VFD_DS_Mida_FTPServer_CSV",
+												"referenceName": "VFD_DS_Mida_Seals_FTPServer_CSV",
 												"type": "DatasetReference"
 											}
 										]
@@ -172,10 +240,6 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"pipeline": {
-												"referenceName": "VFD_PL_Mida_Sales_Raw_Curated",
-												"type": "PipelineReference"
-											},
 											"waitOnCompletion": true,
 											"parameters": {
 												"folderPath": {
@@ -196,16 +260,6 @@
 				}
 			}
 		],
-		"parameters": {
-			"folderPath": {
-				"type": "String",
-				"defaultValue": "Mida/Sales/2025/03"
-			},
-			"fileName": {
-				"type": "String",
-				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
-			}
-		},
 		"variables": {
 			"fileName": {
 				"type": "String"
@@ -221,7 +275,7 @@
 			}
 		},
 		"folder": {
-			"name": "Mida/Seals"
+			"name": "Mida/Bookings"
 		},
 		"annotations": []
 	}
