@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "VFD_DS_Mida_FTPServer_CSV",
+						"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
 						"type": "DatasetReference"
 					},
 					"fieldList": [
@@ -29,7 +29,7 @@
 						"disableChunking": false
 					},
 					"formatSettings": {
-						"type": "DelimitedTextReadSettings"
+						"type": "BinaryReadSettings"
 					}
 				}
 			},
