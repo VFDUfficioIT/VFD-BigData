@@ -1,0 +1,20 @@
+{
+	"name": "VFD_DS_Mida_Seals_FTPServer_Folder",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_Mida_FtpServer",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Mida/Bookings"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "FtpServerLocation",
+				"folderPath": "seals"
+			}
+		}
+	}
+}
