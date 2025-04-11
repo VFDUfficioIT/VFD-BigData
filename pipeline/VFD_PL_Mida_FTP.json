@@ -61,6 +61,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
+								"variableName": "folderPathVar",
 								"value": ""
 							}
 						},
