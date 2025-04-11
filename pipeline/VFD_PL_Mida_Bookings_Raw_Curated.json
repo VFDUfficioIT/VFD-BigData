@@ -180,53 +180,6 @@
 						"enablePartitionDiscovery": false
 					}
 				}
-			},
-			{
-				"name": "Processed to Curated Transformation",
-				"type": "ExecuteDataFlow",
-				"dependsOn": [
-					{
-						"activity": "Delete Temporary File",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"dataflow": {
-						"referenceName": "VFD_DFL_Mida_Sales_Processed_Curated_Daily",
-						"type": "DataFlowReference",
-						"datasetParameters": {
-							"sourceProcessed": {
-								"folderPath": {
-									"value": "@pipeline().parameters.folderPath",
-									"type": "Expression"
-								},
-								"fileName": {
-									"value": "@pipeline().parameters.fileName",
-									"type": "Expression"
-								}
-							},
-							"sinkCuratedDaily": {
-								"p_Year": "2025",
-								"p_Month": "03"
-							}
-						}
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine"
-				}
 			}
 		],
 		"parameters": {
