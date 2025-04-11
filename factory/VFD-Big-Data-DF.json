@@ -1,5 +1,10 @@
 {
 	"name": "VFD-Big-Data-DF",
+	"properties": {
+		"globalConfigurations": {
+			"PipelineBillingEnabled": "true"
+		}
+	},
 	"location": "italynorth",
 	"identity": {
 		"type": "SystemAssigned",
