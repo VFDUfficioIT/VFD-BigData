@@ -2,6 +2,9 @@
 	"name": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily",
 	"properties": {
 		"description": "Dataflow per filtrare colonne dal parquet processed e scrivere su un file fisso",
+		"folder": {
+			"name": "Mida/Bookings"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
