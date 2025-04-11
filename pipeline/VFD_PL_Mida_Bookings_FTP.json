@@ -122,7 +122,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "SetMonth",
+									"activity": "SetDay",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -325,11 +325,39 @@
 												"month": {
 													"value": "@variables('month')",
 													"type": "Expression"
+												},
+												"day": {
+													"value": "@variables('day')",
+													"type": "Expression"
 												}
 											}
 										}
 									}
 								]
+							}
+						},
+						{
+							"name": "SetDay",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "SetMonth",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "day",
+								"value": {
+									"value": "@substring(item().name, 43, 2)",
+									"type": "Expression"
+								}
 							}
 						}
 					]
@@ -347,6 +375,9 @@
 				"type": "String"
 			},
 			"folderPathVar": {
+				"type": "String"
+			},
+			"day": {
 				"type": "String"
 			}
 		},

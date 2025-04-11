@@ -211,6 +211,12 @@
 									"type": "Expression"
 								},
 								"fileName": "@replace(pipeline().parameters.fileName,'.csv','.parquet')"
+							},
+							"SinkCurated": {
+								"folderPath": {
+									"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
+									"type": "Expression"
+								}
 							}
 						}
 					},
@@ -238,10 +244,17 @@
 			"month": {
 				"type": "string",
 				"defaultValue": "03"
+			},
+			"day": {
+				"type": "string",
+				"defaultValue": "13"
 			}
 		},
 		"variables": {
 			"year": {
+				"type": "String"
+			},
+			"day": {
 				"type": "String"
 			}
 		},
