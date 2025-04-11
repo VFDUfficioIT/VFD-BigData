@@ -1,0 +1,34 @@
+{
+	"name": "VFD_DS_Mida_Seals_FTPServer_CSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_Mida_FtpServer",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida/Seals"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FtpServerLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "seals"
+			},
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
