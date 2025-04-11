@@ -162,7 +162,17 @@
 							"typeProperties": {
 								"dataset": {
 									"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": {
+											"value": "@variables('folderPathVar')",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@variables('fileName')",
+											"type": "Expression"
+										}
+									}
 								},
 								"fieldList": [
 									"exists"
