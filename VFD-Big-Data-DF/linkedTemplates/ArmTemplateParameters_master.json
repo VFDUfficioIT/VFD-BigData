@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "VFD-Big-Data-DF"
+		},
+		"VFD_Big_Data_DL_accountKey": {
+			"value": ""
+		},
+		"VFD_LS_Mida_FtpServer_password": {
+			"value": ""
+		},
+		"VFD_Big_Data_DL_properties_typeProperties_url": {
+			"value": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
+		},
+		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
+			"value": "103.241.66.28"
+		},
+		"VFD_LS_Mida_FtpServer_properties_typeProperties_userName": {
+			"value": "test"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
