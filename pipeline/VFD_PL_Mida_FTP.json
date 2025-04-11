@@ -1,5 +1,5 @@
 {
-	"name": "VFD_FTP_Pipe",
+	"name": "VFD_PL_Mida_FTP",
 	"properties": {
 		"description": "Pipeline arricchita: FTP → ADLS solo se nuovo → Data Flow → Copy → Delete",
 		"activities": [
@@ -122,188 +122,28 @@
 								},
 								"ifTrueActivities": [
 									{
-										"name": "CopyFromFTP",
-										"type": "Copy",
+										"name": "Execute Pipeline Sales",
+										"type": "ExecutePipeline",
 										"dependsOn": [],
 										"policy": {
-											"retry": 0,
-											"retryIntervalInSeconds": 30,
-											"secureOutput": false,
 											"secureInput": false
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"source": {
-												"type": "DelimitedTextSource",
-												"storeSettings": {
-													"type": "FtpReadSettings",
-													"recursive": true,
-													"enablePartitionDiscovery": false,
-													"useBinaryTransfer": true,
-													"disableChunking": false
+											"pipeline": {
+												"referenceName": "VFD_PL_Mida_Sales_Raw_Processed",
+												"type": "PipelineReference"
+											},
+											"waitOnCompletion": true,
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
 												},
-												"formatSettings": {
-													"type": "DelimitedTextReadSettings"
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
 												}
-											},
-											"enableStaging": false,
-											"dataset": {
-												"referenceName": "VFD_DS_Raw_Mida_Sales_CSV",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@variables('folderPathVar')",
-													"fileName": "@variables('fileName')"
-												}
-											}
-										},
-										"inputs": [
-											{
-												"referenceName": "VFD_DS_Mida_FTPServer_CSV",
-												"type": "DatasetReference"
-											}
-										]
-									},
-									{
-										"name": "RunDataFlow",
-										"type": "ExecuteDataFlow",
-										"dependsOn": [
-											{
-												"activity": "CopyFromFTP",
-												"dependencyConditions": [
-													"Succeeded"
-												]
-											}
-										],
-										"policy": {
-											"retry": 0,
-											"retryIntervalInSeconds": 30,
-											"secureOutput": false,
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"dataflow": {
-												"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
-												"type": "DataFlowReference",
-												"parameters": {
-													"folderPath": "@variables('folderPathVar')",
-													"sourcefileName": "@variables('fileName')",
-													"destfileName": "@replace(variables('fileName'), '.csv', '.parquet')"
-												}
-											},
-											"compute": {
-												"coreCount": 8,
-												"computeType": "General"
-											},
-											"traceLevel": "Fine"
-										}
-									},
-									{
-										"name": "CopyData",
-										"type": "Copy",
-										"dependsOn": [
-											{
-												"activity": "RunDataFlow",
-												"dependencyConditions": [
-													"Succeeded"
-												]
-											}
-										],
-										"policy": {
-											"retry": 0,
-											"retryIntervalInSeconds": 30,
-											"secureOutput": false,
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"source": {
-												"type": "ParquetSource",
-												"storeSettings": {
-													"type": "AzureBlobFSReadSettings",
-													"recursive": true
-												},
-												"formatSettings": {
-													"type": "ParquetReadSettings"
-												}
-											},
-											"sink": {
-												"type": "ParquetSink",
-												"storeSettings": {
-													"type": "AzureBlobFSWriteSettings"
-												},
-												"formatSettings": {
-													"type": "ParquetWriteSettings"
-												}
-											},
-											"enableStaging": false,
-											"translator": {
-												"type": "TabularTranslator",
-												"typeConversion": true,
-												"typeConversionSettings": {
-													"allowDataTruncation": true,
-													"treatBooleanAsNumber": false
-												}
-											}
-										},
-										"inputs": [
-											{
-												"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@variables('folderPathVar')",
-													"fileName": "VFD_DFL_Mida_Sales_Raw_Processed_output.parquet"
-												}
-											}
-										],
-										"outputs": [
-											{
-												"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@variables('folderPathVar')",
-													"fileName": "@replace(variables('fileName'), '.csv', '.parquet')"
-												}
-											}
-										]
-									},
-									{
-										"name": "DeleteFile",
-										"type": "Delete",
-										"dependsOn": [
-											{
-												"activity": "CopyData",
-												"dependencyConditions": [
-													"Succeeded"
-												]
-											}
-										],
-										"policy": {
-											"retry": 0,
-											"retryIntervalInSeconds": 30,
-											"secureOutput": false,
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"dataset": {
-												"referenceName": "VFD_DS_Processed_Mida_Sales_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@variables('folderPathVar')",
-													"fileName": "VFD_DFL_Mida_Sales_Raw_Processed_output.parquet"
-												}
-											},
-											"logStorageSettings": {
-												"linkedServiceName": {
-													"referenceName": "VFD_Big_Data_DL",
-													"type": "LinkedServiceReference"
-												}
-											},
-											"enableLogging": true,
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": true
 											}
 										}
 									}
@@ -363,6 +203,9 @@
 			"folderPathVar": {
 				"type": "String"
 			}
+		},
+		"folder": {
+			"name": "Mida"
 		},
 		"annotations": []
 	}
