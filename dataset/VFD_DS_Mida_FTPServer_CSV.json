@@ -5,14 +5,20 @@
 			"referenceName": "VFD_LS_Mida_FtpServer",
 			"type": "LinkedServiceReference"
 		},
-		"folder": {
-			"name": "Mida"
+		"parameters": {
+			"fileName": {
+				"type": "String"
+			}
 		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "FtpServerLocation"
+				"type": "FtpServerLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				}
 			},
 			"columnDelimiter": ";",
 			"escapeChar": "\\",
