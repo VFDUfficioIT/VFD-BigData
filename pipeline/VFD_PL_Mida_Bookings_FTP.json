@@ -317,6 +317,14 @@
 												"fileName": {
 													"value": "@variables('fileName')",
 													"type": "Expression"
+												},
+												"year": {
+													"value": "@variables('year')",
+													"type": "Expression"
+												},
+												"month": {
+													"value": "@variables('month')",
+													"type": "Expression"
 												}
 											}
 										}
