@@ -1,5 +1,5 @@
 {
-	"name": "VFD_PL_Mida_Sales_Raw_Curated",
+	"name": "VFD_PL_Mida_Bookings_Raw_Curated",
 	"properties": {
 		"description": "Pipeline parametrica per convertire CSV in Parquet usando Data Flow",
 		"activities": [

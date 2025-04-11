@@ -1,5 +1,5 @@
 {
-	"name": "VFD_PL_Mida_Sales_FTP",
+	"name": "VFD_PL_Mida_Bookings_FTP",
 	"properties": {
 		"description": "Pipeline arricchita: FTP → ADLS solo se nuovo → Data Flow → Copy → Delete",
 		"activities": [
@@ -216,7 +216,7 @@
 										"userProperties": [],
 										"typeProperties": {
 											"pipeline": {
-												"referenceName": "VFD_PL_Mida_Sales_Raw_Curated",
+												"referenceName": "VFD_PL_Mida_Bookings_Raw_Curated",
 												"type": "PipelineReference"
 											},
 											"waitOnCompletion": true,
