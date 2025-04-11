@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "Mida/Bookings"
+			"name": "Mida/Seals"
 		},
 		"annotations": [],
 		"type": "Binary",
