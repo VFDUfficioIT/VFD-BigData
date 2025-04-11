@@ -1,0 +1,50 @@
+{
+	"name": "VFD_PL_Mida",
+	"properties": {
+		"activities": [
+			{
+				"name": "Process Bookings",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida_Bookings_FTP",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Process Seals",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Process Bookings",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida_Seals_FTP",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "Mida"
+		},
+		"annotations": []
+	}
+}

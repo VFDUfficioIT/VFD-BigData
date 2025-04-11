@@ -7,7 +7,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "VFD_PL_Mida_Sales_Raw_Curated",
+					"referenceName": "VFD_PL_Mida_Bookings_Raw_Curated",
 					"type": "PipelineReference"
 				}
 			}
