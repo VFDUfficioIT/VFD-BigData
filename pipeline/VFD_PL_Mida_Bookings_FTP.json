@@ -24,6 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "FtpReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false,
 						"useBinaryTransfer": true,
 						"disableChunking": false
@@ -52,7 +53,7 @@
 					},
 					"activities": [
 						{
-							"name": "SetVariables",
+							"name": "SetFileName",
 							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
@@ -61,8 +62,62 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"variableName": "",
-								"value": ""
+								"variableName": "fileName",
+								"value": {
+									"value": "@item().name",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetYear",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "year",
+								"value": {
+									"value": "@substring(item().name, 44, 4)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetMonth",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "month",
+								"value": {
+									"value": "@substring(item().name, 48, 2)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetFolderPathVar",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "folderPathVar",
+								"value": {
+									"value": "@concat('Mida/Bookings/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								}
 							}
 						},
 						{
@@ -70,7 +125,7 @@
 							"type": "GetMetadata",
 							"dependsOn": [
 								{
-									"activity": "SetVariables",
+									"activity": "SetFolderPathVar",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -86,17 +141,14 @@
 							"typeProperties": {
 								"dataset": {
 									"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@variables('folderPathVar')",
-										"fileName": "@variables('fileName')"
-									}
+									"type": "DatasetReference"
 								},
 								"fieldList": [
 									"exists"
 								],
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
@@ -156,16 +208,8 @@
 												}
 											},
 											"enableStaging": false,
-											"translator": {
-												"type": "TabularTranslator",
-												"typeConversion": true,
-												"typeConversionSettings": {
-													"allowDataTruncation": true,
-													"treatBooleanAsNumber": false
-												}
-											},
 											"dataset": {
-												"referenceName": "VFD_DS_Raw_Mida_Sales_CSV",
+												"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
 												"type": "DatasetReference",
 												"parameters": {
 													"folderPath": "@variables('folderPathVar')",
@@ -175,17 +219,8 @@
 										},
 										"inputs": [
 											{
-												"referenceName": "VFD_DS_Mida_FTPServer_CSV",
-												"type": "DatasetReference"
-											}
-										],
-										"outputs": [
-											{
 												"referenceName": "VFD_DS_Mida_Bookings_FTPServer_CSV",
-												"type": "DatasetReference",
-												"parameters": {
-													"fileName": "@variables('fileName')"
-												}
+												"type": "DatasetReference"
 											}
 										]
 									},
