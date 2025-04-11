@@ -184,7 +184,14 @@
 			{
 				"name": "Processed to Curated Transformation",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Delete Temporary File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -196,7 +203,16 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"SourceProcessed": {
+								"folderPath": {
+									"value": "@pipeline().parameters.folderPath",
+									"type": "Expression"
+								},
+								"fileName": "@replace(pipeline().parameters.fileName,'.csv','.parquet')"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
@@ -214,6 +230,14 @@
 			"fileName": {
 				"type": "String",
 				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
+			},
+			"year": {
+				"type": "string",
+				"defaultValue": "2025"
+			},
+			"month": {
+				"type": "string",
+				"defaultValue": "03"
 			}
 		},
 		"variables": {
