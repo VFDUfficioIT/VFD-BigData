@@ -3,7 +3,7 @@
 	"properties": {
 		"description": "Dataflow with full schema from CSV to Parquet with dynamic file name.",
 		"folder": {
-			"name": "Mida/Sales"
+			"name": "Mida/Bookings"
 		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
