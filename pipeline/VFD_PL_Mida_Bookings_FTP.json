@@ -262,7 +262,13 @@
 										"inputs": [
 											{
 												"referenceName": "VFD_DS_Mida_Bookings_FTPServer_CSV",
-												"type": "DatasetReference"
+												"type": "DatasetReference",
+												"parameters": {
+													"fileName": {
+														"value": "@variables('fileName')",
+														"type": "Expression"
+													}
+												}
 											}
 										],
 										"outputs": [
