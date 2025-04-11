@@ -1,10 +1,7 @@
 {
 	"name": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily",
 	"properties": {
-		"description": "Estrae subset di colonne dal Parquet processed e scrive su curated.",
-		"folder": {
-			"name": "Mida/Bookings"
-		},
+		"description": "Dataflow per filtrare colonne dal parquet processed e scrivere su un file fisso",
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
@@ -13,20 +10,24 @@
 						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "sourceProcessed"
+					"name": "SourceProcessed"
 				}
 			],
 			"sinks": [
 				{
-					"name": "sinkCuratedDaily"
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkCurated"
 				}
 			],
 			"transformations": [
 				{
-					"name": "SelectCuratedFields"
+					"name": "SelectFields"
 				}
 			],
-			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tformat: 'parquet') ~> sourceProcessed\nsourceProcessed select(mapColumn(\n\t\tpax_quantity,\n\t\tpriceList,\n\t\ttickets_quantity,\n\t\tamount,\n\t\tvisitDate,\n\t\tchannel_label,\n\t\ttransactionType_text\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> SelectCuratedFields\nSelectCuratedFields sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> sinkCuratedDaily"
+			"script": "parameters{\n\tfolderPath as string,\n\tfileName as string\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tformat: 'parquet',\n\tfolderPath: folderPath,\n\tfileName: fileName) ~> SourceProcessed\nSourceProcessed select(mapColumn(\n\t\tpax_quantity,\n\t\tpriceList,\n\t\ttickets_quantity,\n\t\tamount,\n\t\tvisitDate,\n\t\tchannel_label,\n\t\ttransactionType_text\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> SelectFields\nSelectFields sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tfileName: 'VFD_DFL_Mida_Sales_Curated_output.parquet') ~> SinkCurated"
 		}
 	}
 }
