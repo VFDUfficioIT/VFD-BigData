@@ -149,9 +149,6 @@
 											},
 											"sink": {
 												"type": "DelimitedTextSink",
-												"storeSettings": {
-													"type": "AzureBlobFSWriteSettings"
-												},
 												"formatSettings": {
 													"type": "DelimitedTextWriteSettings",
 													"quoteAllText": true,
@@ -184,17 +181,10 @@
 										],
 										"outputs": [
 											{
-												"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
+												"referenceName": "VFD_DS_Mida_Bookings_FTPServer_CSV",
 												"type": "DatasetReference",
 												"parameters": {
-													"folderPath": {
-														"value": "@variables('folderPathVar')",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@variables('fileName')",
-														"type": "Expression"
-													}
+													"fileName": "@variables('fileName')"
 												}
 											}
 										]
