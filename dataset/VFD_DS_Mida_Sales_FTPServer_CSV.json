@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Mida_FTPServer_CSV",
+	"name": "VFD_DS_Mida_Sales_FTPServer_CSV",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_LS_Mida_FtpServer",
@@ -11,7 +11,7 @@
 			}
 		},
 		"folder": {
-			"name": "Mida"
+			"name": "Mida/Sales"
 		},
 		"annotations": [],
 		"type": "DelimitedText",
