@@ -204,6 +204,10 @@
 					"dataflow": {
 						"referenceName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily",
 						"type": "DataFlowReference",
+						"parameters": {
+							"folderPath": "\"folder\"",
+							"fileName": "\"file\""
+						},
 						"datasetParameters": {
 							"SourceProcessed": {
 								"folderPath": {
@@ -296,17 +300,11 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": {
-								"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
-								"type": "Expression"
-							},
-							"fileName": {
-								"value": "@concat('Mida_Merged_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)",
-								"type": "Expression"
-							}
+							"folderPath": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
+							"fileName": "@concat('Mida_Merged_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)"
 						}
 					}
 				]
@@ -332,13 +330,10 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": {
-								"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
-								"type": "Expression"
-							},
+							"folderPath": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
 							"fileName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet"
 						}
 					},
