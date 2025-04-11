@@ -4,7 +4,7 @@
 		"description": "Pipeline parametrica per convertire CSV in Parquet usando Data Flow",
 		"activities": [
 			{
-				"name": "RunDataFlow",
+				"name": "Raw to Processed",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -61,7 +61,7 @@
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "RunDataFlow",
+						"activity": "Raw to Processed",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -212,10 +212,57 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "VFD_DS_Mida_FTPServer_CSV",
+						"referenceName": "VFD_DS_Mida_Sales_FTPServer_CSV",
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Processed to Curated",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DeleteFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Mida_Sales_Processed_Curated_Daily",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sourceProcessed": {
+								"folderPath": {
+									"value": "@pipeline().parameters.folderPath",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@pipeline().parameters.fileName",
+									"type": "Expression"
+								}
+							},
+							"sinkCuratedDaily": {
+								"p_Year": "2025",
+								"p_Month": "03"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
 			}
 		],
 		"parameters": {
