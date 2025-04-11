@@ -3,7 +3,7 @@
 	"properties": {
 		"description": "Trigger per la pipeline di trasformazione da Processed a Curated.\nViene triggerato quando viene generato un file processed, crea poi le aggregazioni daily e monthly",
 		"annotations": [],
-		"runtimeState": "Started",
+		"runtimeState": "Stopped",
 		"pipelines": [],
 		"type": "BlobEventsTrigger",
 		"typeProperties": {
