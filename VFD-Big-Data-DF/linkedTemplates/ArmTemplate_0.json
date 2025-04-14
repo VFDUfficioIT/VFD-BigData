@@ -1762,6 +1762,7 @@
 								"value": "@activity('ListFTPFiles').output.childItems",
 								"type": "Expression"
 							},
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "SetFileName",
@@ -2149,7 +2150,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -2164,7 +2165,7 @@
 					"recurrence": {
 						"frequency": "Hour",
 						"interval": 1,
-						"startTime": "2025-04-11T18:22:00",
+						"startTime": "2025-04-12T01:16:00",
 						"timeZone": "W. Europe Standard Time"
 					}
 				}
