@@ -511,7 +511,7 @@
 							},
 							"staging": {},
 							"compute": {
-								"coreCount": 8,
+								"coreCount": 16,
 								"computeType": "General"
 							},
 							"traceLevel": "Fine",
@@ -642,13 +642,7 @@
 									"fileName": "VFD_DFL_Mida_Sales_Raw_Processed_output.parquet"
 								}
 							},
-							"logStorageSettings": {
-								"linkedServiceName": {
-									"referenceName": "VFD_Big_Data_DL",
-									"type": "LinkedServiceReference"
-								}
-							},
-							"enableLogging": true,
+							"enableLogging": false,
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
@@ -816,13 +810,7 @@
 									"fileName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet"
 								}
 							},
-							"logStorageSettings": {
-								"linkedServiceName": {
-									"referenceName": "VFD_Big_Data_DL",
-									"type": "LinkedServiceReference"
-								}
-							},
-							"enableLogging": true,
+							"enableLogging": false,
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
@@ -873,8 +861,7 @@
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Sales_Raw_Processed')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Bookings_Processed_Curated_Daily')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Parquet')]",
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Parquet')]"
 			]
 		},
 		{
@@ -893,6 +880,9 @@
 					"fileName": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "Mida/Bookings"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -1968,7 +1958,11 @@
 								"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 								"type": "DatasetReference"
 							},
-							"name": "SinkParquet"
+							"name": "SinkParquet",
+							"rejectedDataLinkedService": {
+								"referenceName": "VFD_Big_Data_DL",
+								"type": "LinkedServiceReference"
+							}
 						}
 					],
 					"transformations": [
@@ -2171,7 +2165,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_CSV')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
 			]
 		}
 	]
