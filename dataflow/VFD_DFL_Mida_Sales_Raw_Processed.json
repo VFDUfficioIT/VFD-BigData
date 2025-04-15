@@ -22,7 +22,11 @@
 						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "SinkParquet"
+					"name": "SinkParquet",
+					"rejectedDataLinkedService": {
+						"referenceName": "VFD_Big_Data_DL",
+						"type": "LinkedServiceReference"
+					}
 				}
 			],
 			"transformations": [

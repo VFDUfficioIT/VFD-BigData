@@ -36,7 +36,7 @@
 						}
 					},
 					"compute": {
-						"coreCount": 8,
+						"coreCount": 16,
 						"computeType": "General"
 					},
 					"traceLevel": "Fine",
@@ -167,13 +167,7 @@
 							"fileName": "VFD_DFL_Mida_Sales_Raw_Processed_output.parquet"
 						}
 					},
-					"logStorageSettings": {
-						"linkedServiceName": {
-							"referenceName": "VFD_Big_Data_DL",
-							"type": "LinkedServiceReference"
-						}
-					},
-					"enableLogging": true,
+					"enableLogging": false,
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
 						"recursive": true,
@@ -340,13 +334,7 @@
 							"fileName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet"
 						}
 					},
-					"logStorageSettings": {
-						"linkedServiceName": {
-							"referenceName": "VFD_Big_Data_DL",
-							"type": "LinkedServiceReference"
-						}
-					},
-					"enableLogging": true,
+					"enableLogging": false,
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
 						"recursive": true,
