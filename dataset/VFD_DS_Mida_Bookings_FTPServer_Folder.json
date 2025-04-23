@@ -12,8 +12,7 @@
 		"type": "Binary",
 		"typeProperties": {
 			"location": {
-				"type": "FtpServerLocation",
-				"fileName": "*.csv"
+				"type": "FtpServerLocation"
 			}
 		}
 	}
