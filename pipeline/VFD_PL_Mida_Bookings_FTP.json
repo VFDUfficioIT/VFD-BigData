@@ -167,8 +167,8 @@
 							}
 						},
 						{
-							"name": "CheckFileNameAndDate",
-							"type": "IfCondition",
+							"name": "SetDateString",
+							"type": "SetVariable",
 							"dependsOn": [
 								{
 									"activity": "SetFolderPathVar",
@@ -177,10 +177,34 @@
 									]
 								}
 							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "dateString",
+								"value": {
+									"value": "@concat(variables('year'), variables('month'), variables('day'))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "CheckFileNameAndDate",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "SetDateString",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(concat(variables('year'),variables('month'),variables('day')), '20240814'))",
+									"value": "@and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(int(variables('dateString')), 20240814))",
 									"type": "Expression"
 								},
 								"ifTrueActivities": [
@@ -393,6 +417,9 @@
 				"type": "String"
 			},
 			"day": {
+				"type": "String"
+			},
+			"dateString": {
 				"type": "String"
 			}
 		},
