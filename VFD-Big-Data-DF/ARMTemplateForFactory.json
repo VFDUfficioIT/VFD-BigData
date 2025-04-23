@@ -21,11 +21,11 @@
 		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"type": "string",
-			"defaultValue": "103.241.66.28"
+			"defaultValue": "217.73.236.242"
 		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "test"
+			"defaultValue": "vfd_storico_ftp"
 		}
 	},
 	"variables": {
@@ -192,6 +192,30 @@
 									}
 								},
 								{
+									"name": "SetDay",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "day",
+										"value": {
+											"value": "@substring(item().name, 43, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
 									"name": "SetFolderPathVar",
 									"type": "SetVariable",
 									"dependsOn": [
@@ -216,11 +240,35 @@
 									}
 								},
 								{
+									"name": "SetDateString",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetFolderPathVar",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "dateString",
+										"value": {
+											"value": "@concat(variables('year'), variables('month'), variables('day'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
 									"name": "CheckIfExistsOnADLS",
 									"type": "GetMetadata",
 									"dependsOn": [
 										{
-											"activity": "SetFolderPathVar",
+											"activity": "SetDateString",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -262,7 +310,7 @@
 									}
 								},
 								{
-									"name": "IfNotExists",
+									"name": "ProcessFileIfCondition",
 									"type": "IfCondition",
 									"dependsOn": [
 										{
@@ -275,7 +323,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"expression": {
-											"value": "@not(activity('CheckIfExistsOnADLS').output.exists)",
+											"value": "@and(and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(int(variables('dateString')), 20240814)), not(activity('CheckIfExistsOnADLS').output.exists))",
 											"type": "Expression"
 										},
 										"ifTrueActivities": [
@@ -409,30 +457,6 @@
 											}
 										]
 									}
-								},
-								{
-									"name": "SetDay",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "SetMonth",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "day",
-										"value": {
-											"value": "@substring(item().name, 43, 2)",
-											"type": "Expression"
-										}
-									}
 								}
 							]
 						}
@@ -455,6 +479,9 @@
 						"type": "String"
 					},
 					"day": {
+						"type": "String"
+					},
+					"dateString": {
 						"type": "String"
 					}
 				},
@@ -1847,7 +1874,7 @@
 				"type": "FtpServer",
 				"typeProperties": {
 					"host": "[parameters('VFD_LS_Mida_FtpServer_properties_typeProperties_host')]",
-					"port": "21",
+					"port": "52013",
 					"enableSsl": false,
 					"enableServerCertificateValidation": false,
 					"authenticationType": "Basic",
@@ -1867,15 +1894,7 @@
 			"properties": {
 				"annotations": [],
 				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "VFD_PL_Mida_Bookings_FTP",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
+				"pipelines": [],
 				"type": "ScheduleTrigger",
 				"typeProperties": {
 					"recurrence": {
@@ -1886,9 +1905,7 @@
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_FTP')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Bookings_Processed_Curated_Daily')]",
@@ -1921,10 +1938,135 @@
 					],
 					"transformations": [
 						{
+							"name": "TransformData"
+						},
+						{
 							"name": "SelectFields"
 						}
 					],
-					"script": "parameters{\n\tfolderPath as string (\"folder\"),\n\tfileName as string (\"file\")\n}\nsource(output(\n\t\tguid_pk as string,\n\t\treservation_progressiveCode as string,\n\t\treservation_code as string,\n\t\treservation_status as integer,\n\t\tinvoiceRequired as string,\n\t\tcustomer as decimal(10,2),\n\t\tvisitDate as date,\n\t\treservationPayment_guid as string,\n\t\tparentPayment_guid as string,\n\t\tsliced as string,\n\t\treservation_guid as string,\n\t\tgroup_guid as string,\n\t\tgroup_label as string,\n\t\tgroup_email as string,\n\t\tpaymentCode as string,\n\t\tpaymentCondition as decimal(10,2),\n\t\treservation_amount as decimal(10,2),\n\t\treservation_amountTax as decimal(10,2),\n\t\tstatus as integer,\n\t\tstatus_text as string,\n\t\tstamp as string,\n\t\tnotes as decimal(10,2),\n\t\ttransactionType as string,\n\t\ttransactionType_text as string,\n\t\tpaymentLimitDate as date,\n\t\tpaymentDate as date,\n\t\trefund as string,\n\t\trefunded as string,\n\t\tconvention_label as string,\n\t\treceiptCode as decimal(10,2),\n\t\tinsertTimestamp as date,\n\t\tupdateTimestamp as date,\n\t\towner as string,\n\t\towner_text as string,\n\t\tsessionId as string,\n\t\tterminal_label as decimal(10,2),\n\t\tterminalGroup_label as decimal(10,2),\n\t\tgateway_guid as string,\n\t\tgateway_label as string,\n\t\ttransactionID as string,\n\t\tbankAccount_guid as decimal(10,2),\n\t\tbankAccount_label as decimal(10,2),\n\t\tchannel_guid as string,\n\t\tchannel_label as string,\n\t\tchannelType as string,\n\t\tdetail_guid as string,\n\t\textra_guid as decimal(10,2),\n\t\tpriceList as string,\n\t\tevent as string,\n\t\tdetailType as string,\n\t\tdetail_text as string,\n\t\tdetail_label as string,\n\t\tdetail_count as integer,\n\t\tpaymentDetail_guid as string,\n\t\tdetail_payingPartecipants as integer,\n\t\tdetail_quantity as integer,\n\t\ttickets_quantity as integer,\n\t\tpax_quantity as integer,\n\t\tcostCenter_guid as string,\n\t\tcostCenter_label as string,\n\t\tobject_receipt as integer,\n\t\tobject_taxCode as string,\n\t\tobject_taxNotes as string,\n\t\tobject_amount as decimal(10,2),\n\t\tobject_taxPercentage as decimal(10,2),\n\t\tamount as decimal(10,2),\n\t\tamountNet as decimal(10,2),\n\t\tamountPresale as decimal(10,2),\n\t\tamountSold as decimal(10,2),\n\t\tamountPayed as decimal(10,2),\n\t\tamountPending as decimal(10,2),\n\t\tamountCanceled as decimal(10,2),\n\t\texternalId as string,\n\t\tamountRefunded as decimal(10,2),\n\t\tinvoiceSummary as decimal(10,2),\n\t\teventCalendar_guid as string,\n\t\tpassDetail_guid as decimal(10,2),\n\t\tpaymentCostCenter_guid as decimal(10,2),\n\t\torganization_guid as string,\n\t\tvenue_guid as string,\n\t\tolapUpdateTimestamp as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tformat: 'parquet',\n\tfolderPath: folderPath,\n\tfileName: fileName) ~> SourceProcessed\nSourceProcessed select(mapColumn(\n\t\tpax_quantity,\n\t\tpriceList,\n\t\ttickets_quantity,\n\t\tamount,\n\t\tvisitDate,\n\t\tchannel_label,\n\t\ttransactionType_text,\n\t\tinsertTimestamp,\n\t\tpaymentDate,\n\t\tsecondaryVisitDate = visitDate\n\t),\n\tskipDuplicateMapInputs: false,\n\tskipDuplicateMapOutputs: false) ~> SelectFields\nSelectFields sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tpartitionFileNames:['VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet'],\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tpartitionBy('hash', 1),\n\tfileName: 'VFD_DFL_Mida_Sales_Curated_output.parquet') ~> SinkCurated"
+					"scriptLines": [
+						"parameters{",
+						"     folderPath as string (\"folder\"),",
+						"     fileName as string (\"file\")",
+						"}",
+						"source(output(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as decimal(10,2),",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          refund as string,",
+						"          refunded as string,",
+						"          convention_label as string,",
+						"          receiptCode as decimal(10,2),",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          owner as string,",
+						"          owner_text as string,",
+						"          sessionId as string,",
+						"          terminal_label as decimal(10,2),",
+						"          terminalGroup_label as decimal(10,2),",
+						"          gateway_guid as string,",
+						"          gateway_label as string,",
+						"          transactionID as string,",
+						"          bankAccount_guid as decimal(10,2),",
+						"          bankAccount_label as decimal(10,2),",
+						"          channel_guid as string,",
+						"          channel_label as string,",
+						"          channelType as string,",
+						"          detail_guid as string,",
+						"          extra_guid as decimal(10,2),",
+						"          priceList as string,",
+						"          event as string,",
+						"          detailType as string,",
+						"          detail_text as string,",
+						"          detail_label as string,",
+						"          detail_count as integer,",
+						"          paymentDetail_guid as string,",
+						"          detail_payingPartecipants as integer,",
+						"          detail_quantity as integer,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          costCenter_guid as string,",
+						"          costCenter_label as string,",
+						"          object_receipt as integer,",
+						"          object_taxCode as string,",
+						"          object_taxNotes as string,",
+						"          object_amount as decimal(10,2),",
+						"          object_taxPercentage as decimal(10,2),",
+						"          amount as decimal(10,2),",
+						"          amountNet as decimal(10,2),",
+						"          amountPresale as decimal(10,2),",
+						"          amountSold as decimal(10,2),",
+						"          amountPayed as decimal(10,2),",
+						"          amountPending as decimal(10,2),",
+						"          amountCanceled as decimal(10,2),",
+						"          externalId as string,",
+						"          amountRefunded as decimal(10,2),",
+						"          invoiceSummary as decimal(10,2),",
+						"          eventCalendar_guid as string,",
+						"          passDetail_guid as decimal(10,2),",
+						"          paymentCostCenter_guid as decimal(10,2),",
+						"          organization_guid as string,",
+						"          venue_guid as string,",
+						"          olapUpdateTimestamp as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     folderPath: folderPath,",
+						"     fileName: fileName) ~> SourceProcessed",
+						"SourceProcessed derive(adjusted_pax_quantity = iif(status == 6 || status == 7 || status == 101, pax_quantity * -1, pax_quantity),",
+						"          adjusted_tickets_quantity = iif(status == 6 || status == 7 || status == 101, tickets_quantity * -1, tickets_quantity),",
+						"          adjusted_amount = iif(status == 6 || status == 7 || status == 101, amount * -1, amount)) ~> TransformData",
+						"TransformData select(mapColumn(",
+						"          pax_quantity = adjusted_pax_quantity,",
+						"          priceList,",
+						"          tickets_quantity = adjusted_tickets_quantity,",
+						"          amount = adjusted_amount,",
+						"          visitDate,",
+						"          channel_label,",
+						"          transactionType_text,",
+						"          insertTimestamp,",
+						"          paymentDate,",
+						"          secondaryVisitDate = visitDate,",
+						"          status,",
+						"          status_text",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> SelectFields",
+						"SelectFields sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     fileName: 'VFD_DFL_Mida_Sales_Curated_output.parquet') ~> SinkCurated"
+					]
 				}
 			},
 			"dependsOn": [

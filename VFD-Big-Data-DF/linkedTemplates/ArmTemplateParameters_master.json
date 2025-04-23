@@ -15,10 +15,10 @@
 			"value": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
 		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
-			"value": "103.241.66.28"
+			"value": "217.73.236.242"
 		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_userName": {
-			"value": "test"
+			"value": "vfd_storico_ftp"
 		},
 		"containerUri": {
 			"value": ""

@@ -21,11 +21,11 @@
 		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"type": "string",
-			"defaultValue": "103.241.66.28"
+			"defaultValue": "217.73.236.242"
 		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_userName": {
 			"type": "string",
-			"defaultValue": "test"
+			"defaultValue": "vfd_storico_ftp"
 		},
 		"containerUri": {
 			"type": "string",
