@@ -20,7 +20,8 @@
 						"type": "DatasetReference"
 					},
 					"fieldList": [
-						"childItems"
+						"itemName",
+						"itemType"
 					],
 					"storeSettings": {
 						"type": "FtpReadSettings",
