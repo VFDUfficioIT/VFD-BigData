@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_Raw_Mida_Bookings_Folder",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Mida/Bookings"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Mida/Bookings",
+				"fileSystem": "raw"
+			}
+		}
+	}
+}
