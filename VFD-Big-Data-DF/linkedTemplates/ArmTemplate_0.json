@@ -2462,7 +2462,7 @@
 									"typeProperties": {
 										"variableName": "fileDate",
 										"value": {
-											"value": "@substring(variables('fileName'), add(indexOf(variables('fileName'), 'reservationPayments'), 20), 8)",
+											"value": "@substring(variables('fileName'), sub(length(variables('fileName')), 12), 8)",
 											"type": "Expression"
 										}
 									}
