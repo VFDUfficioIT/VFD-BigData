@@ -108,7 +108,19 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"fieldList": [],
+								"dataset": {
+									"referenceName": "VFD_DS_Raw_Year_Folder",
+									"type": "DatasetReference",
+									"parameters": {
+										"yearFolder": {
+											"value": "@variables('yearFolder')",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"childItems"
+								],
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
 									"recursive": false,
@@ -198,6 +210,16 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
+											"dataset": {
+												"referenceName": "VFD_DS_Raw_Month_Folder",
+												"type": "DatasetReference",
+												"parameters": {
+													"folderPath": {
+														"value": "@variables('folderPathVar')",
+														"type": "Expression"
+													}
+												}
+											},
 											"fieldList": [
 												"childItems"
 											],
