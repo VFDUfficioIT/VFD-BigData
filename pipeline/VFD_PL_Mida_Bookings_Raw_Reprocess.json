@@ -4,9 +4,30 @@
 		"description": "Pipeline per rielaborare i file dal container raw che non esistono in processed",
 		"activities": [
 			{
-				"name": "ListRawFiles",
-				"type": "GetMetadata",
+				"name": "SetParentFolder",
+				"type": "SetVariable",
 				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "parentFolder",
+					"value": "Mida/Bookings"
+				}
+			},
+			{
+				"name": "GetYearFolders",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "SetParentFolder",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"retry": 0,
 					"retryIntervalInSeconds": 30,
@@ -24,7 +45,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
-						"recursive": true,
+						"recursive": false,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -33,11 +54,11 @@
 				}
 			},
 			{
-				"name": "ForEachRawFile",
+				"name": "ForEachYearFolder",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "ListRawFiles",
+						"activity": "GetYearFolders",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,13 +67,13 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('ListRawFiles').output.childItems",
+						"value": "@activity('GetYearFolders').output.childItems",
 						"type": "Expression"
 					},
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "SetFileName",
+							"name": "SetYearFolder",
 							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
@@ -61,7 +82,7 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"variableName": "fileName",
+								"variableName": "yearFolder",
 								"value": {
 									"value": "@item().name",
 									"type": "Expression"
@@ -69,179 +90,11 @@
 							}
 						},
 						{
-							"name": "ExtractDateFromFileName",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetFileName",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "fileDate",
-								"value": {
-									"value": "@substring(variables('fileName'), indexOf(variables('fileName'), 'reservationPayments') + 20, 8)",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetYear",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "ExtractDateFromFileName",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "year",
-								"value": {
-									"value": "@substring(variables('fileDate'), 0, 4)",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetMonth",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetYear",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "month",
-								"value": {
-									"value": "@substring(variables('fileDate'), 4, 2)",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetDay",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetMonth",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "day",
-								"value": {
-									"value": "@substring(variables('fileDate'), 6, 2)",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetFolderPathRaw",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetDay",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "folderPathRaw",
-								"value": {
-									"value": "@concat('Mida/Bookings/', variables('year'), '/', variables('month'))",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetFolderPathProcessed",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetFolderPathRaw",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "folderPathProcessed",
-								"value": {
-									"value": "@concat('Mida/Bookings/', variables('year'), '/', variables('month'))",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetDateString",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetFolderPathProcessed",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "dateString",
-								"value": {
-									"value": "@variables('fileDate')",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "CheckIfExistsInProcessed",
+							"name": "GetMonthFolders",
 							"type": "GetMetadata",
 							"dependsOn": [
 								{
-									"activity": "SetDateString",
+									"activity": "SetYearFolder",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -255,39 +108,23 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"dataset": {
-									"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": {
-											"value": "@variables('folderPathProcessed')",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@replace(variables('fileName'),'.csv','.parquet')",
-											"type": "Expression"
-										}
-									}
-								},
-								"fieldList": [
-									"exists"
-								],
+								"fieldList": [],
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
+									"recursive": false,
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
-									"type": "ParquetReadSettings"
+									"type": "BinaryReadSettings"
 								}
 							}
 						},
 						{
-							"name": "CheckFileNameAndDate",
-							"type": "IfCondition",
+							"name": "ForEachMonthFolder",
+							"type": "ForEach",
 							"dependsOn": [
 								{
-									"activity": "CheckIfExistsInProcessed",
+									"activity": "GetMonthFolders",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -295,47 +132,347 @@
 							],
 							"userProperties": [],
 							"typeProperties": {
-								"expression": {
-									"value": "@and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(int(variables('dateString')), 20240814), not(activity('CheckIfExistsInProcessed').output.exists))",
+								"items": {
+									"value": "@activity('GetMonthFolders').output.childItems",
 									"type": "Expression"
 								},
-								"ifTrueActivities": [
+								"isSequential": true,
+								"activities": [
 									{
-										"name": "Raw to Curated Pipeline",
-										"type": "ExecutePipeline",
+										"name": "SetMonthFolder",
+										"type": "SetVariable",
 										"dependsOn": [],
 										"policy": {
+											"secureOutput": false,
 											"secureInput": false
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"pipeline": {
-												"referenceName": "VFD_PL_Mida_Bookings_Raw_Curated",
-												"type": "PipelineReference"
-											},
-											"waitOnCompletion": true,
-											"parameters": {
-												"folderPath": {
-													"value": "@variables('folderPathRaw')",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@variables('fileName')",
-													"type": "Expression"
-												},
-												"year": {
-													"value": "@variables('year')",
-													"type": "Expression"
-												},
-												"month": {
-													"value": "@variables('month')",
-													"type": "Expression"
-												},
-												"day": {
-													"value": "@variables('day')",
-													"type": "Expression"
-												}
+											"variableName": "monthFolder",
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
 											}
+										}
+									},
+									{
+										"name": "SetFolderPathVar",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "SetMonthFolder",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "folderPathVar",
+											"value": {
+												"value": "@concat(variables('parentFolder'), '/', variables('yearFolder'), '/', variables('monthFolder'))",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "GetCSVFiles",
+										"type": "GetMetadata",
+										"dependsOn": [
+											{
+												"activity": "SetFolderPathVar",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"fieldList": [
+												"childItems"
+											],
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": false,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "BinaryReadSettings"
+											}
+										}
+									},
+									{
+										"name": "ForEachCSVFile",
+										"type": "ForEach",
+										"dependsOn": [
+											{
+												"activity": "GetCSVFiles",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"userProperties": [],
+										"typeProperties": {
+											"items": {
+												"value": "@activity('GetCSVFiles').output.childItems",
+												"type": "Expression"
+											},
+											"isSequential": true,
+											"activities": [
+												{
+													"name": "SetFileName",
+													"type": "SetVariable",
+													"dependsOn": [],
+													"policy": {
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"variableName": "fileName",
+														"value": {
+															"value": "@item().name",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "ExtractDateFromFileName",
+													"type": "SetVariable",
+													"dependsOn": [
+														{
+															"activity": "SetFileName",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"policy": {
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"variableName": "fileDate",
+														"value": {
+															"value": "@substring(variables('fileName'), indexOf(variables('fileName'), 'reservationPayments') + 20, 8)",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "SetDateString",
+													"type": "SetVariable",
+													"dependsOn": [
+														{
+															"activity": "ExtractDateFromFileName",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"policy": {
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"variableName": "dateString",
+														"value": {
+															"value": "@variables('fileDate')",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "SetYear",
+													"type": "SetVariable",
+													"dependsOn": [
+														{
+															"activity": "SetDateString",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"policy": {
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"variableName": "year",
+														"value": {
+															"value": "@substring(variables('fileDate'), 0, 4)",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "SetMonth",
+													"type": "SetVariable",
+													"dependsOn": [
+														{
+															"activity": "SetYear",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"policy": {
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"variableName": "month",
+														"value": {
+															"value": "@substring(variables('fileDate'), 4, 2)",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "SetDay",
+													"type": "SetVariable",
+													"dependsOn": [
+														{
+															"activity": "SetMonth",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"policy": {
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"variableName": "day",
+														"value": {
+															"value": "@substring(variables('fileDate'), 6, 2)",
+															"type": "Expression"
+														}
+													}
+												},
+												{
+													"name": "CheckIfExistsInProcessed",
+													"type": "GetMetadata",
+													"dependsOn": [
+														{
+															"activity": "SetDay",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"policy": {
+														"retry": 0,
+														"retryIntervalInSeconds": 30,
+														"secureOutput": false,
+														"secureInput": false
+													},
+													"userProperties": [],
+													"typeProperties": {
+														"dataset": {
+															"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
+															"type": "DatasetReference",
+															"parameters": {
+																"folderPath": {
+																	"value": "@variables('folderPathVar')",
+																	"type": "Expression"
+																},
+																"fileName": {
+																	"value": "@replace(variables('fileName'),'.csv','.parquet')",
+																	"type": "Expression"
+																}
+															}
+														},
+														"fieldList": [
+															"exists"
+														],
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "ParquetReadSettings"
+														}
+													}
+												},
+												{
+													"name": "ProcessFileIfCondition",
+													"type": "IfCondition",
+													"dependsOn": [
+														{
+															"activity": "CheckIfExistsInProcessed",
+															"dependencyConditions": [
+																"Succeeded"
+															]
+														}
+													],
+													"userProperties": [],
+													"typeProperties": {
+														"expression": {
+															"value": "@and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(int(variables('dateString')), 20240814), not(activity('CheckIfExistsInProcessed').output.exists))",
+															"type": "Expression"
+														},
+														"ifTrueActivities": [
+															{
+																"name": "Raw to Curated Pipeline",
+																"type": "ExecutePipeline",
+																"dependsOn": [],
+																"policy": {
+																	"secureInput": false
+																},
+																"userProperties": [],
+																"typeProperties": {
+																	"pipeline": {
+																		"referenceName": "VFD_PL_Mida_Bookings_Raw_Curated",
+																		"type": "PipelineReference"
+																	},
+																	"waitOnCompletion": true,
+																	"parameters": {
+																		"folderPath": {
+																			"value": "@variables('folderPathVar')",
+																			"type": "Expression"
+																		},
+																		"fileName": {
+																			"value": "@variables('fileName')",
+																			"type": "Expression"
+																		},
+																		"year": {
+																			"value": "@variables('year')",
+																			"type": "Expression"
+																		},
+																		"month": {
+																			"value": "@variables('month')",
+																			"type": "Expression"
+																		},
+																		"day": {
+																			"value": "@variables('day')",
+																			"type": "Expression"
+																		}
+																	}
+																}
+															}
+														]
+													}
+												}
+											]
 										}
 									}
 								]
@@ -358,16 +495,22 @@
 			"day": {
 				"type": "String"
 			},
-			"folderPathRaw": {
-				"type": "String"
-			},
-			"folderPathProcessed": {
+			"folderPathVar": {
 				"type": "String"
 			},
 			"dateString": {
 				"type": "String"
 			},
 			"fileDate": {
+				"type": "String"
+			},
+			"parentFolder": {
+				"type": "String"
+			},
+			"yearFolder": {
+				"type": "String"
+			},
+			"monthFolder": {
 				"type": "String"
 			}
 		},
