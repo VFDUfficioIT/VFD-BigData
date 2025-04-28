@@ -449,7 +449,7 @@
 													"userProperties": [],
 													"typeProperties": {
 														"expression": {
-															"value": "@and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(int(variables('dateString')), 20240814), not(activity('CheckIfExistsInProcessed').output.exists))",
+															"value": "@and(endswith(toLower(variables('fileName')), '.csv'), \n    and(less(int(variables('dateString')), 20240814), \n        not(activity('CheckIfExistsInProcessed').output.exists)))",
 															"type": "Expression"
 														},
 														"ifTrueActivities": [
