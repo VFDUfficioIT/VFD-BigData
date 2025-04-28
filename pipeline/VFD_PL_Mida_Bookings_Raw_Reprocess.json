@@ -70,59 +70,11 @@
 							}
 						},
 						{
-							"name": "ExtractPathComponents",
+							"name": "ExtractDateFromFileName",
 							"type": "SetVariable",
 							"dependsOn": [
 								{
 									"activity": "SetFileName",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "filePath",
-								"value": {
-									"value": "@substring(item().itemName, 0, sub(length(item().itemName), add(length(item().name), 1)))",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetYearMonth",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "ExtractPathComponents",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "folderPathVar",
-								"value": {
-									"value": "@variables('filePath')",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "ExtractDateParts",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetYearMonth",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -146,7 +98,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "ExtractDateParts",
+									"activity": "ExtractDateFromFileName",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -214,11 +166,59 @@
 							}
 						},
 						{
+							"name": "SetFolderPathVar",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "SetDay",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "folderPathVar",
+								"value": {
+									"value": "@concat('Mida/Bookings/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetDateString",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "SetFolderPathVar",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "dateString",
+								"value": {
+									"value": "@concat(variables('year'), variables('month'), variables('day'))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
 							"name": "CheckIfExistsInProcessed",
 							"type": "GetMetadata",
 							"dependsOn": [
 								{
-									"activity": "SetDay",
+									"activity": "SetDateString",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -260,7 +260,7 @@
 							}
 						},
 						{
-							"name": "ProcessFileIfNotExists",
+							"name": "ProcessFileIfCondition",
 							"type": "IfCondition",
 							"dependsOn": [
 								{
@@ -273,7 +273,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@not(activity('CheckIfExistsInProcessed').output.exists)",
+									"value": "@and(endswith(toLower(variables('fileName')), '.csv'), not(activity('CheckIfExistsInProcessed').output.exists))",
 									"type": "Expression"
 								},
 								"ifTrueActivities": [
@@ -332,16 +332,16 @@
 			"month": {
 				"type": "String"
 			},
-			"day": {
-				"type": "String"
-			},
 			"folderPathVar": {
 				"type": "String"
 			},
-			"fileDate": {
+			"day": {
 				"type": "String"
 			},
-			"filePath": {
+			"dateString": {
+				"type": "String"
+			},
+			"fileDate": {
 				"type": "String"
 			}
 		},
