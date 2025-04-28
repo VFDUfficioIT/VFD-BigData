@@ -114,7 +114,10 @@
 									"referenceName": "VFD_DS_Raw_Year_Folder",
 									"type": "DatasetReference",
 									"parameters": {
-										"yearFolder": "@variables('yearFolder')"
+										"yearFolder": {
+											"value": "@variables('yearFolder')",
+											"type": "Expression"
+										}
 									}
 								},
 								"fieldList": [
