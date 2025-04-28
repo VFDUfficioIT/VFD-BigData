@@ -112,7 +112,13 @@
 							"typeProperties": {
 								"dataset": {
 									"referenceName": "VFD_DS_Raw_Year_Folder",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"yearFolder": {
+											"value": "@variables('yearFolder')",
+											"type": "Expression"
+										}
+									}
 								},
 								"fieldList": [
 									"childItems"
