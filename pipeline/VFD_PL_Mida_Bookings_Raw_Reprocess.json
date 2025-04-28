@@ -15,6 +15,10 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+						"type": "DatasetReference"
+					},
 					"fieldList": [
 						"childItems"
 					],
