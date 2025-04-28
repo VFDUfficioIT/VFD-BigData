@@ -1,0 +1,29 @@
+{
+	"name": "VFD_DS_Raw_Year_Folder",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"yearFolder": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Mida/Bookings"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@concat('Mida/Bookings/', dataset().yearFolder)",
+					"type": "Expression"
+				},
+				"fileSystem": "raw"
+			}
+		}
+	}
+}
