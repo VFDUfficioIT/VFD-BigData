@@ -35,7 +35,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "VFD_PL_Mida_Bookings_Reprocessing",
+						"referenceName": "VFD_PL_Mida_Bookings_Raw_Reprocess",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
