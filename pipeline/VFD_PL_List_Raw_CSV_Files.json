@@ -35,7 +35,7 @@
 			},
 			{
 				"name": "CreateEmptyFile",
-				"type": "Copy",
+				"type": "WebActivity",
 				"dependsOn": [
 					{
 						"activity": "GetAllCSVFiles",
@@ -53,37 +53,18 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"source": {
-						"type": "BinarySource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": false
-						},
-						"formatSettings": {
-							"type": "BinaryReadSettings"
-						},
-						"data": ""
+					"method": "PUT",
+					"headers": {
+						"x-ms-blob-type": "BlockBlob",
+						"Content-Type": "text/plain"
 					},
-					"sink": {
-						"type": "BinarySink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
-						}
-					},
-					"enableStaging": false
-				},
-				"inputs": [
-					{
-						"referenceName": "VFD_DS_Binary_Source",
-						"type": "DatasetReference"
+					"url": "https://vfdbigdataarchiviazione.blob.core.windows.net/raw/utils/listfile.txt",
+					"body": "File List:\n",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://storage.azure.com/"
 					}
-				],
-				"outputs": [
-					{
-						"referenceName": "VFD_DS_FileList",
-						"type": "DatasetReference"
-					}
-				]
+				}
 			},
 			{
 				"name": "ForEachCSVFile",
@@ -105,82 +86,38 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "AppendToFile",
-							"type": "AppendVariable",
+							"name": "AppendFileLine",
+							"type": "WebActivity",
 							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
-								"variableName": "fileLines",
-								"value": {
-									"value": "@concat(item().path, '/', item().name, '\n')",
+								"method": "PUT",
+								"headers": {
+									"x-ms-blob-type": "BlockBlob",
+									"Content-Type": "text/plain"
+								},
+								"url": "https://vfdbigdataarchiviazione.blob.core.windows.net/raw/utils/listfile.txt?comp=appendblock",
+								"body": {
+									"value": "@concat(item().path, ', ', item().name, '\n')",
 									"type": "Expression"
+								},
+								"authentication": {
+									"type": "MSI",
+									"resource": "https://storage.azure.com/"
 								}
 							}
 						}
 					]
 				}
-			},
-			{
-				"name": "WriteFileContent",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "ForEachCSVFile",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "BinarySource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": false
-						},
-						"formatSettings": {
-							"type": "BinaryReadSettings"
-						},
-						"data": {
-							"value": "@variables('fileLines')",
-							"type": "Expression"
-						}
-					},
-					"sink": {
-						"type": "BinarySink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
-						}
-					},
-					"enableStaging": false
-				},
-				"inputs": [
-					{
-						"referenceName": "VFD_DS_Binary_Source",
-						"type": "DatasetReference"
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "VFD_DS_FileList",
-						"type": "DatasetReference"
-					}
-				]
 			}
 		],
-		"variables": {
-			"fileLines": {
-				"type": "String"
-			}
-		},
 		"folder": {
 			"name": "Mida/Utils"
 		},
