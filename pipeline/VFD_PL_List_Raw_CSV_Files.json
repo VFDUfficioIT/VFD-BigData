@@ -34,35 +34,11 @@
 				}
 			},
 			{
-				"name": "CreateFileContent",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "GetAllCSVFiles",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "fileContent",
-					"value": {
-						"value": "@join(map(activity('GetAllCSVFiles').output.childItems, item(), concat(item().path, '/', item().name)), '\n')",
-						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "WriteFileList",
+				"name": "CreateEmptyFile",
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "CreateFileContent",
+						"activity": "GetAllCSVFiles",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -81,14 +57,100 @@
 						"type": "BinarySource",
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
-							"recursive": false,
-							"deleteFilesAfterCompletion": false
+							"recursive": false
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						},
+						"data": ""
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Binary_Source",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_FileList",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "ForEachCSVFile",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "CreateEmptyFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetAllCSVFiles').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "AppendToFile",
+							"type": "AppendVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "fileLines",
+								"value": {
+									"value": "@concat(item().path, '/', item().name, '\n')",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "WriteFileContent",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ForEachCSVFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false
 						},
 						"formatSettings": {
 							"type": "BinaryReadSettings"
 						},
 						"data": {
-							"value": "@variables('fileContent')",
+							"value": "@variables('fileLines')",
 							"type": "Expression"
 						}
 					},
@@ -115,7 +177,7 @@
 			}
 		],
 		"variables": {
-			"fileContent": {
+			"fileLines": {
 				"type": "String"
 			}
 		},
