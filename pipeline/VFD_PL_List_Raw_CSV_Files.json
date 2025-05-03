@@ -1,0 +1,127 @@
+{
+	"name": "VFD_PL_List_Raw_CSV_Files",
+	"properties": {
+		"description": "Pipeline per elencare tutti i file CSV in modo ricorsivo e salvare l'elenco in un file di testo",
+		"activities": [
+			{
+				"name": "GetAllCSVFiles",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"wildcardFileName": "*.csv",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "CreateFileContent",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "GetAllCSVFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "fileContent",
+					"value": {
+						"value": "@join(map(activity('GetAllCSVFiles').output.childItems, item(), concat(item().path, '/', item().name)), '\n')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "WriteFileList",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "CreateFileContent",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"deleteFilesAfterCompletion": false
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						},
+						"data": {
+							"value": "@variables('fileContent')",
+							"type": "Expression"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Binary_Source",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_FileList",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"variables": {
+			"fileContent": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida/Utils"
+		},
+		"annotations": []
+	}
+}
