@@ -1229,7 +1229,7 @@
 						}
 					},
 					{
-						"name": "InitializeFileContent",
+						"name": "SetInitialContent",
 						"type": "SetVariable",
 						"dependsOn": [
 							{
@@ -1257,7 +1257,7 @@
 						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "InitializeFileContent",
+								"activity": "SetInitialContent",
 								"dependencyConditions": [
 									"Succeeded"
 								]
