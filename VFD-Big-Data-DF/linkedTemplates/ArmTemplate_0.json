@@ -1283,7 +1283,7 @@
 									"typeProperties": {
 										"variableName": "tempContent",
 										"value": {
-											"value": "@concat(variables('fileContent'), item().path, ', ', item().name, '\n')",
+											"value": "@concat(variables('fileContent'),  item().name, '\n')",
 											"type": "Expression"
 										}
 									}
