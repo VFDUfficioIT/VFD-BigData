@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Binary_Source",
+	"name": "VFD_DS_Binary_Dummy",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
@@ -10,6 +10,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": "dummy.txt",
+				"folderPath": "utils",
 				"fileSystem": "raw"
 			}
 		}

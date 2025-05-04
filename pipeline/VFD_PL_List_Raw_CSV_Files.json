@@ -34,8 +34,8 @@
 				}
 			},
 			{
-				"name": "CreateEmptyFile",
-				"type": "WebActivity",
+				"name": "InitializeFileContent",
+				"type": "SetVariable",
 				"dependsOn": [
 					{
 						"activity": "GetAllCSVFiles",
@@ -45,24 +45,15 @@
 					}
 				],
 				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
 					"secureInput": false
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"method": "PUT",
-					"headers": {
-						"x-ms-blob-type": "BlockBlob",
-						"Content-Type": "text/plain"
-					},
-					"url": "https://vfdbigdataarchiviazione.blob.core.windows.net/raw/utils/listfile.txt",
-					"body": "File List:\n",
-					"authentication": {
-						"type": "MSI",
-						"resource": "https://storage.azure.com/"
+					"variableName": "fileContent",
+					"value": {
+						"value": "File List:\n",
+						"type": "Expression"
 					}
 				}
 			},
@@ -71,7 +62,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "CreateEmptyFile",
+						"activity": "InitializeFileContent",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -86,38 +77,113 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "AppendFileLine",
-							"type": "WebActivity",
+							"name": "SetTempContent",
+							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
 								"secureOutput": false,
 								"secureInput": false
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"method": "PUT",
-								"headers": {
-									"x-ms-blob-type": "BlockBlob",
-									"Content-Type": "text/plain"
-								},
-								"url": "https://vfdbigdataarchiviazione.blob.core.windows.net/raw/utils/listfile.txt?comp=appendblock",
-								"body": {
-									"value": "@concat(item().path, ', ', item().name, '\n')",
+								"variableName": "tempContent",
+								"value": {
+									"value": "@concat(variables('fileContent'), item().path, ', ', item().name, '\n')",
 									"type": "Expression"
-								},
-								"authentication": {
-									"type": "MSI",
-									"resource": "https://storage.azure.com/"
+								}
+							}
+						},
+						{
+							"name": "UpdateFileContent",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "SetTempContent",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "fileContent",
+								"value": {
+									"value": "@variables('tempContent')",
+									"type": "Expression"
 								}
 							}
 						}
 					]
 				}
+			},
+			{
+				"name": "WriteFile",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ForEachCSVFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						},
+						"data": {
+							"value": "@variables('fileContent')",
+							"type": "Expression"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Binary_Dummy",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_FileList",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
+		"variables": {
+			"fileContent": {
+				"type": "String"
+			},
+			"tempContent": {
+				"type": "String"
+			}
+		},
 		"folder": {
 			"name": "Mida/Utils"
 		},
