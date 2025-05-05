@@ -80,41 +80,78 @@
 								},
 								"activities": [
 									{
-										"name": "If_Folder",
-										"type": "IfCondition",
+										"name": "Set_Item_Name_Type",
+										"type": "SetVariable",
 										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "currentItemName",
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "Set_Item_Type",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "Set_Item_Name_Type",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "currentItemType",
+											"value": {
+												"value": "@item().type",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "Append_Folder_Or_File",
+										"type": "IfCondition",
+										"dependsOn": [
+											{
+												"activity": "Set_Item_Type",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
 										"userProperties": [],
 										"typeProperties": {
 											"expression": {
-												"value": "@equals(item().type, 'Folder')",
+												"value": "@equals(variables('currentItemType'), 'Folder')",
 												"type": "Expression"
 											},
 											"ifFalseActivities": [
 												{
-													"name": "If_CSV_File",
-													"type": "IfCondition",
+													"name": "AppendCSVToList",
+													"type": "AppendVariable",
 													"dependsOn": [],
 													"userProperties": [],
 													"typeProperties": {
-														"expression": {
-															"value": "@endsWith(item().name, '.csv')",
+														"variableName": "fileList",
+														"value": {
+															"value": "@concat(variables('currentFolder'), '/', variables('currentItemName'))",
 															"type": "Expression"
-														},
-														"ifTrueActivities": [
-															{
-																"name": "AppendCSVToList",
-																"type": "AppendVariable",
-																"dependsOn": [],
-																"userProperties": [],
-																"typeProperties": {
-																	"variableName": "fileList",
-																	"value": {
-																		"value": "@concat(variables('currentFolder'), '/', item().name)",
-																		"type": "Expression"
-																	}
-																}
-															}
-														]
+														}
+													},
+													"condition": {
+														"expression": "@endsWith(variables('currentItemName'), '.csv')"
 													}
 												}
 											],
@@ -127,7 +164,7 @@
 													"typeProperties": {
 														"variableName": "foldersToProcess",
 														"value": {
-															"value": "@concat(variables('currentFolder'), '/', item().name)",
+															"value": "@concat(variables('currentFolder'), '/', variables('currentItemName'))",
 															"type": "Expression"
 														}
 													}
@@ -188,6 +225,83 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Prepare_JSON_String",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Until_All_Folders_Processed",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "fileListText",
+					"value": {
+						"value": "@jsonString(variables('fileList'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "WriteFileListToJSON",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Prepare_JSON_String",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "InlineSource",
+						"inlineDatasetProperties": {
+							"type": "Json"
+						},
+						"data": {
+							"type": "Expression",
+							"value": "@variables('fileListText')"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_Dummy_JSON_Source",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_Output_JSON_List",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"variables": {
@@ -207,6 +321,15 @@
 			"updatedFolders": {
 				"type": "Array",
 				"defaultValue": []
+			},
+			"currentItemName": {
+				"type": "String"
+			},
+			"currentItemType": {
+				"type": "String"
+			},
+			"fileListText": {
+				"type": "String"
 			}
 		},
 		"annotations": []

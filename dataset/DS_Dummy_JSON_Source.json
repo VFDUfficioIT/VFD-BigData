@@ -1,0 +1,20 @@
+{
+	"name": "DS_Dummy_JSON_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "dummy.json",
+				"folderPath": "utils",
+				"fileSystem": "raw"
+			}
+		},
+		"schema": {}
+	}
+}
