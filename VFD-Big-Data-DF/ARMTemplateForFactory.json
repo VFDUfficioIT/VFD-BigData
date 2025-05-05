@@ -37,84 +37,20 @@
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline per elencare tutti i file CSV in modo ricorsivo e salvare l'elenco in un file di testo",
 				"activities": [
 					{
-						"name": "GetAllCSVFiles",
-						"type": "GetMetadata",
+						"name": "Until_All_Folders_Processed",
+						"type": "Until",
 						"dependsOn": [],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
 						"userProperties": [],
 						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"wildcardFileName": "*.csv",
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "SetInitialContent",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "GetAllCSVFiles",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "fileContent",
-							"value": {
-								"value": "File List:\n",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "ForEachCSVFile",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "SetInitialContent",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetAllCSVFiles').output.childItems",
+							"expression": {
+								"value": "@equals(length(variables('foldersToProcess')), 0)",
 								"type": "Expression"
 							},
-							"isSequential": true,
 							"activities": [
 								{
-									"name": "SetTempContent",
+									"name": "Set_Current_Folder",
 									"type": "SetVariable",
 									"dependsOn": [],
 									"policy": {
@@ -123,19 +59,164 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"variableName": "tempContent",
+										"variableName": "currentFolder",
 										"value": {
-											"value": "@concat(variables('fileContent'),  item().name, '\n')",
+											"value": "@variables('foldersToProcess')[0]",
 											"type": "Expression"
 										}
 									}
 								},
 								{
-									"name": "UpdateFileContent",
+									"name": "Get_Metadata_Current_Folder",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "Set_Current_Folder",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "DS_Generic_Folder",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "@variables('currentFolder')"
+											}
+										},
+										"fieldList": [
+											"childItems"
+										]
+									}
+								},
+								{
+									"name": "ForEach_ChildItem",
+									"type": "ForEach",
+									"dependsOn": [
+										{
+											"activity": "Get_Metadata_Current_Folder",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@activity('Get_Metadata_Current_Folder').output.childItems",
+											"type": "Expression"
+										},
+										"activities": [
+											{
+												"name": "Set_Item_Name_Type",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "currentItemName",
+													"value": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "Set_Item_Type",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Set_Item_Name_Type",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "currentItemType",
+													"value": {
+														"value": "@item().type",
+														"type": "Expression"
+													}
+												}
+											},
+											{
+												"name": "Append_Folder_Or_File",
+												"type": "IfCondition",
+												"dependsOn": [
+													{
+														"activity": "Set_Item_Type",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"userProperties": [],
+												"typeProperties": {
+													"expression": {
+														"value": "@equals(variables('currentItemType'), 'Folder')",
+														"type": "Expression"
+													},
+													"ifFalseActivities": [
+														{
+															"name": "AppendCSVToList",
+															"type": "AppendVariable",
+															"dependsOn": [],
+															"userProperties": [],
+															"typeProperties": {
+																"variableName": "fileList",
+																"value": {
+																	"value": "@concat(variables('currentFolder'), '/', variables('currentItemName'))",
+																	"type": "Expression"
+																}
+															},
+															"condition": {
+																"expression": "@endsWith(variables('currentItemName'), '.csv')"
+															}
+														}
+													],
+													"ifTrueActivities": [
+														{
+															"name": "AppendFolderToQueue",
+															"type": "AppendVariable",
+															"dependsOn": [],
+															"userProperties": [],
+															"typeProperties": {
+																"variableName": "foldersToProcess",
+																"value": {
+																	"value": "@concat(variables('currentFolder'), '/', variables('currentItemName'))",
+																	"type": "Expression"
+																}
+															}
+														}
+													]
+												}
+											}
+										]
+									}
+								},
+								{
+									"name": "Prepare_Updated_Folders",
 									"type": "SetVariable",
 									"dependsOn": [
 										{
-											"activity": "SetTempContent",
+											"activity": "ForEach_ChildItem",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -147,9 +228,33 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"variableName": "fileContent",
+										"variableName": "updatedFolders",
 										"value": {
-											"value": "@variables('tempContent')",
+											"value": "@skip(variables('foldersToProcess'),1)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Remove_Current_From_Queue",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Prepare_Updated_Folders",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "foldersToProcess",
+										"value": {
+											"value": "@variables('updatedFolders')",
 											"type": "Expression"
 										}
 									}
@@ -158,18 +263,41 @@
 						}
 					},
 					{
-						"name": "WriteFile",
-						"type": "Copy",
+						"name": "Prepare_JSON_String",
+						"type": "SetVariable",
 						"dependsOn": [
 							{
-								"activity": "ForEachCSVFile",
+								"activity": "Until_All_Folders_Processed",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							}
 						],
 						"policy": {
-							"timeout": "0.12:00:00",
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "fileListText",
+							"value": {
+								"value": "@jsonString(variables('fileList'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "WriteFileListToJSON",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Prepare_JSON_String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
 							"secureOutput": false,
@@ -178,37 +306,36 @@
 						"userProperties": [],
 						"typeProperties": {
 							"source": {
-								"type": "BinarySource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false
-								},
-								"formatSettings": {
-									"type": "BinaryReadSettings"
+								"type": "InlineSource",
+								"inlineDatasetProperties": {
+									"type": "Json"
 								},
 								"data": {
-									"value": "@variables('fileContent')",
-									"type": "Expression"
+									"type": "Expression",
+									"value": "@variables('fileListText')"
 								}
 							},
 							"sink": {
-								"type": "BinarySink",
+								"type": "JsonSink",
 								"storeSettings": {
 									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings"
 								}
 							},
 							"enableStaging": false
 						},
 						"inputs": [
 							{
-								"referenceName": "VFD_DS_Binary_Dummy",
+								"referenceName": "DS_Dummy_JSON_Source",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "VFD_DS_FileList",
+								"referenceName": "DS_Output_JSON_List",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
@@ -219,22 +346,39 @@
 					"elapsedTimeMetric": {}
 				},
 				"variables": {
-					"fileContent": {
+					"foldersToProcess": {
+						"type": "Array",
+						"defaultValue": [
+							"raw"
+						]
+					},
+					"fileList": {
+						"type": "Array",
+						"defaultValue": []
+					},
+					"currentFolder": {
 						"type": "String"
 					},
-					"tempContent": {
+					"updatedFolders": {
+						"type": "Array",
+						"defaultValue": []
+					},
+					"currentItemName": {
+						"type": "String"
+					},
+					"currentItemType": {
+						"type": "String"
+					},
+					"fileListText": {
 						"type": "String"
 					}
-				},
-				"folder": {
-					"name": "Mida/Utils"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Binary_Dummy')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_FileList')]"
+				"[concat(variables('factoryId'), '/datasets/DS_Dummy_JSON_Source')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Output_JSON_List')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Generic_Folder')]"
 			]
 		},
 		{
@@ -1486,7 +1630,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Binary_Dummy')]",
+			"name": "[concat(parameters('factoryName'), '/DS_Dummy_JSON_Source')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1495,15 +1639,106 @@
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "dummy.json",
+						"folderPath": "utils",
+						"fileSystem": "raw"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Generic_Folder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
 				"type": "Binary",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "dummy.txt",
-						"folderPath": "utils",
+						"folderPath": {
+							"value": "@{dataset().folderPath}",
+							"type": "Expression"
+						},
 						"fileSystem": "raw"
 					}
 				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Output_CSV_List')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "listfile.csv",
+						"folderPath": "utils",
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "path",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Output_JSON_List')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "listfile.json",
+						"folderPath": "utils",
+						"fileSystem": "raw"
+					}
+				},
+				"schema": {}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -1547,30 +1782,6 @@
 					"compressionCodec": "snappy"
 				},
 				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_FileList')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "listfile.txt",
-						"folderPath": "utils",
-						"fileSystem": "raw"
-					}
-				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -2498,86 +2709,21 @@
 					"referenceName": "VFD_Big_Data_DL",
 					"type": "LinkedServiceReference"
 				},
-				"folder": {
-					"name": "Mida/Bookings"
-				},
 				"annotations": [],
-				"type": "Binary",
+				"type": "DelimitedText",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"folderPath": "Mida/Bookings",
 						"fileSystem": "raw"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Month_Folder')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\"",
+					"recursive": true,
+					"wildcardFileName": "*.csv"
 				},
-				"parameters": {
-					"folderPath": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida/Bookings"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "raw"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Year_Folder')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"yearFolder": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida/Bookings"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "@concat('Mida/Bookings/', dataset().yearFolder)",
-							"type": "Expression"
-						},
-						"fileSystem": "raw"
-					}
-				}
+				"schema": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
