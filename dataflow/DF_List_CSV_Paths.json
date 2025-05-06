@@ -1,0 +1,58 @@
+{
+	"name": "DF_List_CSV_Paths",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "VFD_Big_Data_DL",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SourceCSV"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Output_JSON_List",
+						"type": "DatasetReference"
+					},
+					"name": "WriteJSON"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddPathColumn"
+				},
+				{
+					"name": "SelectPath"
+				}
+			],
+			"scriptLines": [
+				"source(useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'raw',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: false,",
+				"     wildcardPaths:['**/*.csv']) ~> SourceCSV",
+				"SourceCSV derive(path = toString(byName(\"source_file\"))) ~> AddPathColumn",
+				"AddPathColumn select(mapColumn(",
+				"          path",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> SelectPath",
+				"SelectPath sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: []) ~> WriteJSON"
+			]
+		}
+	}
+}

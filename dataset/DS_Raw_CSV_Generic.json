@@ -1,0 +1,29 @@
+{
+	"name": "DS_Raw_CSV_Generic",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "raw",
+				"fileSystem": "raw"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\"",
+			"columnToStoreFileName": "source_file"
+		},
+		"schema": [
+			{
+				"name": "source_file",
+				"type": "String"
+			}
+		]
+	}
+}
