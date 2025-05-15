@@ -5,20 +5,25 @@
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"folderPath": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida/Bookings"
+		},
 		"annotations": [],
-		"type": "DelimitedText",
+		"type": "Binary",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
 				"fileSystem": "raw"
-			},
-			"columnDelimiter": ",",
-			"escapeChar": "\\",
-			"firstRowAsHeader": true,
-			"quoteChar": "\"",
-			"recursive": true,
-			"wildcardFileName": "*.csv"
-		},
-		"schema": []
+			}
+		}
 	}
 }
