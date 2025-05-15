@@ -1315,7 +1315,7 @@
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'singleDocument',",
+						"     documentForm: 'documentPerLine',",
 						"     wildcardPaths:['temp/affluences/*.json']) ~> SourceJSON",
 						"SourceJSON foldDown(unroll(data.results, data.results),",
 						"     mapColumn(",
