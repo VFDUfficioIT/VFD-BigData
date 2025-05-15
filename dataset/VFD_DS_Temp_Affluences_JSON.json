@@ -26,6 +26,49 @@
 				"fileSystem": "staging"
 			}
 		},
-		"schema": {}
+		"schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "object",
+					"properties": {
+						"results": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"day": {
+										"type": "string"
+									},
+									"entries": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"hour": {
+													"type": "string"
+												},
+												"occupancy": {
+													"type": "integer"
+												},
+												"entries": {
+													"type": "integer"
+												},
+												"exits": {
+													"type": "integer"
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"site_id": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		}
 	}
 }
