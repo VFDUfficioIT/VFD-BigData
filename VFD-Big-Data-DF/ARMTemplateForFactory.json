@@ -33,52 +33,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_List_CSV_Files_With_DataFlow')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Run_List_CSV_DataFlow",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_List_CSV_Paths",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"SourceCSV": {},
-									"WriteJSON": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/DF_List_CSV_Paths')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2506,82 +2460,38 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Mida",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
 				"type": "ScheduleTrigger",
 				"typeProperties": {
 					"recurrence": {
-						"frequency": "Hour",
+						"frequency": "Day",
 						"interval": 1,
-						"startTime": "2025-04-12T01:16:00",
-						"timeZone": "W. Europe Standard Time"
+						"startTime": "2025-05-15T01:16:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"minutes": [
+								0,
+								20
+							],
+							"hours": [
+								4,
+								10
+							]
+						}
 					}
 				}
 			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DF_List_CSV_Paths')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"linkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							},
-							"name": "SourceCSV"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "DS_Output_JSON_List",
-								"type": "DatasetReference"
-							},
-							"name": "WriteJSON"
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddPathColumn"
-						},
-						{
-							"name": "SelectPath"
-						}
-					],
-					"scriptLines": [
-						"source(useSchema: false,",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'delimited',",
-						"     fileSystem: 'raw',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: false,",
-						"     wildcardPaths:['**/*.csv']) ~> SourceCSV",
-						"SourceCSV derive(path = toString(byName(\"source_file\"))) ~> AddPathColumn",
-						"AddPathColumn select(mapColumn(",
-						"          path",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> SelectPath",
-						"SelectPath sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: []) ~> WriteJSON"
-					]
-				}
-			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]",
-				"[concat(variables('factoryId'), '/datasets/DS_Output_JSON_List')]"
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida')]"
 			]
 		},
 		{
