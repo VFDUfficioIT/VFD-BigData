@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_Mida_Bookings_Reprocess_MissingFiles",
 	"properties": {
-		"description": "Pipeline per rielaborare i file dal container raw che non esistono in processed",
+		"description": "Pipeline che scorre ricorsivamente il layer Raw per trovare file non ancora processati",
 		"activities": [
 			{
 				"name": "GetYears",
@@ -82,31 +82,8 @@
 				}
 			}
 		],
-		"variables": {
-			"fileName": {
-				"type": "String"
-			},
-			"year": {
-				"type": "String"
-			},
-			"month": {
-				"type": "String"
-			},
-			"folderPathVar": {
-				"type": "String"
-			},
-			"day": {
-				"type": "String"
-			},
-			"dateString": {
-				"type": "String"
-			},
-			"fileDate": {
-				"type": "String"
-			}
-		},
 		"folder": {
-			"name": "Mida/Bookings"
+			"name": "Mida/Bookings/Reprocessing"
 		},
 		"annotations": []
 	}
