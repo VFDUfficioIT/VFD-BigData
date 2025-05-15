@@ -21,7 +21,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": {
-								"value": "@concat('Mida/Bookings',pipeline().parameters.year)",
+								"value": "@concat('Mida/Bookings/',pipeline().parameters.year)",
 								"type": "Expression"
 							}
 						}

@@ -33,6 +33,9 @@
 						"type": "AzureBlobFSReadSettings",
 						"recursive": false,
 						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
 					}
 				}
 			},
