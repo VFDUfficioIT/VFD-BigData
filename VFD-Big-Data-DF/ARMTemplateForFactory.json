@@ -19,6 +19,10 @@
 			"type": "string",
 			"defaultValue": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
 		},
+		"VFD_LS_Affluences_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.affluences.com/v1/data"
+		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"type": "string",
 			"defaultValue": "217.73.236.242"
@@ -32,6 +36,365 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire i dati giornalieri dei contapersone",
+				"activities": [
+					{
+						"name": "SetProcessDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "processDate",
+							"value": {
+								"value": "@if(empty(pipeline().parameters.date), formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd'), pipeline().parameters.date)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetYear",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetProcessDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "year",
+							"value": {
+								"value": "@substring(variables('processDate'), 0, 4)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetMonth",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetYear",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "month",
+							"value": {
+								"value": "@substring(variables('processDate'), 5, 2)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetDateFormatted",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetMonth",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "dateFormatted",
+							"value": {
+								"value": "@replace(variables('processDate'), '-', '')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEachSite",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "SetDateFormatted",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@createArray(json('{\"name\":\"Terrazze\",\"uuid\":\"5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307\"}'), json('{\"name\":\"AscensoreNord\",\"uuid\":\"ca2dae61-4a99-4cb7-8051-26cb852ea408\"}'), json('{\"name\":\"AscensoreSud\",\"uuid\":\"aa6c22f1-84b6-441a-bbb0-bd429e63536d\"}'), json('{\"name\":\"SalitaPiedi\",\"uuid\":\"8358df5f-0186-4a11-87ad-11fc19cda749\"}'), json('{\"name\":\"DiscesaPiedi\",\"uuid\":\"639bc326-010a-402f-ba5f-3c75e2740d9d\"}'))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CallAPI",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "RestSource",
+											"httpRequestTimeout": "00:01:40",
+											"requestInterval": "00.00:00:00.010",
+											"requestMethod": "GET"
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Affluences_API",
+											"type": "DatasetReference",
+											"parameters": {
+												"siteUUID": {
+													"value": "@item().uuid",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "@variables('processDate')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Temp_Affluences_JSON",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@concat('temp_', item().uuid, '.json')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "TransformToCSV",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "ForEachSite",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Affluences_JSON_to_CSV",
+								"type": "DataFlowReference",
+								"parameters": {
+									"date": {
+										"value": "@variables('processDate')",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"SourceJSON": {
+										"fileName": "temp_*.json"
+									},
+									"SinkCSV": {
+										"folderPath": "temp/affluences",
+										"fileName": "temp_output.csv"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "MoveToFinal",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "TransformToCSV",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Raw_Affluences_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "temp/affluences",
+									"fileName": "temp_output.csv"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Raw_Affluences_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('vfd_affluences_', variables('dateFormatted'), '.csv')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "CleanupTemp",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "MoveToFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Temp_Affluences_JSON",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": "temp_*.json"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"wildcardFileName": "temp_*.json"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"processDate": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"dateFormatted": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_JSON_to_CSV')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_CSV')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Temp_Affluences_JSON')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Affluences_API')]"
+			]
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -1395,127 +1758,37 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_Generic_Folder')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Affluences_API')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
+					"referenceName": "VFD_LS_Affluences_API",
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
-					"folderPath": {
-						"type": "String"
-					}
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "@{dataset().folderPath}",
-							"type": "Expression"
-						},
-						"fileSystem": "raw"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_Output_CSV_List')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "listfile.csv",
-						"folderPath": "utils",
-						"fileSystem": "raw"
+					"siteUUID": {
+						"type": "string"
 					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "path",
-						"type": "String"
+					"date": {
+						"type": "string"
 					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_Output_JSON_List')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Affluences"
 				},
 				"annotations": [],
-				"type": "Json",
+				"type": "RestResource",
 				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "listfile.json",
-						"folderPath": "utils",
-						"fileSystem": "raw"
+					"relativeUrl": {
+						"value": "@concat('historical/', dataset().siteUUID, '?date=', dataset().date)",
+						"type": "Expression"
 					}
 				},
-				"schema": {}
+				"schema": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_Raw_CSV_Generic')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "raw",
-						"fileSystem": "raw"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\"",
-					"columnToStoreFileName": "source_file"
-				},
-				"schema": [
-					{
-						"name": "source_file",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Affluences_API')]"
 			]
 		},
 		{
@@ -2104,6 +2377,81 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Affluences_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "site_id",
+						"type": "String"
+					},
+					{
+						"name": "site_name",
+						"type": "String"
+					},
+					{
+						"name": "date",
+						"type": "String"
+					},
+					{
+						"name": "hour",
+						"type": "String"
+					},
+					{
+						"name": "occupancy",
+						"type": "String"
+					},
+					{
+						"name": "entries",
+						"type": "String"
+					},
+					{
+						"name": "exits",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Bookings_CSV')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -2509,6 +2857,42 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Temp_Affluences_JSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "temp/affluences",
+						"fileSystem": "staging"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_Big_Data_DL')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -2522,6 +2906,21 @@
 						"type": "SecureString",
 						"value": "[parameters('VFD_Big_Data_DL_accountKey')]"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_LS_Affluences_API')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
 				}
 			},
 			"dependsOn": []
@@ -2586,6 +2985,115 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_JSON_to_CSV')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Temp_Affluences_JSON",
+								"type": "DatasetReference"
+							},
+							"name": "SourceJSON"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Affluences_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "SinkCSV"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FlattenJSON"
+						},
+						{
+							"name": "ExpandEntries"
+						},
+						{
+							"name": "SelectColumns"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     date as string",
+						"}",
+						"source(output(",
+						"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string),",
+						"          site_name as string,",
+						"          site_uuid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'singleDocument',",
+						"     wildcardPaths:['*.json']) ~> SourceJSON",
+						"SourceJSON foldDown(unroll(data.results, data.results),",
+						"     mapColumn(",
+						"          day = data.results.day,",
+						"          entries = data.results.entries,",
+						"          site_id = data.site_id,",
+						"          site_name,",
+						"          site_uuid",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> FlattenJSON",
+						"FlattenJSON foldDown(unroll(entries, entries),",
+						"     mapColumn(",
+						"          site_id,",
+						"          site_name,",
+						"          day,",
+						"          hour = entries.hour,",
+						"          occupancy = entries.occupancy,",
+						"          entries_count = entries.entries,",
+						"          exits_count = entries.exits",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> ExpandEntries",
+						"ExpandEntries select(mapColumn(",
+						"          site_id,",
+						"          site_name,",
+						"          date = day,",
+						"          hour,",
+						"          occupancy,",
+						"          entries = entries_count,",
+						"          exits = exits_count",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> SelectColumns",
+						"SelectColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          site_id as string,",
+						"          site_name as string,",
+						"          date as string,",
+						"          hour as string,",
+						"          occupancy as string,",
+						"          entries as string,",
+						"          exits as string",
+						"     ),",
+						"     partitionFileNames:['temp_output.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SinkCSV"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Temp_Affluences_JSON')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_CSV')]"
 			]
 		},
 		{

@@ -19,6 +19,10 @@
 			"type": "string",
 			"defaultValue": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
 		},
+		"VFD_LS_Affluences_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://data.affluences.com/v1/data"
+		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"type": "string",
 			"defaultValue": "217.73.236.242"
@@ -62,6 +66,9 @@
 					},
 					"VFD_Big_Data_DL_properties_typeProperties_url": {
 						"value": "[parameters('VFD_Big_Data_DL_properties_typeProperties_url')]"
+					},
+					"VFD_LS_Affluences_API_properties_typeProperties_url": {
+						"value": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]"
 					},
 					"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 						"value": "[parameters('VFD_LS_Mida_FtpServer_properties_typeProperties_host')]"

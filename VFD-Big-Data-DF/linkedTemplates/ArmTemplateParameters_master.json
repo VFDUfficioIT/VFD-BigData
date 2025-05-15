@@ -14,6 +14,9 @@
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"value": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"
 		},
+		"VFD_LS_Affluences_API_properties_typeProperties_url": {
+			"value": "https://data.affluences.com/v1/data"
+		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"value": "217.73.236.242"
 		},
