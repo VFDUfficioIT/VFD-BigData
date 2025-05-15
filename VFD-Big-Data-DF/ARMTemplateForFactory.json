@@ -560,6 +560,9 @@
 								"type": "AzureBlobFSReadSettings",
 								"recursive": false,
 								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
 							}
 						}
 					},
@@ -814,7 +817,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"folderPath": {
-										"value": "@concat('Mida/Bookings',pipeline().parameters.year)",
+										"value": "@concat('Mida/Bookings/',pipeline().parameters.year)",
 										"type": "Expression"
 									}
 								}
