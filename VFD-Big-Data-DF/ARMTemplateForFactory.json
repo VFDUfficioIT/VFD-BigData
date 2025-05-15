@@ -849,8 +849,7 @@
 								"value": "@activity('GetMonths').output.childItems",
 								"type": "Expression"
 							},
-							"isSequential": false,
-							"batchCount": 3,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "ProcessMonth",
@@ -1351,8 +1350,7 @@
 								"value": "@activity('GetYears').output.childItems",
 								"type": "Expression"
 							},
-							"isSequential": false,
-							"batchCount": 2,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "ProcessYear",
