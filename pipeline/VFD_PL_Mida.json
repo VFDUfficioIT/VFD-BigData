@@ -35,7 +35,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "VFD_PL_Mida_Bookings_Raw_Reprocess",
+						"referenceName": "VFD_PL_Mida_Bookings_Reprocess_MissingFiles",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
