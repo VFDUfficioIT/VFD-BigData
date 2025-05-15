@@ -1275,7 +1275,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'singleDocument',",
-						"     wildcardPaths:['*.json']) ~> SourceJSON",
+						"     wildcardPaths:['*.pippo']) ~> SourceJSON",
 						"SourceJSON foldDown(unroll(data.results, data.results),",
 						"     mapColumn(",
 						"          day = data.results.day,",
