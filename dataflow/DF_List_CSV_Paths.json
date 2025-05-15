@@ -34,6 +34,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
+				"     rowUrlColumn: 'path',",
 				"     format: 'delimited',",
 				"     fileSystem: 'raw',",
 				"     columnDelimiter: ',',",
@@ -49,9 +50,14 @@
 				"     skipDuplicateMapOutputs: false) ~> SelectPath",
 				"SelectPath sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
+				"     partitionFileNames:[(filelist.json)],",
 				"     umask: 0022,",
 				"     preCommands: [],",
-				"     postCommands: []) ~> WriteJSON"
+				"     postCommands: [],",
+				"     mapColumn(",
+				"          path",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> WriteJSON"
 			]
 		}
 	}
