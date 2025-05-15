@@ -298,6 +298,15 @@
 								"value": "@variables('processDate')",
 								"type": "Expression"
 							}
+						},
+						"datasetParameters": {
+							"SourceJSON": {
+								"fileName": "*.json"
+							},
+							"SinkCSV": {
+								"folderPath": "staging/temp",
+								"fileName": "temp_output.csv"
+							}
 						}
 					},
 					"compute": {
