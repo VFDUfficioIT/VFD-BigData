@@ -21,35 +21,11 @@
 				}
 			},
 			{
-				"name": "SetDateFormatted",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "SetProcessDate",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "dateFormatted",
-					"value": {
-						"value": "@replace(variables('processDate'), '-', '')",
-						"type": "Expression"
-					}
-				}
-			},
-			{
 				"name": "SetYear",
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "SetDateFormatted",
+						"activity": "SetProcessDate",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -93,8 +69,8 @@
 				}
 			},
 			{
-				"name": "ForEachSite",
-				"type": "ForEach",
+				"name": "SetDateFormatted",
+				"type": "SetVariable",
 				"dependsOn": [
 					{
 						"activity": "SetMonth",
@@ -103,10 +79,34 @@
 						]
 					}
 				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "dateFormatted",
+					"value": {
+						"value": "@replace(variables('processDate'), '-', '')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEachSite",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "SetDateFormatted",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@createArray(json('{\"name\":\"Terrazze\",\"uuid\":\"5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307\"}'), json('{\"name\":\"Ascensore Nord\",\"uuid\":\"ca2dae61-4a99-4cb7-8051-26cb852ea408\"}'), json('{\"name\":\"Ascensore Sud\",\"uuid\":\"aa6c22f1-84b6-441a-bbb0-bd429e63536d\"}'), json('{\"name\":\"Salita a piedi\",\"uuid\":\"8358df5f-0186-4a11-87ad-11fc19cda749\"}'), json('{\"name\":\"Discesa a piedi\",\"uuid\":\"639bc326-010a-402f-ba5f-3c75e2740d9d\"}'))",
+						"value": "@createArray(json('{\"name\":\"Terrazze\",\"uuid\":\"5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307\"}'), json('{\"name\":\"AscensoreNord\",\"uuid\":\"ca2dae61-4a99-4cb7-8051-26cb852ea408\"}'), json('{\"name\":\"AscensoreSud\",\"uuid\":\"aa6c22f1-84b6-441a-bbb0-bd429e63536d\"}'), json('{\"name\":\"SalitaPiedi\",\"uuid\":\"8358df5f-0186-4a11-87ad-11fc19cda749\"}'), json('{\"name\":\"DiscesaPiedi\",\"uuid\":\"639bc326-010a-402f-ba5f-3c75e2740d9d\"}'))",
 						"type": "Expression"
 					},
 					"isSequential": true,
@@ -118,9 +118,7 @@
 							"policy": {
 								"timeout": "7.00:00:00",
 								"retry": 2,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
+								"retryIntervalInSeconds": 30
 							},
 							"userProperties": [],
 							"typeProperties": {
@@ -128,10 +126,7 @@
 									"type": "RestSource",
 									"httpRequestTimeout": "00:01:40",
 									"requestInterval": "00.00:00:00.010",
-									"requestMethod": "GET",
-									"additionalHeaders": {
-										"Content-Type": "application/json"
-									}
+									"requestMethod": "GET"
 								},
 								"sink": {
 									"type": "JsonSink",
@@ -142,21 +137,7 @@
 										"type": "JsonWriteSettings"
 									}
 								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"mappings": [
-										{
-											"source": {
-												"path": "$"
-											},
-											"sink": {
-												"path": "$"
-											}
-										}
-									],
-									"collectionReference": ""
-								}
+								"enableStaging": false
 							},
 							"inputs": [
 								{
@@ -186,86 +167,6 @@
 									}
 								}
 							]
-						},
-						{
-							"name": "EnrichWithMetadata",
-							"type": "Copy",
-							"dependsOn": [
-								{
-									"activity": "CallAPI",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "JsonSource",
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": true,
-										"enablePartitionDiscovery": false
-									},
-									"formatSettings": {
-										"type": "JsonReadSettings"
-									}
-								},
-								"sink": {
-									"type": "JsonSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "JsonWriteSettings"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"mappings": [
-										{
-											"source": {
-												"path": "$"
-											},
-											"sink": {
-												"path": "$.data"
-											}
-										}
-									],
-									"collectionReference": ""
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "VFD_DS_Temp_Affluences_JSON",
-									"type": "DatasetReference",
-									"parameters": {
-										"fileName": {
-											"value": "@concat('temp_', item().uuid, '.json')",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "VFD_DS_Temp_Affluences_JSON",
-									"type": "DatasetReference",
-									"parameters": {
-										"fileName": {
-											"value": "@concat('enriched_', item().uuid, '.json')",
-											"type": "Expression"
-										}
-									}
-								}
-							]
 						}
 					]
 				}
@@ -282,7 +183,6 @@
 					}
 				],
 				"policy": {
-					"timeout": "7.00:00:00",
 					"retry": 0,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
@@ -301,10 +201,10 @@
 						},
 						"datasetParameters": {
 							"SourceJSON": {
-								"fileName": "*.json"
+								"fileName": "temp_*.json"
 							},
 							"SinkCSV": {
-								"folderPath": "staging/temp",
+								"folderPath": "temp/affluences",
 								"fileName": "temp_output.csv"
 							}
 						}
@@ -339,8 +239,7 @@
 						"type": "DelimitedTextSource",
 						"storeSettings": {
 							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
+							"recursive": false
 						},
 						"formatSettings": {
 							"type": "DelimitedTextReadSettings"
@@ -364,7 +263,7 @@
 						"referenceName": "VFD_DS_Raw_Affluences_CSV",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": "staging/temp",
+							"folderPath": "temp/affluences",
 							"fileName": "temp_output.csv"
 						}
 					}
@@ -409,15 +308,14 @@
 						"referenceName": "VFD_DS_Temp_Affluences_JSON",
 						"type": "DatasetReference",
 						"parameters": {
-							"fileName": "*"
+							"fileName": "temp_*.json"
 						}
 					},
 					"enableLogging": false,
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
-						"recursive": true,
-						"wildcardFileName": "*",
-						"enablePartitionDiscovery": false
+						"recursive": false,
+						"wildcardFileName": "temp_*.json"
 					}
 				}
 			}
@@ -431,13 +329,13 @@
 			"processDate": {
 				"type": "String"
 			},
-			"dateFormatted": {
-				"type": "String"
-			},
 			"year": {
 				"type": "String"
 			},
 			"month": {
+				"type": "String"
+			},
+			"dateFormatted": {
 				"type": "String"
 			}
 		},
