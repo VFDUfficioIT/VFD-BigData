@@ -1,0 +1,437 @@
+{
+	"name": "VFD_PL_Affluences_Daily",
+	"properties": {
+		"description": "Pipeline per acquisire i dati giornalieri dei contapersone",
+		"activities": [
+			{
+				"name": "SetProcessDate",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "processDate",
+					"value": {
+						"value": "@if(empty(pipeline().parameters.date), formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd'), pipeline().parameters.date)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SetDateFormatted",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SetProcessDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "dateFormatted",
+					"value": {
+						"value": "@replace(variables('processDate'), '-', '')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SetYear",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SetDateFormatted",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "year",
+					"value": {
+						"value": "@substring(variables('processDate'), 0, 4)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SetMonth",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SetYear",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "month",
+					"value": {
+						"value": "@substring(variables('processDate'), 5, 2)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEachSite",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "SetMonth",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@createArray(json('{\"name\":\"Terrazze\",\"uuid\":\"5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307\"}'), json('{\"name\":\"Ascensore Nord\",\"uuid\":\"ca2dae61-4a99-4cb7-8051-26cb852ea408\"}'), json('{\"name\":\"Ascensore Sud\",\"uuid\":\"aa6c22f1-84b6-441a-bbb0-bd429e63536d\"}'), json('{\"name\":\"Salita a piedi\",\"uuid\":\"8358df5f-0186-4a11-87ad-11fc19cda749\"}'), json('{\"name\":\"Discesa a piedi\",\"uuid\":\"639bc326-010a-402f-ba5f-3c75e2740d9d\"}'))",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "CallAPI",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "RestSource",
+									"httpRequestTimeout": "00:01:40",
+									"requestInterval": "00.00:00:00.010",
+									"requestMethod": "GET",
+									"additionalHeaders": {
+										"Content-Type": "application/json"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$"
+											},
+											"sink": {
+												"path": "$"
+											}
+										}
+									],
+									"collectionReference": ""
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "VFD_DS_Affluences_API",
+									"type": "DatasetReference",
+									"parameters": {
+										"siteUUID": {
+											"value": "@item().uuid",
+											"type": "Expression"
+										},
+										"date": {
+											"value": "@variables('processDate')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "VFD_DS_Temp_Affluences_JSON",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@concat('temp_', item().uuid, '.json')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "EnrichWithMetadata",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "CallAPI",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$"
+											},
+											"sink": {
+												"path": "$.data"
+											}
+										}
+									],
+									"collectionReference": ""
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "VFD_DS_Temp_Affluences_JSON",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@concat('temp_', item().uuid, '.json')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "VFD_DS_Temp_Affluences_JSON",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@concat('enriched_', item().uuid, '.json')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "TransformToCSV",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ForEachSite",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Affluences_JSON_to_CSV",
+						"type": "DataFlowReference",
+						"parameters": {
+							"date": {
+								"value": "@variables('processDate')",
+								"type": "Expression"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "MoveToFinal",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "TransformToCSV",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Raw_Affluences_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "staging/temp",
+							"fileName": "temp_output.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_Raw_Affluences_CSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@concat('vfd_affluences_', variables('dateFormatted'), '.csv')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "CleanupTemp",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "MoveToFinal",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Temp_Affluences_JSON",
+						"type": "DatasetReference",
+						"parameters": {
+							"fileName": "*"
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"wildcardFileName": "*",
+						"enablePartitionDiscovery": false
+					}
+				}
+			}
+		],
+		"parameters": {
+			"date": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"processDate": {
+				"type": "String"
+			},
+			"dateFormatted": {
+				"type": "String"
+			},
+			"year": {
+				"type": "String"
+			},
+			"month": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Affluences"
+		},
+		"annotations": []
+	}
+}
