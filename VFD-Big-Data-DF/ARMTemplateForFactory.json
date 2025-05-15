@@ -2886,7 +2886,50 @@
 						"fileSystem": "staging"
 					}
 				},
-				"schema": {}
+				"schema": {
+					"type": "object",
+					"properties": {
+						"data": {
+							"type": "object",
+							"properties": {
+								"results": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"day": {
+												"type": "string"
+											},
+											"entries": {
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"hour": {
+															"type": "string"
+														},
+														"occupancy": {
+															"type": "integer"
+														},
+														"entries": {
+															"type": "integer"
+														},
+														"exits": {
+															"type": "integer"
+														}
+													}
+												}
+											}
+										}
+									}
+								},
+								"site_id": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -3025,12 +3068,10 @@
 					],
 					"scriptLines": [
 						"parameters{",
-						"     date as string",
+						"     date as string ('20250514')",
 						"}",
 						"source(output(",
-						"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string),",
-						"          site_name as string,",
-						"          site_uuid as string",
+						"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string)",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
@@ -3041,16 +3082,13 @@
 						"     mapColumn(",
 						"          day = data.results.day,",
 						"          entries = data.results.entries,",
-						"          site_id = data.site_id,",
-						"          site_name,",
-						"          site_uuid",
+						"          site_id = data.site_id",
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> FlattenJSON",
 						"FlattenJSON foldDown(unroll(entries, entries),",
 						"     mapColumn(",
 						"          site_id,",
-						"          site_name,",
 						"          day,",
 						"          hour = entries.hour,",
 						"          occupancy = entries.occupancy,",
@@ -3061,7 +3099,6 @@
 						"     skipDuplicateMapOutputs: false) ~> ExpandEntries",
 						"ExpandEntries select(mapColumn(",
 						"          site_id,",
-						"          site_name,",
 						"          date = day,",
 						"          hour,",
 						"          occupancy,",
