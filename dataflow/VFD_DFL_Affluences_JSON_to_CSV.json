@@ -1,6 +1,9 @@
 {
 	"name": "VFD_DFL_Affluences_JSON_to_CSV",
 	"properties": {
+		"folder": {
+			"name": "Affluences"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
@@ -18,7 +21,11 @@
 						"referenceName": "VFD_DS_Raw_Affluences_CSV",
 						"type": "DatasetReference"
 					},
-					"name": "SinkCSV"
+					"name": "SinkCSV",
+					"rejectedDataLinkedService": {
+						"referenceName": "VFD_Big_Data_DL",
+						"type": "LinkedServiceReference"
+					}
 				}
 			],
 			"transformations": [
@@ -30,6 +37,9 @@
 				},
 				{
 					"name": "SelectColumns"
+				},
+				{
+					"name": "AddSiteName"
 				}
 			],
 			"scriptLines": [
@@ -48,13 +58,13 @@
 				"     mapColumn(",
 				"          day = data.results.day,",
 				"          entries = data.results.entries,",
-				"          site_id = data.site_id",
+				"          site_uuid = data.site_id",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> FlattenJSON",
 				"FlattenJSON foldDown(unroll(entries, entries),",
 				"     mapColumn(",
-				"          site_id,",
+				"          site_uuid,",
 				"          day,",
 				"          hour = entries.hour,",
 				"          occupancy = entries.occupancy,",
@@ -64,16 +74,18 @@
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> ExpandEntries",
 				"ExpandEntries select(mapColumn(",
-				"          site_id,",
+				"          site_uuid,",
 				"          date = day,",
 				"          hour,",
 				"          occupancy,",
 				"          entries = entries_count,",
 				"          exits = exits_count",
 				"     ),",
+				"     partitionBy('hash', 1),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> SelectColumns",
-				"SelectColumns sink(allowSchemaDrift: true,",
+				"SelectColumns derive(site_name = case(   site_uuid == '5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307', 'Terrazze',   site_uuid == 'ca2dae61-4a99-4cb7-8051-26cb852ea408', 'Ascensore Nord',   site_uuid == 'aa6c22f1-84b6-441a-bbb0-bd429e63536d', 'Ascensore Sud',   site_uuid == '8358df5f-0186-4a11-87ad-11fc19cda749', 'Salita a piedi',   site_uuid == '639bc326-010a-402f-ba5f-3c75e2740d9d', 'Discesa a piedi',   'Unknown' )) ~> AddSiteName",
+				"AddSiteName sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          site_id as string,",
@@ -90,6 +102,15 @@
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          site_id = site_uuid,",
+				"          site_name,",
+				"          date,",
+				"          hour,",
+				"          occupancy,",
+				"          entries,",
+				"          exits",
+				"     ),",
 				"     partitionBy('hash', 1)) ~> SinkCSV"
 			]
 		}
