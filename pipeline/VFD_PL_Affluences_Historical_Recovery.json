@@ -90,7 +90,7 @@
 								{
 									"activity": "ExecuteDailyPipeline",
 									"dependencyConditions": [
-										"Succeeded"
+										"Completed"
 									]
 								}
 							],
