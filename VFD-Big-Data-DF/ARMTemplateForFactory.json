@@ -396,6 +396,188 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Historical_Recovery')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per il recupero storico dei dati Affluences dall'1 novembre 2024 al 15 maggio 2025",
+				"activities": [
+					{
+						"name": "SetStartDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime('2024-11-01', 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetEndDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "endDate",
+							"value": {
+								"value": "@formatDateTime('2025-05-15', 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ProcessUntilEndDate",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetStartDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "SetEndDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('currentDate'), variables('endDate'))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ExecuteDailyPipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_Affluences_Daily",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"date": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "CalculateNextDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ExecuteDailyPipeline",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "tempDate",
+										"value": {
+											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "UpdateCurrentDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "CalculateNextDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "currentDate",
+										"value": {
+											"value": "@variables('tempDate')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "WaitForCooldown",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "UpdateCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 10
+									}
+								}
+							],
+							"timeout": "7.00:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"currentDate": {
+						"type": "String"
+					},
+					"endDate": {
+						"type": "String"
+					},
+					"tempDate": {
+						"type": "String"
+					},
+					"progressMessage": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Affluences_Daily')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
