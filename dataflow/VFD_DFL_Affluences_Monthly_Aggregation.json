@@ -122,7 +122,7 @@
 				"          salita_piedi_entries = coalesce(entries_sumSalitaPiedi, 0),",
 				"          discesa_piedi_entries = coalesce(entries_sumDiscesaPiedi, 0),",
 				"          total_entries = coalesce(entries_sumAscensoreNord, 0) + coalesce(entries_sumAscensoreSud, 0) + coalesce(entries_sumSalitaPiedi, 0) + coalesce(entries_sumDiscesaPiedi, 0)) ~> CalculateTotals",
-				"CalculateTotals, MaxOccupancyByDate join(CalculateTotals@date == MaxOccupancyByDate@date,",
+				"CalculateTotals, MaxOccupancyByDate join(PivotEntries@date == MaxOccupancyByDate@date,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
