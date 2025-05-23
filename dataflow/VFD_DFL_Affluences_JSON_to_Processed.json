@@ -87,9 +87,12 @@
 				"          exits as integer",
 				"     ),",
 				"     format: 'parquet',",
+				"     partitionFileNames:['affluences_processed_temp.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
 				"     mapColumn(",
 				"          site_id,",
 				"          site_name,",
@@ -99,6 +102,7 @@
 				"          entries = entries_count,",
 				"          exits = exits_count",
 				"     ),",
+				"     partitionBy('hash', 1),",
 				"     compressionCodec: 'snappy') ~> SinkProcessed"
 			]
 		}

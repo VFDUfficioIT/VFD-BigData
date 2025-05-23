@@ -221,12 +221,6 @@
 					"dataflow": {
 						"referenceName": "VFD_DFL_Affluences_JSON_to_Processed",
 						"type": "DataFlowReference",
-						"parameters": {
-							"folderPath": {
-								"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-								"type": "Expression"
-							}
-						},
 						"datasetParameters": {
 							"SourceJSON": {
 								"folderPath": {
