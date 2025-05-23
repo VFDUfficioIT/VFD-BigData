@@ -1,0 +1,63 @@
+{
+	"name": "VFD_DFL_Affluences_Daily_to_Curated",
+	"properties": {
+		"folder": {
+			"name": "Affluences"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SourceProcessed"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkCuratedDaily"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          site_id as string,",
+				"          site_name as string,",
+				"          date as date,",
+				"          hour as string,",
+				"          occupancy as integer,",
+				"          entries as integer,",
+				"          exits as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> SourceProcessed",
+				"SourceProcessed sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          site_id as string,",
+				"          site_name as string,",
+				"          date as date,",
+				"          hour as string,",
+				"          occupancy as integer,",
+				"          entries as integer,",
+				"          exits as integer",
+				"     ),",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     compressionCodec: 'snappy') ~> SinkCuratedDaily"
+			]
+		}
+	}
+}

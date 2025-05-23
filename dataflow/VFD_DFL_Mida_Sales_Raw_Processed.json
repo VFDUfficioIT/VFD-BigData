@@ -36,9 +36,9 @@
 			],
 			"scriptLines": [
 				"parameters{",
-				"     folderPath as string (\"folder\"),",
-				"     sourcefileName as string (\"source\"),",
-				"     destfileName as string (\"dest\")",
+				"     Mida/Bookings/2021/07 as string (\"folder\"),",
+				"     export_vw_summary_reservationPayments20210726.csv as string (\"source\"),",
+				"     export_vw_summary_reservationPayments20210726.parquet as string (\"dest\")",
 				"}",
 				"source(output(",
 				"          guid_pk as string,",

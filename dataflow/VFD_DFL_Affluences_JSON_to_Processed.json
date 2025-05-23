@@ -1,0 +1,59 @@
+{
+	"name": "VFD_DFL_Affluences_JSON_to_Processed",
+	"properties": {
+		"folder": {
+			"name": "Affluences"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Raw_Affluences_JSON",
+						"type": "DatasetReference"
+					},
+					"name": "SourceJSON"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkProcessed"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"parameters{",
+				"     folderPath as string",
+				"}",
+				"source(output(",
+				"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'documentPerLine') ~> SourceJSON",
+				" sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          site_id as string,",
+				"          site_name as string,",
+				"          date as date,",
+				"          hour as string,",
+				"          occupancy as integer,",
+				"          entries as integer,",
+				"          exits as integer",
+				"     ),",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SinkProcessed"
+			]
+		}
+	}
+}

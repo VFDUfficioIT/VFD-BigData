@@ -1,0 +1,388 @@
+{
+	"name": "VFD_PL_Affluences_Daily_v2",
+	"properties": {
+		"description": "Pipeline v2 per acquisire i dati giornalieri Affluences con architettura Raw->Processed->Curated",
+		"activities": [
+			{
+				"name": "SetProcessDate",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "processDate",
+					"value": {
+						"value": "@if(empty(pipeline().parameters.date), formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd'), pipeline().parameters.date)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SetYear",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SetProcessDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "year",
+					"value": {
+						"value": "@substring(variables('processDate'), 0, 4)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SetMonth",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SetYear",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "month",
+					"value": {
+						"value": "@substring(variables('processDate'), 5, 2)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SetDateFormatted",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SetMonth",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "dateFormatted",
+					"value": {
+						"value": "@replace(variables('processDate'), '-', '')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "SetYearMonth",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "SetDateFormatted",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "yearMonth",
+					"value": {
+						"value": "@concat(variables('year'), variables('month'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEachSite",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "SetYearMonth",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@createArray(json('{\"name\":\"Terrazze\",\"uuid\":\"5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307\"}'), json('{\"name\":\"AscensoreNord\",\"uuid\":\"ca2dae61-4a99-4cb7-8051-26cb852ea408\"}'), json('{\"name\":\"AscensoreSud\",\"uuid\":\"aa6c22f1-84b6-441a-bbb0-bd429e63536d\"}'), json('{\"name\":\"SalitaPiedi\",\"uuid\":\"8358df5f-0186-4a11-87ad-11fc19cda749\"}'), json('{\"name\":\"DiscesaPiedi\",\"uuid\":\"639bc326-010a-402f-ba5f-3c75e2740d9d\"}'))",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "CallAPI",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "RestSource",
+									"httpRequestTimeout": "00:01:40",
+									"requestInterval": "00.00:00:00.010",
+									"requestMethod": "GET"
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "VFD_DS_Affluences_API",
+									"type": "DatasetReference",
+									"parameters": {
+										"siteUUID": {
+											"value": "@item().uuid",
+											"type": "Expression"
+										},
+										"date": {
+											"value": "@variables('processDate')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "VFD_DS_Raw_Affluences_JSON",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('affluences_', variables('dateFormatted'), '_', item().uuid, '.json')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "TransformToProcessed",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "ForEachSite",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Affluences_JSON_to_Processed",
+						"type": "DataFlowReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"SourceJSON": {
+								"folderPath": {
+									"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@concat('affluences_', variables('dateFormatted'), '_*.json')",
+									"type": "Expression"
+								}
+							},
+							"SinkProcessed": {
+								"folderPath": {
+									"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@concat('affluences_', variables('dateFormatted'), '.parquet')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "CreateCuratedDaily",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "TransformToProcessed",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Affluences_Daily_to_Curated",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"SourceProcessed": {
+								"folderPath": {
+									"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@concat('affluences_', variables('dateFormatted'), '.parquet')",
+									"type": "Expression"
+								}
+							},
+							"SinkCuratedDaily": {
+								"folderPath": {
+									"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@concat('affluences_daily_', variables('dateFormatted'), '.parquet')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "UpdateMonthlyAggregation",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "CreateCuratedDaily",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Affluences_Monthly_Aggregation",
+						"type": "DataFlowReference",
+						"parameters": {
+							"currentDate": {
+								"value": "@variables('processDate')",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"SourceNewData": {
+								"folderPath": {
+									"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@concat('affluences_', variables('dateFormatted'), '.parquet')",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"date": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"processDate": {
+				"type": "String"
+			},
+			"year": {
+				"type": "String"
+			},
+			"month": {
+				"type": "String"
+			},
+			"dateFormatted": {
+				"type": "String"
+			},
+			"yearMonth": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Affluences"
+		},
+		"annotations": []
+	}
+}

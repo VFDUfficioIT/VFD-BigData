@@ -1,0 +1,60 @@
+{
+	"name": "VFD_DS_Curated_Affluences_Monthly_Delta",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Affluences"
+		},
+		"annotations": [],
+		"type": "Delta",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "curated"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "date",
+				"type": "date"
+			},
+			{
+				"name": "total_entries",
+				"type": "integer"
+			},
+			{
+				"name": "ascensore_nord_entries",
+				"type": "integer"
+			},
+			{
+				"name": "ascensore_sud_entries",
+				"type": "integer"
+			},
+			{
+				"name": "salita_piedi_entries",
+				"type": "integer"
+			},
+			{
+				"name": "max_occupancy",
+				"type": "integer"
+			},
+			{
+				"name": "max_occupancy_hour",
+				"type": "string"
+			}
+		]
+	}
+}

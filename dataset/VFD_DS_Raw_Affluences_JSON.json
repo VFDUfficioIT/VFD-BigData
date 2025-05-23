@@ -1,0 +1,80 @@
+{
+	"name": "VFD_DS_Raw_Affluences_JSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderPath": {
+				"type": "string"
+			},
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Affluences"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "raw"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "object",
+					"properties": {
+						"results": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"day": {
+										"type": "string"
+									},
+									"entries": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"hour": {
+													"type": "string"
+												},
+												"occupancy": {
+													"type": "integer"
+												},
+												"entries": {
+													"type": "integer"
+												},
+												"exits": {
+													"type": "integer"
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"site_id": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		}
+	}
+}

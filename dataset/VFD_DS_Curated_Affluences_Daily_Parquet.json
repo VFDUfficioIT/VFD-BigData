@@ -1,0 +1,67 @@
+{
+	"name": "VFD_DS_Curated_Affluences_Daily_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderPath": {
+				"type": "string"
+			},
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Affluences"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "curated"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "site_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "site_name",
+				"type": "UTF8"
+			},
+			{
+				"name": "date",
+				"type": "DATE"
+			},
+			{
+				"name": "hour",
+				"type": "UTF8"
+			},
+			{
+				"name": "occupancy",
+				"type": "INT32"
+			},
+			{
+				"name": "entries",
+				"type": "INT32"
+			},
+			{
+				"name": "exits",
+				"type": "INT32"
+			}
+		]
+	}
+}
