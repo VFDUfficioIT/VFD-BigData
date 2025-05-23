@@ -396,6 +396,740 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Daily_v2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline v2 per acquisire i dati giornalieri Affluences con architettura Raw->Processed->Curated",
+				"activities": [
+					{
+						"name": "SetProcessDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "processDate",
+							"value": {
+								"value": "@if(empty(pipeline().parameters.date), formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd'), pipeline().parameters.date)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetYear",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetProcessDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "year",
+							"value": {
+								"value": "@substring(variables('processDate'), 0, 4)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetMonth",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetYear",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "month",
+							"value": {
+								"value": "@substring(variables('processDate'), 5, 2)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetDateFormatted",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetMonth",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "dateFormatted",
+							"value": {
+								"value": "@replace(variables('processDate'), '-', '')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetYearMonth",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetDateFormatted",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "yearMonth",
+							"value": {
+								"value": "@concat(variables('year'), variables('month'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEachSite",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "SetYearMonth",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@createArray(json('{\"name\":\"Terrazze\",\"uuid\":\"5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307\"}'), json('{\"name\":\"AscensoreNord\",\"uuid\":\"ca2dae61-4a99-4cb7-8051-26cb852ea408\"}'), json('{\"name\":\"AscensoreSud\",\"uuid\":\"aa6c22f1-84b6-441a-bbb0-bd429e63536d\"}'), json('{\"name\":\"SalitaPiedi\",\"uuid\":\"8358df5f-0186-4a11-87ad-11fc19cda749\"}'), json('{\"name\":\"DiscesaPiedi\",\"uuid\":\"639bc326-010a-402f-ba5f-3c75e2740d9d\"}'))",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CallAPI",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "RestSource",
+											"httpRequestTimeout": "00:01:40",
+											"requestInterval": "00.00:00:00.010",
+											"requestMethod": "GET"
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Affluences_API",
+											"type": "DatasetReference",
+											"parameters": {
+												"siteUUID": {
+													"value": "@item().uuid",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "@variables('processDate')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Raw_Affluences_JSON",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '_', item().uuid, '.json')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "TransformToProcessed",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "ForEachSite",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Affluences_JSON_to_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceJSON": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '_*.json')",
+											"type": "Expression"
+										}
+									},
+									"SinkProcessed": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Affluences_JSON_to_Processed_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "CopyProcessedToFinal",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "TransformToProcessed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Affluences_JSON_to_Processed_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "DeleteProcessedTemp",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "CopyProcessedToFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Affluences_JSON_to_Processed_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false
+							}
+						}
+					},
+					{
+						"name": "CreateCuratedDaily",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DeleteProcessedTemp",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Affluences_Daily_to_Curated",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceProcessed": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '.parquet')",
+											"type": "Expression"
+										}
+									},
+									"SinkCuratedDaily": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Affluences_Daily_to_Curated_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "CopyCuratedDailyToFinal",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "CreateCuratedDaily",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Affluences_Daily_to_Curated_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Affluences_Daily_', variables('dateFormatted'), '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "DeleteCuratedDailyTemp",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "CopyCuratedDailyToFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Affluences_Daily_to_Curated_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false
+							}
+						}
+					},
+					{
+						"name": "UpdateMonthlyAggregation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DeleteCuratedDailyTemp",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Affluences_Monthly_Aggregation",
+								"type": "DataFlowReference",
+								"parameters": {
+									"currentDate": {
+										"value": "@variables('processDate')",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"SourceNewData": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '.parquet')",
+											"type": "Expression"
+										}
+									},
+									"SourceExistingMonthly": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('VFD_Affluences_Monthly_', variables('yearMonth'), '.parquet')",
+											"type": "Expression"
+										}
+									},
+									"SinkMonthly": {
+										"folderPath": {
+											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Affluences_Monthly_Aggregation_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "CopyMonthlyToFinal",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "UpdateMonthlyAggregation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Affluences_Monthly_Aggregation_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Affluences_Monthly_', variables('yearMonth'), '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "DeleteMonthlyTemp",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "CopyMonthlyToFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Affluences_Monthly_Aggregation_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"processDate": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"dateFormatted": {
+						"type": "String"
+					},
+					"yearMonth": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_JSON_to_Processed')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_Daily_to_Curated')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Affluences_Daily_Parquet')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_Monthly_Aggregation')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Affluences_Monthly_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Affluences_API')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_JSON')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Historical_Recovery')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1470,11 +2204,7 @@
 							"dataflow": {
 								"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
 								"type": "DataFlowReference",
-								"parameters": {
-									"folderPath": "\"folder\"",
-									"sourcefileName": "\"source\"",
-									"destfileName": "\"dest\""
-								},
+								"parameters": {},
 								"datasetParameters": {
 									"SourceCSV": {
 										"folderPath": "@pipeline().parameters.folderPath",
@@ -1974,6 +2704,154 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Affluences_Daily_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "site_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "site_name",
+						"type": "UTF8"
+					},
+					{
+						"name": "date",
+						"type": "DATE"
+					},
+					{
+						"name": "hour",
+						"type": "UTF8"
+					},
+					{
+						"name": "occupancy",
+						"type": "INT32"
+					},
+					{
+						"name": "entries",
+						"type": "INT32"
+					},
+					{
+						"name": "exits",
+						"type": "INT32"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Affluences_Monthly_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "date",
+						"type": "DATE"
+					},
+					{
+						"name": "total_entries",
+						"type": "INT32"
+					},
+					{
+						"name": "ascensore_nord_entries",
+						"type": "INT32"
+					},
+					{
+						"name": "ascensore_sud_entries",
+						"type": "INT32"
+					},
+					{
+						"name": "salita_piedi_entries",
+						"type": "INT32"
+					},
+					{
+						"name": "discesa_piedi_entries",
+						"type": "INT32"
+					},
+					{
+						"name": "max_occupancy",
+						"type": "INT32"
+					},
+					{
+						"name": "max_occupancy_hour",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Bookings_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -2140,6 +3018,78 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Affluences_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "site_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "site_name",
+						"type": "UTF8"
+					},
+					{
+						"name": "date",
+						"type": "DATE"
+					},
+					{
+						"name": "hour",
+						"type": "UTF8"
+					},
+					{
+						"name": "occupancy",
+						"type": "INT32"
+					},
+					{
+						"name": "entries",
+						"type": "INT32"
+					},
+					{
+						"name": "exits",
+						"type": "INT32"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
 			]
 		},
 		{
@@ -2628,6 +3578,91 @@
 						"type": "String"
 					}
 				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Affluences_JSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"data": {
+							"type": "object",
+							"properties": {
+								"results": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"day": {
+												"type": "string"
+											},
+											"entries": {
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"hour": {
+															"type": "string"
+														},
+														"occupancy": {
+															"type": "integer"
+														},
+														"entries": {
+															"type": "integer"
+														},
+														"exits": {
+															"type": "integer"
+														}
+													}
+												}
+											}
+										}
+									}
+								},
+								"site_id": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -3178,7 +4213,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -3210,6 +4245,77 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_Daily_to_Curated')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Affluences"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkCuratedDaily"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          site_id as string,",
+						"          site_name as string,",
+						"          date as date,",
+						"          hour as string,",
+						"          occupancy as integer,",
+						"          entries as integer,",
+						"          exits as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"SourceProcessed sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          site_id as string,",
+						"          site_name as string,",
+						"          date as date,",
+						"          hour as string,",
+						"          occupancy as integer,",
+						"          entries as integer,",
+						"          exits as integer",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Affluences_Daily_to_Curated_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkCuratedDaily"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Affluences_Daily_Parquet')]"
 			]
 		},
 		{
@@ -3335,6 +4441,298 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Temp_Affluences_JSON')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_CSV')]",
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_JSON_to_Processed')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Affluences"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Affluences_JSON",
+								"type": "DatasetReference"
+							},
+							"name": "SourceJSON"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkProcessed"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FlattenJSON"
+						},
+						{
+							"name": "ExpandEntries"
+						},
+						{
+							"name": "AddSiteName"
+						},
+						{
+							"name": "ConvertTypes"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string)",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'documentPerLine',",
+						"     wildcardPaths:['*.json']) ~> SourceJSON",
+						"SourceJSON foldDown(unroll(data.results, data.results),",
+						"     mapColumn(",
+						"          day = data.results.day,",
+						"          entries = data.results.entries,",
+						"          site_uuid = data.site_id",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> FlattenJSON",
+						"FlattenJSON foldDown(unroll(entries, entries),",
+						"     mapColumn(",
+						"          site_uuid,",
+						"          day,",
+						"          hour = entries.hour,",
+						"          occupancy = entries.occupancy,",
+						"          entries_count = entries.entries,",
+						"          exits_count = entries.exits",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> ExpandEntries",
+						"ExpandEntries derive(site_name = case(",
+						"     site_uuid == '5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307', 'Terrazze',",
+						"     site_uuid == 'ca2dae61-4a99-4cb7-8051-26cb852ea408', 'Ascensore Nord',",
+						"     site_uuid == 'aa6c22f1-84b6-441a-bbb0-bd429e63536d', 'Ascensore Sud',",
+						"     site_uuid == '8358df5f-0186-4a11-87ad-11fc19cda749', 'Salita a piedi',",
+						"     site_uuid == '639bc326-010a-402f-ba5f-3c75e2740d9d', 'Discesa a piedi',",
+						"     'Unknown'",
+						")) ~> AddSiteName",
+						"AddSiteName derive(date = toDate(day, 'yyyy-MM-dd'),",
+						"          site_id = site_uuid) ~> ConvertTypes",
+						"ConvertTypes sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          site_id as string,",
+						"          site_name as string,",
+						"          date as date,",
+						"          hour as string,",
+						"          occupancy as integer,",
+						"          entries as integer,",
+						"          exits as integer",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Affluences_JSON_to_Processed_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          site_id,",
+						"          site_name,",
+						"          date,",
+						"          hour,",
+						"          occupancy,",
+						"          entries = entries_count,",
+						"          exits = exits_count",
+						"     ),",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkProcessed"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_JSON')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_Monthly_Aggregation')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Affluences"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceNewData"
+						},
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceExistingMonthly"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkMonthly"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterEntryPoints"
+						},
+						{
+							"name": "CleanSiteNames"
+						},
+						{
+							"name": "AggregateByDate"
+						},
+						{
+							"name": "FilterTerrazze"
+						},
+						{
+							"name": "MaxOccupancyByDate"
+						},
+						{
+							"name": "PivotEntries"
+						},
+						{
+							"name": "CalculateTotals"
+						},
+						{
+							"name": "JoinAggregations"
+						},
+						{
+							"name": "CleanJoinOutput"
+						},
+						{
+							"name": "FilterExistingData"
+						},
+						{
+							"name": "UnionWithExisting"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     currentDate as string",
+						"}",
+						"source(output(",
+						"          site_id as string,",
+						"          site_name as string,",
+						"          date as date,",
+						"          hour as string,",
+						"          occupancy as integer,",
+						"          entries as integer,",
+						"          exits as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceNewData",
+						"source(output(",
+						"          date as date,",
+						"          total_entries as integer,",
+						"          ascensore_nord_entries as integer,",
+						"          ascensore_sud_entries as integer,",
+						"          salita_piedi_entries as integer,",
+						"          discesa_piedi_entries as integer,",
+						"          max_occupancy as integer,",
+						"          max_occupancy_hour as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'parquet') ~> SourceExistingMonthly",
+						"SourceNewData filter(site_name == 'Ascensore Nord' || site_name == 'Ascensore Sud' || site_name == 'Salita a piedi' || site_name == 'Discesa a piedi') ~> FilterEntryPoints",
+						"FilterEntryPoints derive(site_name_clean = case(",
+						"     site_name == 'Ascensore Nord', 'AscensoreNord',",
+						"     site_name == 'Ascensore Sud', 'AscensoreSud',",
+						"     site_name == 'Salita a piedi', 'SalitaPiedi',",
+						"     site_name == 'Discesa a piedi', 'DiscesaPiedi',",
+						"     site_name",
+						")) ~> CleanSiteNames",
+						"CleanSiteNames aggregate(groupBy(date,",
+						"          site_name_clean),",
+						"     entries_sum = sum(entries)) ~> AggregateByDate",
+						"SourceNewData filter(site_name == 'Terrazze') ~> FilterTerrazze",
+						"FilterTerrazze aggregate(groupBy(date),",
+						"     max_occupancy = max(occupancy),",
+						"          max_occupancy_hour = first(case(occupancy == max(occupancy), hour))) ~> MaxOccupancyByDate",
+						"AggregateByDate pivot(groupBy(date),",
+						"     pivotBy(site_name_clean, ['AscensoreNord', 'AscensoreSud', 'SalitaPiedi', 'DiscesaPiedi']),",
+						"     entries_sum = sum(entries_sum),",
+						"     columnNaming: '$N$V',",
+						"     lateral: true) ~> PivotEntries",
+						"PivotEntries derive(ascensore_nord_entries = coalesce(entries_sumAscensoreNord, 0),",
+						"          ascensore_sud_entries = coalesce(entries_sumAscensoreSud, 0),",
+						"          salita_piedi_entries = coalesce(entries_sumSalitaPiedi, 0),",
+						"          discesa_piedi_entries = coalesce(entries_sumDiscesaPiedi, 0),",
+						"          total_entries = coalesce(entries_sumAscensoreNord, 0) + coalesce(entries_sumAscensoreSud, 0) + coalesce(entries_sumSalitaPiedi, 0) + coalesce(entries_sumDiscesaPiedi, 0)) ~> CalculateTotals",
+						"CalculateTotals, MaxOccupancyByDate join(PivotEntries@date == MaxOccupancyByDate@date,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinAggregations",
+						"JoinAggregations select(mapColumn(",
+						"          date,",
+						"          total_entries,",
+						"          ascensore_nord_entries,",
+						"          ascensore_sud_entries,",
+						"          salita_piedi_entries,",
+						"          discesa_piedi_entries,",
+						"          max_occupancy,",
+						"          max_occupancy_hour",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> CleanJoinOutput",
+						"SourceExistingMonthly filter(toString(date) != $currentDate) ~> FilterExistingData",
+						"FilterExistingData, CleanJoinOutput union(byName: true,",
+						"     partitionBy('hash', 1))~> UnionWithExisting",
+						"UnionWithExisting sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          date as date,",
+						"          total_entries as integer,",
+						"          ascensore_nord_entries as integer,",
+						"          ascensore_sud_entries as integer,",
+						"          salita_piedi_entries as integer,",
+						"          discesa_piedi_entries as integer,",
+						"          max_occupancy as integer,",
+						"          max_occupancy_hour as string",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Affluences_Monthly_Aggregation_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkMonthly"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Affluences_Monthly_Parquet')]"
 			]
 		},
 		{
