@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DFL_Affluences_Monthly_Aggregation_Delta",
+	"name": "VFD_DFL_Affluences_Monthly_Aggregation",
 	"properties": {
 		"folder": {
 			"name": "Affluences"
@@ -13,6 +13,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "SourceNewData"
+				},
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SourceExistingMonthly"
 				}
 			],
 			"sinks": [
@@ -21,7 +28,7 @@
 						"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "SinkMonthlyParquet"
+					"name": "SinkMonthly"
 				}
 			],
 			"transformations": [
@@ -48,9 +55,18 @@
 				},
 				{
 					"name": "JoinAggregations"
+				},
+				{
+					"name": "FilterExistingData"
+				},
+				{
+					"name": "UnionWithExisting"
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     currentDate as string",
+				"}",
 				"source(output(",
 				"          site_id as string,",
 				"          site_name as string,",
@@ -64,6 +80,20 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet') ~> SourceNewData",
+				"source(output(",
+				"          date as date,",
+				"          total_entries as integer,",
+				"          ascensore_nord_entries as integer,",
+				"          ascensore_sud_entries as integer,",
+				"          salita_piedi_entries as integer,",
+				"          discesa_piedi_entries as integer,",
+				"          max_occupancy as integer,",
+				"          max_occupancy_hour as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     format: 'parquet') ~> SourceExistingMonthly",
 				"SourceNewData filter(site_name == 'Ascensore Nord' || site_name == 'Ascensore Sud' || site_name == 'Salita a piedi' || site_name == 'Discesa a piedi') ~> FilterEntryPoints",
 				"FilterEntryPoints derive(site_name_clean = case(",
 				"     site_name == 'Ascensore Nord', 'AscensoreNord',",
@@ -84,26 +114,39 @@
 				"     entries_sum = sum(entries_sum),",
 				"     columnNaming: '$N$V',",
 				"     lateral: true) ~> PivotEntries",
-				"PivotEntries derive(ascensore_nord_entries = coalesce(entries_sumAscensoreNord, 0),",
-				"          ascensore_sud_entries = coalesce(entries_sumAscensoreSud, 0),",
-				"          salita_piedi_entries = coalesce(entries_sumSalitaPiedi, 0),",
-				"          discesa_piedi_entries = coalesce(entries_sumDiscesaPiedi, 0),",
-				"          total_entries = coalesce(entries_sumAscensoreNord, 0) + coalesce(entries_sumAscensoreSud, 0) + coalesce(entries_sumSalitaPiedi, 0) + coalesce(entries_sumDiscesaPiedi, 0)) ~> CalculateTotals",
+				"PivotEntries derive(ascensore_nord_entries = coalesce(AscensoreNord_entries_sum, 0),",
+				"          ascensore_sud_entries = coalesce(AscensoreSud_entries_sum, 0),",
+				"          salita_piedi_entries = coalesce(SalitaPiedi_entries_sum, 0),",
+				"          discesa_piedi_entries = coalesce(DiscesaPiedi_entries_sum, 0),",
+				"          total_entries = coalesce(AscensoreNord_entries_sum, 0) + coalesce(AscensoreSud_entries_sum, 0) + coalesce(SalitaPiedi_entries_sum, 0) + coalesce(DiscesaPiedi_entries_sum, 0)) ~> CalculateTotals",
 				"CalculateTotals, MaxOccupancyByDate join(PivotEntries@date == MaxOccupancyByDate@date,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> JoinAggregations",
-				"JoinAggregations sink(allowSchemaDrift: true,",
+				"SourceExistingMonthly filter(toString(date) != $currentDate) ~> FilterExistingData",
+				"FilterExistingData, JoinAggregations union(byName: true)~> UnionWithExisting",
+				"UnionWithExisting sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
+				"     input(",
+				"          date as date,",
+				"          total_entries as integer,",
+				"          ascensore_nord_entries as integer,",
+				"          ascensore_sud_entries as integer,",
+				"          salita_piedi_entries as integer,",
+				"          discesa_piedi_entries as integer,",
+				"          max_occupancy as integer,",
+				"          max_occupancy_hour as string",
+				"     ),",
 				"     format: 'parquet',",
+				"     partitionFileNames:['VFD_DFL_Affluences_Monthly_Aggregation_output.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     mapColumn(",
-				"          date = PivotEntries@date,",
+				"          date = {PivotEntries@date},",
 				"          total_entries,",
 				"          ascensore_nord_entries,",
 				"          ascensore_sud_entries,",
@@ -112,7 +155,8 @@
 				"          max_occupancy,",
 				"          max_occupancy_hour",
 				"     ),",
-				"     compressionCodec: 'snappy') ~> SinkMonthlyParquet"
+				"     partitionBy('hash', 1),",
+				"     compressionCodec: 'snappy') ~> SinkMonthly"
 			]
 		}
 	}

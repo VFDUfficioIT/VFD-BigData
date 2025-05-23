@@ -5,6 +5,14 @@
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"folderPath": {
+				"type": "string"
+			},
+			"fileName": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "Affluences"
 		},
@@ -12,10 +20,52 @@
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobFSLocation"
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "curated"
 			},
 			"compressionCodec": "snappy"
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "date",
+				"type": "DATE"
+			},
+			{
+				"name": "total_entries",
+				"type": "INT32"
+			},
+			{
+				"name": "ascensore_nord_entries",
+				"type": "INT32"
+			},
+			{
+				"name": "ascensore_sud_entries",
+				"type": "INT32"
+			},
+			{
+				"name": "salita_piedi_entries",
+				"type": "INT32"
+			},
+			{
+				"name": "discesa_piedi_entries",
+				"type": "INT32"
+			},
+			{
+				"name": "max_occupancy",
+				"type": "INT32"
+			},
+			{
+				"name": "max_occupancy_hour",
+				"type": "UTF8"
+			}
+		]
 	}
 }
