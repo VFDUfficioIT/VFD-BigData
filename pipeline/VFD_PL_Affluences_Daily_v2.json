@@ -323,14 +323,8 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "VFD_DFL_Affluences_Monthly_Aggregation",
+						"referenceName": "VFD_DFL_Affluences_Monthly_Aggregation_Delta",
 						"type": "DataFlowReference",
-						"parameters": {
-							"currentDate": {
-								"value": "@variables('processDate')",
-								"type": "Expression"
-							}
-						},
 						"datasetParameters": {
 							"SourceNewData": {
 								"folderPath": {
