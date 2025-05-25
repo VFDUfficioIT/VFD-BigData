@@ -39,6 +39,11 @@
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     year as string,",
+				"     month as string,",
+				"     dateFormatted as string",
+				"}",
 				"source(output(",
 				"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string)",
 				"     ),",
@@ -46,7 +51,7 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     documentForm: 'documentPerLine',",
-				"     wildcardPaths:['*.json']) ~> SourceJSON",
+				"     wildcardPaths:[(concat(\"/Affluences/\",$year,\"/\",$month,\"/VFD_Affluences_\",$dateFormatted,\"_*.json\"))]) ~> SourceJSON",
 				"SourceJSON foldDown(unroll(data.results, data.results),",
 				"     mapColumn(",
 				"          day = data.results.day,",
@@ -104,6 +109,7 @@
 				"          exits = exits_count",
 				"     ),",
 				"     partitionBy('hash', 1),",
+				"     folderPath: concat(\"Affluences/\", $year, \"/\", $month),",
 				"     compressionCodec: 'snappy') ~> SinkProcessed"
 			]
 		}
