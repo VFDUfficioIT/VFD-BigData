@@ -549,7 +549,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"currentDate": {
-								"value": "@variables('processDate')",
+								"value": "@string(variables('processDate'))",
 								"type": "Expression"
 							}
 						},
