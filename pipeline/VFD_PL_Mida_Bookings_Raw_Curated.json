@@ -346,23 +346,23 @@
 		"parameters": {
 			"folderPath": {
 				"type": "String",
-				"defaultValue": "Mida/Sales/2025/03"
+				"defaultValue": "Mida/Sales/2025/10"
 			},
 			"fileName": {
 				"type": "String",
-				"defaultValue": "export_vw_summary_reservationPayments20250313.csv"
+				"defaultValue": "export_vw_summary_reservationPayments20211001.csv"
 			},
 			"year": {
 				"type": "string",
-				"defaultValue": "2025"
+				"defaultValue": "2021"
 			},
 			"month": {
 				"type": "string",
-				"defaultValue": "03"
+				"defaultValue": "10"
 			},
 			"day": {
 				"type": "string",
-				"defaultValue": "13"
+				"defaultValue": "01"
 			}
 		},
 		"variables": {
