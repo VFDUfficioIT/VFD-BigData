@@ -66,6 +66,9 @@
 					"name": "CleanJoinOutput"
 				},
 				{
+					"name": "GetCurrentDateFromNew"
+				},
+				{
 					"name": "FilterExistingData"
 				},
 				{
@@ -73,9 +76,6 @@
 				}
 			],
 			"scriptLines": [
-				"parameters{",
-				"     currentDate as string",
-				"}",
 				"source(output(",
 				"          site_id as string,",
 				"          site_name as string,",
@@ -149,7 +149,10 @@
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> CleanJoinOutput",
-				"SourceExistingMonthly filter(toString(date) != $currentDate) ~> FilterExistingData",
+				"CleanJoinOutput derive(current_date_value = date) ~> GetCurrentDateFromNew",
+				"SourceExistingMonthly, GetCurrentDateFromNew exists(SourceExistingMonthly@date == current_date_value,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> FilterExistingData",
 				"FilterExistingData, CleanJoinOutput union(byName: true,",
 				"     partitionBy('hash', 1))~> UnionWithExisting",
 				"UnionWithExisting sink(allowSchemaDrift: true,",
