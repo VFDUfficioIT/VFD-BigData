@@ -139,7 +139,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> CleanJoinOutput",
-				"SourceExistingMonthly filter(date != toDate($currentDate, 'yyyy-MM-dd')) ~> FilterExistingData",
+				"SourceExistingMonthly filter(iifNull(date, toDate(\"1900-01-01\",\"yyyy-MM-dd\"),date)!= toDate($currentDate, 'yyyy-MM-dd')) ~> FilterExistingData",
 				"FilterExistingData, CleanJoinOutput union(byName: true,",
 				"     partitionBy('hash', 1))~> UnionWithExisting",
 				"UnionWithExisting sink(allowSchemaDrift: true,",

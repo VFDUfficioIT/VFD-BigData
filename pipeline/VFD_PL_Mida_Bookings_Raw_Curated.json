@@ -20,9 +20,9 @@
 						"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
 						"type": "DataFlowReference",
 						"parameters": {
-							"Mida/Bookings/2021/07": "\"folder\"",
-							"export_vw_summary_reservationPayments20210726.csv": "\"source\"",
-							"export_vw_summary_reservationPayments20210726.parquet": "\"dest\""
+							"folderPath": "\"folder\"",
+							"sourcefileName": "\"source\"",
+							"destfileName": "\"dest\""
 						},
 						"datasetParameters": {
 							"SourceCSV": {
