@@ -4715,7 +4715,7 @@
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> JoinAggregations",
 						"JoinAggregations select(mapColumn(",
-						"          date,",
+						"          date = PivotEntries@date,",
 						"          total_entries,",
 						"          ascensore_nord_entries,",
 						"          ascensore_sud_entries,",
