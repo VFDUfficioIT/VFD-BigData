@@ -202,6 +202,9 @@
 							"name": "CleanJoinOutput"
 						},
 						{
+							"name": "FilterExistingData"
+						},
+						{
 							"name": "UnionWithExisting"
 						}
 					],
@@ -282,7 +285,8 @@
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> CleanJoinOutput",
-						"SourceExistingMonthly, CleanJoinOutput union(byName: true,",
+						"SourceExistingMonthly filter(toString(date) != $currentDate) ~> FilterExistingData",
+						"FilterExistingData, CleanJoinOutput union(byName: true,",
 						"     partitionBy('hash', 1))~> UnionWithExisting",
 						"UnionWithExisting sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
