@@ -226,7 +226,7 @@
 						"coreCount": 16,
 						"computeType": "General"
 					},
-					"traceLevel": "Fine"
+					"traceLevel": "Coarse"
 				}
 			},
 			{
@@ -346,7 +346,7 @@
 		"parameters": {
 			"folderPath": {
 				"type": "String",
-				"defaultValue": "Mida/Sales/2025/10"
+				"defaultValue": "Mida/Bookings/2021/10"
 			},
 			"fileName": {
 				"type": "String",
