@@ -2235,8 +2235,8 @@
 							},
 							"staging": {},
 							"compute": {
-								"coreCount": 16,
-								"computeType": "General"
+								"coreCount": 32,
+								"computeType": "MemoryOptimized"
 							},
 							"traceLevel": "Fine",
 							"parameters": {
@@ -2423,8 +2423,8 @@
 							},
 							"staging": {},
 							"compute": {
-								"coreCount": 16,
-								"computeType": "General"
+								"coreCount": 32,
+								"computeType": "MemoryOptimized"
 							},
 							"traceLevel": "Coarse"
 						}
