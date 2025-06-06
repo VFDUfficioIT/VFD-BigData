@@ -2217,7 +2217,11 @@
 							"dataflow": {
 								"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
 								"type": "DataFlowReference",
-								"parameters": {},
+								"parameters": {
+									"folderPath": "\"folder\"",
+									"sourcefileName": "\"source\"",
+									"destfileName": "\"dest\""
+								},
 								"datasetParameters": {
 									"SourceCSV": {
 										"folderPath": "@pipeline().parameters.folderPath",
@@ -4722,7 +4726,7 @@
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> CleanJoinOutput",
-						"SourceExistingMonthly filter(date != toDate($currentDate, 'yyyy-MM-dd')) ~> FilterExistingData",
+						"SourceExistingMonthly filter(iifNull(date, toDate(\"1900-01-01\",\"yyyy-MM-dd\"),date)!= toDate($currentDate, 'yyyy-MM-dd')) ~> FilterExistingData",
 						"FilterExistingData, CleanJoinOutput union(byName: true,",
 						"     partitionBy('hash', 1))~> UnionWithExisting",
 						"UnionWithExisting sink(allowSchemaDrift: true,",
