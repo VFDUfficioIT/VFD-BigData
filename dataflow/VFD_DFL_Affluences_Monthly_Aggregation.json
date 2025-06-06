@@ -45,10 +45,13 @@
 					"name": "FilterTerrazze"
 				},
 				{
-					"name": "AddMaxOccupancy"
+					"name": "MaxOccupancyOnly"
 				},
 				{
-					"name": "FilterMaxRows"
+					"name": "JoinWithMax"
+				},
+				{
+					"name": "FilterMaxOccupancy"
 				},
 				{
 					"name": "MaxOccupancyByDate"
@@ -115,10 +118,15 @@
 				"          site_name_clean),",
 				"     entries_sum = sum(entries)) ~> AggregateByDate",
 				"SourceNewData filter(site_name == 'Terrazze') ~> FilterTerrazze",
-				"FilterTerrazze window(over(date),",
-				"     max_occupancy = max(occupancy)) ~> AddMaxOccupancy",
-				"AddMaxOccupancy filter(occupancy == max_occupancy) ~> FilterMaxRows",
-				"FilterMaxRows aggregate(groupBy(date,",
+				"FilterTerrazze aggregate(groupBy(date),",
+				"     max_occupancy = max(occupancy)) ~> MaxOccupancyOnly",
+				"FilterTerrazze, MaxOccupancyOnly join(SourceNewData@date == MaxOccupancyOnly@date,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinWithMax",
+				"JoinWithMax filter(occupancy == max_occupancy) ~> FilterMaxOccupancy",
+				"FilterMaxOccupancy aggregate(groupBy(SourceNewData@date,",
 				"          max_occupancy),",
 				"     max_occupancy_hour = first(hour)) ~> MaxOccupancyByDate",
 				"AggregateByDate pivot(groupBy(date),",
