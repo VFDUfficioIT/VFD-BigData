@@ -1173,7 +1173,7 @@
 						"typeProperties": {
 							"variableName": "endDate",
 							"value": {
-								"value": "@formatDateTime('2025-05-15', 'yyyy-MM-dd')",
+								"value": "@formatDateTime('2025-06-06', 'yyyy-MM-dd')",
 								"type": "Expression"
 							}
 						}
@@ -1212,7 +1212,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "VFD_PL_Affluences_Daily",
+											"referenceName": "VFD_PL_Affluences_Daily_v2",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
@@ -1316,7 +1316,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Affluences_Daily')]"
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Affluences_Daily_v2')]"
 			]
 		},
 		{
