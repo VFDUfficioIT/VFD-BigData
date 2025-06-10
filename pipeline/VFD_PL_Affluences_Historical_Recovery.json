@@ -15,7 +15,7 @@
 				"typeProperties": {
 					"variableName": "currentDate",
 					"value": {
-						"value": "@formatDateTime('2024-11-01', 'yyyy-MM-dd')",
+						"value": "@formatDateTime('2025-06-07', 'yyyy-MM-dd')",
 						"type": "Expression"
 					}
 				}
@@ -32,7 +32,7 @@
 				"typeProperties": {
 					"variableName": "endDate",
 					"value": {
-						"value": "@formatDateTime('2025-06-06', 'yyyy-MM-dd')",
+						"value": "@formatDateTime('2025-06-09', 'yyyy-MM-dd')",
 						"type": "Expression"
 					}
 				}
