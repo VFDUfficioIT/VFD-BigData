@@ -1646,7 +1646,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_JSON_to_CSV')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_JSON_to_Processed')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1658,7 +1658,7 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "VFD_DS_Temp_Affluences_JSON",
+								"referenceName": "VFD_DS_Raw_Affluences_JSON",
 								"type": "DatasetReference"
 							},
 							"name": "SourceJSON"
@@ -1667,14 +1667,10 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "VFD_DS_Raw_Affluences_CSV",
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
 								"type": "DatasetReference"
 							},
-							"name": "SinkCSV",
-							"rejectedDataLinkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							}
+							"name": "SinkProcessed"
 						}
 					],
 					"transformations": [
@@ -1685,15 +1681,17 @@
 							"name": "ExpandEntries"
 						},
 						{
-							"name": "SelectColumns"
+							"name": "AddSiteName"
 						},
 						{
-							"name": "AddSiteName"
+							"name": "ConvertTypes"
 						}
 					],
 					"scriptLines": [
 						"parameters{",
-						"     date as string ('20250514')",
+						"     year as string,",
+						"     month as string,",
+						"     dateFormatted as string",
 						"}",
 						"source(output(",
 						"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string)",
@@ -1702,7 +1700,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:['temp/affluences/*.json']) ~> SourceJSON",
+						"     wildcardPaths:[(concat(\"/Affluences/\",$year,\"/\",$month,\"/VFD_Affluences_\",$dateFormatted,\"_*.json\"))]) ~> SourceJSON",
 						"SourceJSON foldDown(unroll(data.results, data.results),",
 						"     mapColumn(",
 						"          day = data.results.day,",
@@ -1722,52 +1720,52 @@
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> ExpandEntries",
-						"ExpandEntries select(mapColumn(",
-						"          site_uuid,",
-						"          date = day,",
-						"          hour,",
-						"          occupancy,",
-						"          entries = entries_count,",
-						"          exits = exits_count",
-						"     ),",
-						"     partitionBy('hash', 1),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> SelectColumns",
-						"SelectColumns derive(site_name = case(   site_uuid == '5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307', 'Terrazze',   site_uuid == 'ca2dae61-4a99-4cb7-8051-26cb852ea408', 'Ascensore Nord',   site_uuid == 'aa6c22f1-84b6-441a-bbb0-bd429e63536d', 'Ascensore Sud',   site_uuid == '8358df5f-0186-4a11-87ad-11fc19cda749', 'Salita a piedi',   site_uuid == '639bc326-010a-402f-ba5f-3c75e2740d9d', 'Discesa a piedi',   'Unknown' )) ~> AddSiteName",
-						"AddSiteName sink(allowSchemaDrift: true,",
+						"ExpandEntries derive(site_name = case(",
+						"     site_uuid == '5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307', 'Terrazze',",
+						"     site_uuid == 'ca2dae61-4a99-4cb7-8051-26cb852ea408', 'Ascensore Nord',",
+						"     site_uuid == 'aa6c22f1-84b6-441a-bbb0-bd429e63536d', 'Ascensore Sud',",
+						"     site_uuid == '8358df5f-0186-4a11-87ad-11fc19cda749', 'Salita a piedi',",
+						"     site_uuid == '639bc326-010a-402f-ba5f-3c75e2740d9d', 'Discesa a piedi',",
+						"     'Unknown'",
+						")) ~> AddSiteName",
+						"AddSiteName derive(date = toDate(day, 'yyyy-MM-dd'),",
+						"          site_id = site_uuid) ~> ConvertTypes",
+						"ConvertTypes sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          site_id as string,",
 						"          site_name as string,",
-						"          date as string,",
+						"          date as date,",
 						"          hour as string,",
-						"          occupancy as string,",
-						"          entries as string,",
-						"          exits as string",
+						"          occupancy as integer,",
+						"          entries as integer,",
+						"          exits as integer",
 						"     ),",
-						"     partitionFileNames:['temp_output.csv'],",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Affluences_JSON_to_Processed_output.parquet'],",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     mapColumn(",
-						"          site_id = site_uuid,",
+						"          site_id,",
 						"          site_name,",
 						"          date,",
 						"          hour,",
 						"          occupancy,",
-						"          entries,",
-						"          exits",
+						"          entries = entries_count,",
+						"          exits = exits_count",
 						"     ),",
-						"     partitionBy('hash', 1)) ~> SinkCSV"
+						"     partitionBy('hash', 1),",
+						"     folderPath: concat(\"Affluences/\", $year, \"/\", $month),",
+						"     compressionCodec: 'snappy') ~> SinkProcessed"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Temp_Affluences_JSON')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_CSV')]",
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_JSON')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]"
 			]
 		}
 	]
