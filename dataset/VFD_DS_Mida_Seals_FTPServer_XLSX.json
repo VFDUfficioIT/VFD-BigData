@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Mida_Seals_FTPServer_CSV",
+	"name": "VFD_DS_Mida_Seals_FTPServer_XLSX",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_LS_Mida_FtpServer",
@@ -14,19 +14,20 @@
 			"name": "Mida/Seals"
 		},
 		"annotations": [],
-		"type": "DelimitedText",
+		"type": "Excel",
 		"typeProperties": {
+			"sheetName": "Emissioni di ieri",
 			"location": {
 				"type": "FtpServerLocation",
 				"fileName": {
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "seals"
+				"folderPath": "emissioni"
 			},
+			"firstRowAsHeader": true,
 			"columnDelimiter": ";",
 			"escapeChar": "\\",
-			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
 		"schema": []
