@@ -1,0 +1,68 @@
+{
+	"name": "VFD_DS_Mida_Validations_FTPServer_XLSX",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_Mida_FtpServer",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida/Validations"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Vidimazioni di ieri",
+			"location": {
+				"type": "FtpServerLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "vidimazioni"
+			},
+			"firstRowAsHeader": true,
+			"columnDelimiter": ";",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "event_guid",
+				"type": "String"
+			},
+			{
+				"name": "siae",
+				"type": "String"
+			},
+			{
+				"name": "seal",
+				"type": "String"
+			},
+			{
+				"name": "reservationCode",
+				"type": "String"
+			},
+			{
+				"name": "inGateTimestamp",
+				"type": "String"
+			},
+			{
+				"name": "entranceLabel",
+				"type": "String"
+			},
+			{
+				"name": "passCode",
+				"type": "String"
+			},
+			{
+				"name": "externalCode",
+				"type": "String"
+			}
+		]
+	}
+}
