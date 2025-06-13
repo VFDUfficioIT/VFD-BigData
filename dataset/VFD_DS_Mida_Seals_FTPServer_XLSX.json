@@ -30,6 +30,31 @@
 			"escapeChar": "\\",
 			"quoteChar": "\""
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "sealCode",
+				"type": "String"
+			},
+			{
+				"name": "reservationCode",
+				"type": "String"
+			},
+			{
+				"name": "TicketLabel",
+				"type": "String"
+			},
+			{
+				"name": "EventLabel",
+				"type": "String"
+			},
+			{
+				"name": "List",
+				"type": "String"
+			},
+			{
+				"name": "externalCode",
+				"type": "String"
+			}
+		]
 	}
 }
