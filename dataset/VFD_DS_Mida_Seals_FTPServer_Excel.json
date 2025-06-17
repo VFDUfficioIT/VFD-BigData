@@ -22,7 +22,8 @@
 				"fileName": {
 					"value": "@dataset().fileName",
 					"type": "Expression"
-				}
+				},
+				"folderPath": "emissioni"
 			},
 			"firstRowAsHeader": true
 		},
