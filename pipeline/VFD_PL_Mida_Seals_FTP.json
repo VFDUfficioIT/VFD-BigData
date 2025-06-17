@@ -89,7 +89,7 @@
 							"typeProperties": {
 								"variableName": "year",
 								"value": {
-									"value": "@substring(item().name, 21, 4)",
+									"value": "@substring(item().name, 24, 4)",
 									"type": "Expression"
 								}
 							}
@@ -113,7 +113,7 @@
 							"typeProperties": {
 								"variableName": "month",
 								"value": {
-									"value": "@substring(item().name, 25, 2)",
+									"value": "@substring(item().name, 28, 2)",
 									"type": "Expression"
 								}
 							}
@@ -137,7 +137,7 @@
 							"typeProperties": {
 								"variableName": "day",
 								"value": {
-									"value": "@substring(item().name, 27, 2)",
+									"value": "@substring(item().name, 30, 2)",
 									"type": "Expression"
 								}
 							}
