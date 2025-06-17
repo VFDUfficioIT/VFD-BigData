@@ -447,7 +447,8 @@
 						"fileName": {
 							"value": "@dataset().fileName",
 							"type": "Expression"
-						}
+						},
+						"folderPath": "emissioni"
 					},
 					"firstRowAsHeader": true
 				},
@@ -473,7 +474,8 @@
 				"type": "Binary",
 				"typeProperties": {
 					"location": {
-						"type": "FtpServerLocation"
+						"type": "FtpServerLocation",
+						"folderPath": "emissioni"
 					}
 				}
 			},
