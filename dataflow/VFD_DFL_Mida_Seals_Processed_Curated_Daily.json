@@ -1,0 +1,71 @@
+{
+	"name": "VFD_DFL_Mida_Seals_Processed_Curated_Daily",
+	"properties": {
+		"description": "Dataflow per selezionare campi rilevanti dal parquet processed",
+		"folder": {
+			"name": "Mida/Seals"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_Mida_Seals_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SourceProcessed"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkCurated"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SelectFields"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          sealCode as string,",
+				"          reservationCode as string,",
+				"          ticketLabel as string,",
+				"          eventLabel as string,",
+				"          list as string,",
+				"          externalCode as string,",
+				"          processing_date as timestamp,",
+				"          data_source as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> SourceProcessed",
+				"SourceProcessed select(mapColumn(",
+				"          sealCode,",
+				"          reservationCode,",
+				"          ticketLabel,",
+				"          eventLabel,",
+				"          list,",
+				"          externalCode,",
+				"          processing_date",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> SelectFields",
+				"SelectFields sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:['VFD_DFL_Mida_Seals_Processed_Curated_Daily_output.parquet'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     partitionBy('hash', 1),",
+				"     compressionCodec: 'snappy') ~> SinkCurated"
+			]
+		}
+	}
+}

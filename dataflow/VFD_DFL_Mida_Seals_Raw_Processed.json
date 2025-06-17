@@ -1,0 +1,63 @@
+{
+	"name": "VFD_DFL_Mida_Seals_Raw_Processed",
+	"properties": {
+		"description": "Dataflow per convertire Excel Seals in Parquet con conversioni di tipo",
+		"folder": {
+			"name": "Mida/Seals"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+						"type": "DatasetReference"
+					},
+					"name": "SourceExcel"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_Mida_Seals_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkParquet",
+					"rejectedDataLinkedService": {
+						"referenceName": "VFD_Big_Data_DL",
+						"type": "LinkedServiceReference"
+					}
+				}
+			],
+			"transformations": [
+				{
+					"name": "dataTypeConversions"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          sealCode as string,",
+				"          reservationCode as string,",
+				"          ticketLabel as string,",
+				"          eventLabel as string,",
+				"          list as string,",
+				"          externalCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SourceExcel",
+				"SourceExcel derive(processing_date = currentUTC(),",
+				"          data_source = 'mida_seals') ~> dataTypeConversions",
+				"dataTypeConversions sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:['VFD_DFL_Mida_Seals_Raw_Processed_output.parquet'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     partitionBy('hash', 1),",
+				"     compressionCodec: 'snappy') ~> SinkParquet"
+			]
+		}
+	}
+}
