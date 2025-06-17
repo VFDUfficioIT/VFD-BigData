@@ -379,7 +379,32 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Seals_FTPServer_CSV')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Validations_FTPServer_Folder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_LS_Mida_FtpServer",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "FtpServerLocation",
+						"folderPath": "vidimazioni"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Validations_FTPServer_XLSX')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -393,50 +418,59 @@
 					}
 				},
 				"folder": {
-					"name": "Mida/Seals"
+					"name": "Mida/Validations"
 				},
 				"annotations": [],
-				"type": "DelimitedText",
+				"type": "Excel",
 				"typeProperties": {
+					"sheetName": "Vidimazioni di ieri",
 					"location": {
 						"type": "FtpServerLocation",
 						"fileName": {
 							"value": "@dataset().fileName",
 							"type": "Expression"
 						},
-						"folderPath": "seals"
+						"folderPath": "vidimazioni"
 					},
+					"firstRowAsHeader": true,
 					"columnDelimiter": ";",
 					"escapeChar": "\\",
-					"firstRowAsHeader": true,
 					"quoteChar": "\""
 				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Seals_FTPServer_Folder')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_Mida_FtpServer",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Mida/Seals"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "FtpServerLocation",
-						"folderPath": "seals"
+				"schema": [
+					{
+						"name": "event_guid",
+						"type": "String"
+					},
+					{
+						"name": "siae",
+						"type": "String"
+					},
+					{
+						"name": "seal",
+						"type": "String"
+					},
+					{
+						"name": "reservationCode",
+						"type": "String"
+					},
+					{
+						"name": "inGateTimestamp",
+						"type": "String"
+					},
+					{
+						"name": "entranceLabel",
+						"type": "String"
+					},
+					{
+						"name": "passCode",
+						"type": "String"
+					},
+					{
+						"name": "externalCode",
+						"type": "String"
 					}
-				}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
@@ -1575,197 +1609,63 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_Daily_to_Curated')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Seals_FTPServer_Folder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"folder": {
-					"name": "Affluences"
+				"linkedServiceName": {
+					"referenceName": "VFD_LS_Mida_FtpServer",
+					"type": "LinkedServiceReference"
 				},
-				"type": "MappingDataFlow",
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Binary",
 				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceProcessed"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkCuratedDaily"
-						}
-					],
-					"transformations": [],
-					"scriptLines": [
-						"source(output(",
-						"          site_id as string,",
-						"          site_name as string,",
-						"          date as date,",
-						"          hour as string,",
-						"          occupancy as integer,",
-						"          entries as integer,",
-						"          exits as integer",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> SourceProcessed",
-						"SourceProcessed sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          site_id as string,",
-						"          site_name as string,",
-						"          date as date,",
-						"          hour as string,",
-						"          occupancy as integer,",
-						"          entries as integer,",
-						"          exits as integer",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Affluences_Daily_to_Curated_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkCuratedDaily"
-					]
+					"location": {
+						"type": "FtpServerLocation"
+					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Affluences_Daily_Parquet')]"
+				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_JSON_to_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Seals_FTPServer_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"folder": {
-					"name": "Affluences"
+				"linkedServiceName": {
+					"referenceName": "VFD_LS_Mida_FtpServer",
+					"type": "LinkedServiceReference"
 				},
-				"type": "MappingDataFlow",
+				"parameters": {
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Excel",
 				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Affluences_JSON",
-								"type": "DatasetReference"
-							},
-							"name": "SourceJSON"
+					"sheetName": "Foglio1",
+					"location": {
+						"type": "FtpServerLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
 						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkProcessed"
-						}
-					],
-					"transformations": [
-						{
-							"name": "FlattenJSON"
-						},
-						{
-							"name": "ExpandEntries"
-						},
-						{
-							"name": "AddSiteName"
-						},
-						{
-							"name": "ConvertTypes"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     year as string,",
-						"     month as string,",
-						"     dateFormatted as string",
-						"}",
-						"source(output(",
-						"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string)",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:[(concat(\"/Affluences/\",$year,\"/\",$month,\"/VFD_Affluences_\",$dateFormatted,\"_*.json\"))]) ~> SourceJSON",
-						"SourceJSON foldDown(unroll(data.results, data.results),",
-						"     mapColumn(",
-						"          day = data.results.day,",
-						"          entries = data.results.entries,",
-						"          site_uuid = data.site_id",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> FlattenJSON",
-						"FlattenJSON foldDown(unroll(entries, entries),",
-						"     mapColumn(",
-						"          site_uuid,",
-						"          day,",
-						"          hour = entries.hour,",
-						"          occupancy = entries.occupancy,",
-						"          entries_count = entries.entries,",
-						"          exits_count = entries.exits",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> ExpandEntries",
-						"ExpandEntries derive(site_name = case(",
-						"     site_uuid == '5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307', 'Terrazze',",
-						"     site_uuid == 'ca2dae61-4a99-4cb7-8051-26cb852ea408', 'Ascensore Nord',",
-						"     site_uuid == 'aa6c22f1-84b6-441a-bbb0-bd429e63536d', 'Ascensore Sud',",
-						"     site_uuid == '8358df5f-0186-4a11-87ad-11fc19cda749', 'Salita a piedi',",
-						"     site_uuid == '639bc326-010a-402f-ba5f-3c75e2740d9d', 'Discesa a piedi',",
-						"     'Unknown'",
-						")) ~> AddSiteName",
-						"AddSiteName derive(date = toDate(day, 'yyyy-MM-dd'),",
-						"          site_id = site_uuid) ~> ConvertTypes",
-						"ConvertTypes sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          site_id as string,",
-						"          site_name as string,",
-						"          date as date,",
-						"          hour as string,",
-						"          occupancy as integer,",
-						"          entries as integer,",
-						"          exits as integer",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Affluences_JSON_to_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     mapColumn(",
-						"          site_id,",
-						"          site_name,",
-						"          date,",
-						"          hour,",
-						"          occupancy,",
-						"          entries = entries_count,",
-						"          exits = exits_count",
-						"     ),",
-						"     partitionBy('hash', 1),",
-						"     folderPath: concat(\"Affluences/\", $year, \"/\", $month),",
-						"     compressionCodec: 'snappy') ~> SinkProcessed"
-					]
-				}
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Affluences_JSON')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]"
+				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
 			]
 		}
 	]
