@@ -4791,7 +4791,7 @@
 				"annotations": [],
 				"type": "Excel",
 				"typeProperties": {
-					"sheetName": "Foglio1",
+					"sheetName": "Emissioni di ieri",
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
