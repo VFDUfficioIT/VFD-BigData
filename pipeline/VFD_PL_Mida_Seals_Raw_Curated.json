@@ -189,7 +189,7 @@
 							},
 							"SinkCurated": {
 								"folderPath": {
-									"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
+									"value": "@pipeline().parameters.folderPath",
 									"type": "Expression"
 								},
 								"fileName": {
