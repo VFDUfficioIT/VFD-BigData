@@ -1,0 +1,13 @@
+{
+	"name": "VFD_LS_VisualCrossing_API",
+	"properties": {
+		"description": "Linked service per le API di Visual Crossing per i dati meteo",
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
