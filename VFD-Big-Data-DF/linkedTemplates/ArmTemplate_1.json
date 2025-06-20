@@ -2580,7 +2580,10 @@
 								"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
 									"fileName": {
 										"value": "VFD_DFL_Mida_Seals_Processed_Curated_Daily_output.parquet",
 										"type": "Expression"
@@ -2626,7 +2629,10 @@
 								"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
 									"fileName": "VFD_DFL_Mida_Seals_Processed_Curated_Daily_output.parquet"
 								}
 							},
