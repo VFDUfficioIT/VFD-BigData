@@ -23,6 +23,9 @@
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_userName": {
 			"value": "vfd_storico_ftp"
 		},
+		"VFD_LS_VisualCrossing_API_properties_typeProperties_url": {
+			"value": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+		},
 		"containerUri": {
 			"value": ""
 		},

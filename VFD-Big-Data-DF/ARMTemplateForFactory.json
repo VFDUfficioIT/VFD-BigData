@@ -30,6 +30,10 @@
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "vfd_storico_ftp"
+		},
+		"VFD_LS_VisualCrossing_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
 		}
 	},
 	"variables": {
@@ -3094,7 +3098,10 @@
 								"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
 									"fileName": {
 										"value": "@concat('Mida_Seals_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
 										"type": "Expression"
@@ -4948,6 +4955,22 @@
 						"type": "SecureString",
 						"value": "[parameters('VFD_LS_Mida_FtpServer_password')]"
 					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_LS_VisualCrossing_API')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Linked service per le API di Visual Crossing per i dati meteo",
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('VFD_LS_VisualCrossing_API_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
 				}
 			},
 			"dependsOn": []

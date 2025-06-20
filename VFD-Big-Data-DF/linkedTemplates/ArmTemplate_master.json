@@ -31,6 +31,10 @@
 			"type": "string",
 			"defaultValue": "vfd_storico_ftp"
 		},
+		"VFD_LS_VisualCrossing_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -75,6 +79,9 @@
 					},
 					"VFD_LS_Mida_FtpServer_properties_typeProperties_userName": {
 						"value": "[parameters('VFD_LS_Mida_FtpServer_properties_typeProperties_userName')]"
+					},
+					"VFD_LS_VisualCrossing_API_properties_typeProperties_url": {
+						"value": "[parameters('VFD_LS_VisualCrossing_API_properties_typeProperties_url')]"
 					}
 				}
 			},
