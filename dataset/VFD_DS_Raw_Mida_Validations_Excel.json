@@ -1,11 +1,14 @@
 {
-	"name": "VFD_DS_Mida_Validations_FTPServer_Excel",
+	"name": "VFD_DS_Raw_Mida_Validations_Excel",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "VFD_LS_Mida_FtpServer",
+			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
+			"folderPath": {
+				"type": "String"
+			},
 			"fileName": {
 				"type": "String"
 			}
@@ -18,12 +21,16 @@
 		"typeProperties": {
 			"sheetName": "Vidimazioni di ieri",
 			"location": {
-				"type": "FtpServerLocation",
+				"type": "AzureBlobFSLocation",
 				"fileName": {
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "vidimazioni"
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "raw"
 			},
 			"firstRowAsHeader": true
 		},
