@@ -72,6 +72,9 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
 						}
 					},
 					"sink": {
@@ -198,7 +201,7 @@
 							},
 							"SinkCurated": {
 								"folderPath": {
-									"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/')",
+									"value": "@pipeline().parameters.folderPath",
 									"type": "Expression"
 								},
 								"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
@@ -238,6 +241,9 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
 						}
 					},
 					"sink": {
@@ -265,7 +271,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": {
-								"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/')",
+								"value": "@pipeline().parameters.folderPath",
 								"type": "Expression"
 							},
 							"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
@@ -278,7 +284,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": {
-								"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/')",
+								"value": "@pipeline().parameters.folderPath",
 								"type": "Expression"
 							},
 							"fileName": {
@@ -314,7 +320,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"folderPath": {
-								"value": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/')",
+								"value": "@pipeline().parameters.folderPath",
 								"type": "Expression"
 							},
 							"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
