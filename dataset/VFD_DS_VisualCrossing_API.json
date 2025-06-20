@@ -1,0 +1,15 @@
+{
+	"name": "VFD_DS_VisualCrossing_API",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_VisualCrossing_API",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Visual Crossing/Weather"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"schema": []
+	}
+}
