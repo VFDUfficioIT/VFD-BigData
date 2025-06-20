@@ -7018,7 +7018,7 @@
 						"     ignoreNoFilesFound: false) ~> SourceExcel",
 						"SourceExcel derive(processing_date = currentUTC(),",
 						"          data_source = 'mida_validations',",
-						"          inGateTimestamp = toTimestamp(inGateTimestamp, 'dd/MM/yyyy')) ~> dataTypeConversions",
+						"          inGateTimestamp = toTimestamp(inGateTimestamp, 'dd/MM/yyyy HH:mm:ss')) ~> dataTypeConversions",
 						"dataTypeConversions sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
