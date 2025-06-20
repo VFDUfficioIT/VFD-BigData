@@ -277,7 +277,10 @@
 						"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": "@concat('Mida/',pipeline().parameters.year,'/',pipeline().parameters.month,'/') ",
+							"folderPath": {
+								"value": "@pipeline().parameters.folderPath",
+								"type": "Expression"
+							},
 							"fileName": {
 								"value": "@concat('Mida_Seals_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
 								"type": "Expression"
