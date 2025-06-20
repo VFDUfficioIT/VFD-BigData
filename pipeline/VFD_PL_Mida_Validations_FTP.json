@@ -310,6 +310,10 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
+											"pipeline": {
+												"referenceName": "VFD_PL_Mida_Validations_Raw_Curated",
+												"type": "PipelineReference"
+											},
 											"waitOnCompletion": true,
 											"parameters": {
 												"folderPath": {

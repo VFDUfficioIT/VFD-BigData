@@ -18,7 +18,26 @@
 				"typeProperties": {
 					"dataflow": {
 						"referenceName": "VFD_DFL_Mida_Validations_Raw_Processed",
-						"type": "DataFlowReference"
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"SourceExcel": {
+								"folderPath": {
+									"value": "@pipeline().parameters.folderPath",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@pipeline().parameters.fileName",
+									"type": "Expression"
+								}
+							},
+							"SinkParquet": {
+								"folderPath": {
+									"value": "@pipeline().parameters.folderPath",
+									"type": "Expression"
+								},
+								"fileName": "VFD_DFL_Mida_Validations_Raw_Processed_output.parquet"
+							}
+						}
 					},
 					"compute": {
 						"coreCount": 8,
@@ -53,9 +72,6 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "ParquetReadSettings"
 						}
 					},
 					"sink": {
