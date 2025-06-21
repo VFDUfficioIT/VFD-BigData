@@ -1,0 +1,36 @@
+{
+	"name": "VFD_DS_VisualCrossing_HTTP_CSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_VisualCrossing_HTTP",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"data_inizio": {
+				"type": "string"
+			},
+			"data_fine": {
+				"type": "string"
+			},
+			"location": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "@concat('/',dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=...&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

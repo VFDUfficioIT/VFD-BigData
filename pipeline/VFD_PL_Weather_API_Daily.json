@@ -233,10 +233,14 @@
 							"userProperties": [],
 							"typeProperties": {
 								"source": {
-									"type": "RestSource",
-									"httpRequestTimeout": "00:01:40",
-									"requestInterval": "00.00:00:00.010",
-									"requestMethod": "GET"
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
 								},
 								"sink": {
 									"type": "DelimitedTextSink",
@@ -249,25 +253,24 @@
 										"fileExtension": ".csv"
 									}
 								},
-								"enableStaging": false
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
 							},
 							"inputs": [
 								{
-									"referenceName": "VFD_DS_VisualCrossing_Historical_API",
+									"referenceName": "VFD_DS_VisualCrossing_HTTP_CSV",
 									"type": "DatasetReference",
 									"parameters": {
-										"data_inizio": {
-											"value": "@variables('data_inizio')",
-											"type": "Expression"
-										},
-										"data_fine": {
-											"value": "@variables('data_fine')",
-											"type": "Expression"
-										},
-										"location": {
-											"value": "@variables('location')",
-											"type": "Expression"
-										}
+										"data_inizio": "@variables('data_inizio')",
+										"data_fine": "@variables('data_fine')",
+										"location": "@variables('location')"
 									}
 								}
 							],
@@ -335,13 +338,16 @@
 		],
 		"parameters": {
 			"data_inizio": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "2025-06-01"
 			},
 			"data_fine": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "2025-06-20"
 			},
 			"location": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "Milano"
 			}
 		},
 		"variables": {
