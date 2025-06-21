@@ -4470,7 +4470,7 @@
 				"description": "Pipeline per acquisire dati meteo da Visual Crossing API e processarli",
 				"activities": [
 					{
-						"name": "SetYear",
+						"name": "SetDataInizio",
 						"type": "SetVariable",
 						"dependsOn": [],
 						"policy": {
@@ -4479,9 +4479,67 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
+							"variableName": "data_inizio",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.data_inizio, formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetDataFine",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "data_fine",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.data_fine, formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetLocation",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "location",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.location, 'Milano')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetYear",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetDataInizio",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
 							"variableName": "year",
 							"value": {
-								"value": "@substring(pipeline().parameters.data_inizio, 0, 4)",
+								"value": "@substring(variables('data_inizio'), 0, 4)",
 								"type": "Expression"
 							}
 						}
@@ -4505,7 +4563,7 @@
 						"typeProperties": {
 							"variableName": "month",
 							"value": {
-								"value": "@substring(pipeline().parameters.data_inizio, 5, 2)",
+								"value": "@substring(variables('data_inizio'), 5, 2)",
 								"type": "Expression"
 							}
 						}
@@ -4539,6 +4597,12 @@
 						"type": "SetVariable",
 						"dependsOn": [
 							{
+								"activity": "SetDataFine",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
 								"activity": "SetFolderPath",
 								"dependencyConditions": [
 									"Succeeded"
@@ -4553,7 +4617,7 @@
 						"typeProperties": {
 							"variableName": "fileName",
 							"value": {
-								"value": "@concat('weather_', replace(pipeline().parameters.data_inizio, '-', ''), '_', replace(pipeline().parameters.data_fine, '-', ''), '.csv')",
+								"value": "@concat('weather_', replace(variables('data_inizio'), '-', ''), '_', replace(variables('data_fine'), '-', ''), '.csv')",
 								"type": "Expression"
 							}
 						}
@@ -4598,9 +4662,6 @@
 								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
 								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
 							}
 						}
 					},
@@ -4658,9 +4719,18 @@
 											"referenceName": "VFD_DS_VisualCrossing_Historical_API",
 											"type": "DatasetReference",
 											"parameters": {
-												"data_inizio": "@pipeline().parameters.data_inizio",
-												"data_fine": "@pipeline().parameters.data_fine",
-												"location": "@pipeline().parameters.location"
+												"data_inizio": {
+													"value": "@variables('data_inizio')",
+													"type": "Expression"
+												},
+												"data_fine": {
+													"value": "@variables('data_fine')",
+													"type": "Expression"
+												},
+												"location": {
+													"value": "@variables('location')",
+													"type": "Expression"
+												}
 											}
 										}
 									],
@@ -4731,19 +4801,25 @@
 				},
 				"parameters": {
 					"data_inizio": {
-						"type": "String",
-						"defaultValue": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')"
+						"type": "String"
 					},
 					"data_fine": {
-						"type": "String",
-						"defaultValue": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')"
+						"type": "String"
 					},
 					"location": {
-						"type": "String",
-						"defaultValue": "Milano"
+						"type": "String"
 					}
 				},
 				"variables": {
+					"data_inizio": {
+						"type": "String"
+					},
+					"data_fine": {
+						"type": "String"
+					},
+					"location": {
+						"type": "String"
+					},
 					"year": {
 						"type": "String"
 					},
