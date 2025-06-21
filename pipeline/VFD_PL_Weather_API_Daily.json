@@ -190,7 +190,12 @@
 							"inputs": [
 								{
 									"referenceName": "VFD_DS_VisualCrossing_Historical_API",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"data_inizio": "@pipeline().parameters.data_inizio",
+										"data_fine": "@pipeline().parameters.data_fine",
+										"location": "@pipeline().parameters.location"
+									}
 								}
 							],
 							"outputs": [
