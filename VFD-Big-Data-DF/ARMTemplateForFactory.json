@@ -3954,6 +3954,831 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_API_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire dati meteo da Visual Crossing API e processarli",
+				"activities": [
+					{
+						"name": "SetYear",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "year",
+							"value": {
+								"value": "@substring(pipeline().parameters.data_inizio, 0, 4)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetMonth",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetYear",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "month",
+							"value": {
+								"value": "@substring(pipeline().parameters.data_inizio, 5, 2)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetFolderPath",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetMonth",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "folderPath",
+							"value": {
+								"value": "@concat('Weather/', variables('year'), '/', variables('month'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetFileName",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetFolderPath",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "fileName",
+							"value": {
+								"value": "@concat('weather_', replace(pipeline().parameters.data_inizio, '-', ''), '_', replace(pipeline().parameters.data_fine, '-', ''), '.csv')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CheckIfExistsInRaw",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "SetFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Weather_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@variables('folderPath')",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@variables('fileName')",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "IfNotExistsInRaw",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "CheckIfExistsInRaw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(activity('CheckIfExistsInRaw').output.exists)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "CopyFromAPI",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "RestSource",
+											"httpRequestTimeout": "00:01:40",
+											"requestInterval": "00.00:00:00.010",
+											"requestMethod": "GET"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": false,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_VisualCrossing_Historical_API",
+											"type": "DatasetReference",
+											"parameters": {
+												"data_inizio": "@pipeline().parameters.data_inizio",
+												"data_fine": "@pipeline().parameters.data_fine",
+												"location": "@pipeline().parameters.location"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Raw_Weather_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPath')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Raw to Curated Pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "IfNotExistsInRaw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Weather_Raw_Curated",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"folderPath": {
+									"value": "@variables('folderPath')",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@variables('fileName')",
+									"type": "Expression"
+								},
+								"year": {
+									"value": "@variables('year')",
+									"type": "Expression"
+								},
+								"month": {
+									"value": "@variables('month')",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"data_inizio": {
+						"type": "String",
+						"defaultValue": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')"
+					},
+					"data_fine": {
+						"type": "String",
+						"defaultValue": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')"
+					},
+					"location": {
+						"type": "String",
+						"defaultValue": "Milano"
+					}
+				},
+				"variables": {
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Weather_CSV')]",
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_Raw_Curated')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_VisualCrossing_Historical_API')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_Raw_Curated')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per convertire CSV meteo in Parquet e aggiornare file mensili con ForEach",
+				"activities": [
+					{
+						"name": "Raw to Processed Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Weather_Raw_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceRaw": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
+									},
+									"SinkProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Copy Raw to Processed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Raw to Processed Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary Processed",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Raw to Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Get Processed Data Rows",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Delete Temporary Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach Weather Row",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Processed Data Rows",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Processed Data Rows').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "SetRowYear",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowYear",
+										"value": {
+											"value": "@substring(item().datetime, 0, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowMonth",
+										"value": {
+											"value": "@substring(item().datetime, 5, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowDate",
+										"value": {
+											"value": "@item().datetime",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Update Monthly File",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "SetRowDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "VFD_DFL_Weather_Single_Row_To_Monthly",
+											"type": "DataFlowReference",
+											"parameters": {
+												"target_date": {
+													"value": "'@{variables('rowDate')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SourceProcessed": {
+													"folderPath": {
+														"value": "@pipeline().parameters.folderPath",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SourceCuratedExisting": {
+													"folderPath": "Weather",
+													"fileName": {
+														"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SinkCurated": {
+													"folderPath": "Weather",
+													"fileName": {
+														"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "Copy to Final Monthly File",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Update Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "Weather",
+												"fileName": {
+													"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "Weather",
+												"fileName": {
+													"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Delete Temporary Monthly",
+									"type": "Delete",
+									"dependsOn": [
+										{
+											"activity": "Copy to Final Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "Weather",
+												"fileName": {
+													"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					}
+				},
+				"variables": {
+					"rowYear": {
+						"type": "String"
+					},
+					"rowMonth": {
+						"type": "String"
+					},
+					"rowDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Single_Row_To_Monthly')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Raw_Processed')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -4264,6 +5089,49 @@
 				},
 				"folder": {
 					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -5049,6 +5917,49 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Weather_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Affluences_CSV')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -5702,6 +6613,52 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Weather_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Temp_Affluences_JSON')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -5781,7 +6738,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_VisualCrossing_API')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_VisualCrossing_Historical_API')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -5789,12 +6746,28 @@
 					"referenceName": "VFD_LS_VisualCrossing_API",
 					"type": "LinkedServiceReference"
 				},
+				"parameters": {
+					"data_inizio": {
+						"type": "string"
+					},
+					"data_fine": {
+						"type": "string"
+					},
+					"location": {
+						"type": "string"
+					}
+				},
 				"folder": {
 					"name": "Visual Crossing/Weather"
 				},
 				"annotations": [],
 				"type": "RestResource",
-				"typeProperties": {},
+				"typeProperties": {
+					"relativeUrl": {
+						"value": "@concat('/',dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2Cfcst&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
+						"type": "Expression"
+					}
+				},
 				"schema": []
 			},
 			"dependsOn": [
@@ -7034,6 +8007,224 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Validations_Parquet')]",
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Raw_Processed')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Conversione CSV meteo in Parquet senza modifiche",
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Weather_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "SourceRaw"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkProcessed",
+							"rejectedDataLinkedService": {
+								"referenceName": "VFD_Big_Data_DL",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddProcessingMetadata"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> SourceRaw",
+						"SourceRaw derive(processing_date = currentUTC(),",
+						"          data_source = 'visual_crossing_api',",
+						"          datetime_parsed = toDate(datetime)) ~> AddProcessingMetadata",
+						"AddProcessingMetadata sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Weather_Raw_Processed_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkProcessed"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Weather_CSV')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Single_Row_To_Monthly')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Aggiorna file mensile con singola riga filtrata per data",
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						},
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceCuratedExisting"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkCurated"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterTargetDate"
+						},
+						{
+							"name": "RemoveTargetDateFromExisting"
+						},
+						{
+							"name": "UnionWithExisting"
+						},
+						{
+							"name": "SortByDate"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     target_date as string",
+						"}",
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string,",
+						"          processing_date as timestamp,",
+						"          data_source as string,",
+						"          datetime_parsed as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string,",
+						"          processing_date as timestamp,",
+						"          data_source as string,",
+						"          datetime_parsed as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'parquet') ~> SourceCuratedExisting",
+						"SourceProcessed filter(datetime == $target_date) ~> FilterTargetDate",
+						"SourceCuratedExisting filter(datetime != $target_date) ~> RemoveTargetDateFromExisting",
+						"FilterTargetDate, RemoveTargetDateFromExisting union(byName: true)~> UnionWithExisting",
+						"UnionWithExisting sort(asc(datetime, false)) ~> SortByDate",
+						"SortByDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkCurated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
 			]
 		}
 	]

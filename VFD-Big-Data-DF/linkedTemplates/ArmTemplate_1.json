@@ -13,6 +13,47 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Seals_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Validations_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -31,6 +72,47 @@
 				},
 				"folder": {
 					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Weather_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
 				},
 				"annotations": [],
 				"type": "Parquet",
@@ -695,6 +777,50 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Weather_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Temp_Affluences_JSON')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -772,7 +898,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_VisualCrossing_API')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_VisualCrossing_Historical_API')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -780,12 +906,28 @@
 					"referenceName": "VFD_LS_VisualCrossing_API",
 					"type": "LinkedServiceReference"
 				},
+				"parameters": {
+					"data_inizio": {
+						"type": "string"
+					},
+					"data_fine": {
+						"type": "string"
+					},
+					"location": {
+						"type": "string"
+					}
+				},
 				"folder": {
 					"name": "Visual Crossing/Weather"
 				},
 				"annotations": [],
 				"type": "RestResource",
-				"typeProperties": {},
+				"typeProperties": {
+					"relativeUrl": {
+						"value": "@concat('/',dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2Cfcst&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
+						"type": "Expression"
+					}
+				},
 				"schema": []
 			},
 			"dependsOn": []
@@ -1743,226 +1885,8 @@
 					]
 				}
 			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Seals_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Dataflow per convertire Excel Seals in Parquet con conversioni di tipo",
-				"folder": {
-					"name": "Mida/Seals"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
-								"type": "DatasetReference"
-							},
-							"name": "SourceExcel"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Mida_Seals_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkParquet",
-							"rejectedDataLinkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "dataTypeConversions"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          sealCode as string,",
-						"          reservationCode as string,",
-						"          TicketLabel as string,",
-						"          EventLabel as string,",
-						"          List as string,",
-						"          externalCode as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> SourceExcel",
-						"SourceExcel derive(processing_date = currentUTC(),",
-						"          data_source = 'mida_seals') ~> dataTypeConversions",
-						"dataTypeConversions sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Mida_Seals_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkParquet"
-					]
-				}
-			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Processed_Curated_Daily')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Dataflow per selezionare campi rilevanti dal parquet processed",
-				"folder": {
-					"name": "Mida/Validations"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceProcessed"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkCurated"
-						}
-					],
-					"transformations": [
-						{
-							"name": "SelectFields"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          event_guid as string,",
-						"          siae as integer,",
-						"          seal as string,",
-						"          reservationCode as string,",
-						"          inGateTimestamp as timestamp,",
-						"          entranceLabel as string,",
-						"          passCode as string,",
-						"          externalCode as string,",
-						"          processing_date as timestamp,",
-						"          data_source as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> SourceProcessed",
-						"SourceProcessed select(mapColumn(",
-						"          event_guid,",
-						"          siae,",
-						"          seal,",
-						"          reservationCode,",
-						"          inGateTimestamp,",
-						"          entranceLabel,",
-						"          passCode,",
-						"          externalCode,",
-						"          processing_date,",
-						"          data_source",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> SelectFields",
-						"SelectFields sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkCurated"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Validations_Parquet')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Dataflow per convertire Excel Validations in Parquet con conversioni di tipo",
-				"folder": {
-					"name": "Mida/Validations"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
-								"type": "DatasetReference"
-							},
-							"name": "SourceExcel"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkParquet",
-							"rejectedDataLinkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "dataTypeConversions"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          event_guid as string,",
-						"          siae as integer,",
-						"          seal as string,",
-						"          reservationCode as string,",
-						"          inGateTimestamp as string,",
-						"          entranceLabel as string,",
-						"          passCode as string,",
-						"          externalCode as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> SourceExcel",
-						"SourceExcel derive(processing_date = currentUTC(),",
-						"          data_source = 'mida_validations') ~> dataTypeConversions",
-						"dataTypeConversions sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Mida_Validations_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkParquet"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Validations_Parquet')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Seals_Parquet')]"
 			]
 		}
 	]
