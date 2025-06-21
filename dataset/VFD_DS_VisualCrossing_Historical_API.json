@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_VisualCrossing_API",
+	"name": "VFD_DS_VisualCrossing_Historical_API",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_LS_VisualCrossing_API",

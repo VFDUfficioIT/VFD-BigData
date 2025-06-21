@@ -1,0 +1,127 @@
+{
+	"name": "VFD_DFL_Weather_Single_Row_To_Monthly",
+	"properties": {
+		"description": "Aggiorna file mensile con singola riga filtrata per data",
+		"folder": {
+			"name": "Visual Crossing/Weather"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_Weather_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SourceProcessed"
+				},
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Weather_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SourceCuratedExisting"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Weather_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkCurated"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FilterTargetDate"
+				},
+				{
+					"name": "RemoveTargetDateFromExisting"
+				},
+				{
+					"name": "UnionWithExisting"
+				},
+				{
+					"name": "SortByDate"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     target_date as string",
+				"}",
+				"source(output(",
+				"          name as string,",
+				"          datetime as string,",
+				"          tempmax as double,",
+				"          tempmin as double,",
+				"          temp as double,",
+				"          feelslikemax as double,",
+				"          feelslikemin as double,",
+				"          feelslike as double,",
+				"          humidity as double,",
+				"          precip as double,",
+				"          precipprob as double,",
+				"          preciptype as string,",
+				"          windgust as double,",
+				"          windspeed as double,",
+				"          cloudcover as double,",
+				"          visibility as double,",
+				"          sunset as string,",
+				"          conditions as string,",
+				"          description as string,",
+				"          icon as string,",
+				"          processing_date as timestamp,",
+				"          data_source as string,",
+				"          datetime_parsed as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> SourceProcessed",
+				"source(output(",
+				"          name as string,",
+				"          datetime as string,",
+				"          tempmax as double,",
+				"          tempmin as double,",
+				"          temp as double,",
+				"          feelslikemax as double,",
+				"          feelslikemin as double,",
+				"          feelslike as double,",
+				"          humidity as double,",
+				"          precip as double,",
+				"          precipprob as double,",
+				"          preciptype as string,",
+				"          windgust as double,",
+				"          windspeed as double,",
+				"          cloudcover as double,",
+				"          visibility as double,",
+				"          sunset as string,",
+				"          conditions as string,",
+				"          description as string,",
+				"          icon as string,",
+				"          processing_date as timestamp,",
+				"          data_source as string,",
+				"          datetime_parsed as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     format: 'parquet') ~> SourceCuratedExisting",
+				"SourceProcessed filter(datetime == $target_date) ~> FilterTargetDate",
+				"SourceCuratedExisting filter(datetime != $target_date) ~> RemoveTargetDateFromExisting",
+				"FilterTargetDate, RemoveTargetDateFromExisting union(byName: true)~> UnionWithExisting",
+				"UnionWithExisting sort(asc(datetime, false)) ~> SortByDate",
+				"SortByDate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:['VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     partitionBy('hash', 1),",
+				"     compressionCodec: 'snappy') ~> SinkCurated"
+			]
+		}
+	}
+}
