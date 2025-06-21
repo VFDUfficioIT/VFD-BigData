@@ -25,6 +25,9 @@
 		},
 		"VFD_LS_VisualCrossing_API_properties_typeProperties_url": {
 			"value": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+		},
+		"VFD_LS_VisualCrossing_HTTP_properties_typeProperties_url": {
+			"value": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline"
 		}
 	}
 }
