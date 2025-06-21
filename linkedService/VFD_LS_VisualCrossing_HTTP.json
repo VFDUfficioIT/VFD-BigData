@@ -1,0 +1,12 @@
+{
+	"name": "VFD_LS_VisualCrossing_HTTP",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
