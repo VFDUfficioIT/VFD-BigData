@@ -4435,6 +4435,9 @@
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
 									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							},
 							"sink": {
@@ -4695,14 +4698,14 @@
 													}
 												},
 												"SourceCuratedExisting": {
-													"folderPath": "Weather",
+													"folderPath": "@pipeline().parameters.folderPath",
 													"fileName": {
 														"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
 														"type": "Expression"
 													}
 												},
 												"SinkCurated": {
-													"folderPath": "Weather",
+													"folderPath": "@pipeline().parameters.folderPath",
 													"fileName": {
 														"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
 														"type": "Expression"
@@ -4744,6 +4747,9 @@
 												"type": "AzureBlobFSReadSettings",
 												"recursive": true,
 												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
 											}
 										},
 										"sink": {
@@ -4770,7 +4776,7 @@
 											"referenceName": "VFD_DS_Curated_Weather_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": "Weather",
+												"folderPath": "@pipeline().parameters.folderPath",
 												"fileName": {
 													"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
 													"type": "Expression"
@@ -4783,7 +4789,7 @@
 											"referenceName": "VFD_DS_Curated_Weather_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": "Weather",
+												"folderPath": "@pipeline().parameters.folderPath",
 												"fileName": {
 													"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
 													"type": "Expression"
@@ -4816,7 +4822,7 @@
 											"referenceName": "VFD_DS_Curated_Weather_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": "Weather",
+												"folderPath": "@pipeline().parameters.folderPath",
 												"fileName": {
 													"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
 													"type": "Expression"
