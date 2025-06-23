@@ -3050,7 +3050,7 @@
 											"parameters": {
 												"folderPath": "@pipeline().parameters.folderPath",
 												"fileName": {
-													"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
 													"type": "Expression"
 												}
 											}
@@ -3096,7 +3096,7 @@
 											"parameters": {
 												"folderPath": "@pipeline().parameters.folderPath",
 												"fileName": {
-													"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
 													"type": "Expression"
 												}
 											}
