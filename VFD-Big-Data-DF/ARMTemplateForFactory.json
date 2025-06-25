@@ -4,16 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -6866,7 +6866,7 @@
 					"location": {
 						"type": "HttpServerLocation",
 						"relativeUrl": {
-							"value": "@concat(dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2Cfcst&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
+							"value": "@concat(dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2C&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
 							"type": "Expression"
 						}
 					},
@@ -6909,7 +6909,7 @@
 				"type": "RestResource",
 				"typeProperties": {
 					"relativeUrl": {
-						"value": "@concat(dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2Cfcst&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
+						"value": "@concat(dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2C&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
 						"type": "Expression"
 					}
 				},
