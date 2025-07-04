@@ -16,6 +16,9 @@
 				"type": "string"
 			}
 		},
+		"folder": {
+			"name": "Visual Crossing/Weather"
+		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {

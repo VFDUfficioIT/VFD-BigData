@@ -1,0 +1,40 @@
+{
+	"name": "VFD_DS_Raw_DuomoWiFi_Connections_JSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"year": {
+				"type": "string"
+			},
+			"month": {
+				"type": "string"
+			},
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "WiFi/Raw"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@concat('Wifi/connections/', dataset().year, '/', dataset().month)",
+					"type": "Expression"
+				},
+				"fileSystem": "raw"
+			}
+		},
+		"schema": {}
+	}
+}

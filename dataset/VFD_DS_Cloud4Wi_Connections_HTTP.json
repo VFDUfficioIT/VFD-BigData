@@ -1,0 +1,83 @@
+{
+	"name": "VFD_DS_Cloud4Wi_Connections_HTTP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_Cloud4Wi_API",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"dateStart": {
+				"type": "string"
+			},
+			"dateStop": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "WiFi/HTTP"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "@concat('/v2/connections?key=dcd685a1553d0dfb6f3a15ce90751a28&secret=34c2c52eed4cb1d1839e77a869b9637e&dateStart=', dataset().dateStart, '&dateStop=', dataset().dateStop)",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"count": {
+					"type": "integer"
+				},
+				"scrollId": {
+					"type": "string"
+				},
+				"data": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"hotspotIdentifier": {
+								"type": "string"
+							},
+							"dateStart": {
+								"type": "string"
+							},
+							"dateStop": {
+								"type": "string"
+							},
+							"sessionTime": {
+								"type": "integer"
+							},
+							"traffic": {
+								"type": "integer"
+							},
+							"terminateCause": {
+								"type": "string"
+							},
+							"username": {
+								"type": "string"
+							},
+							"macAddressUser": {
+								"type": "string"
+							},
+							"ipAddressUser": {
+								"type": "string"
+							},
+							"venueId": {
+								"type": "string"
+							},
+							"online": {
+								"type": "boolean"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
