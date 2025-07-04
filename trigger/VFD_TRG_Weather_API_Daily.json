@@ -1,0 +1,27 @@
+{
+	"name": "VFD_TRG_Weather_API_Daily",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "VFD_PL_Weather_API_Daily",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"location": "Milano"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2025-07-05T06:00:00",
+				"timeZone": "W. Europe Standard Time"
+			}
+		}
+	}
+}
