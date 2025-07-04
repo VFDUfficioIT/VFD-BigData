@@ -17,6 +17,9 @@
 		"VFD_LS_Affluences_API_properties_typeProperties_url": {
 			"value": "https://data.affluences.com/v1/data"
 		},
+		"VFD_LS_Cloud4Wi_API_properties_typeProperties_url": {
+			"value": "https://api.cloud4wi.com"
+		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"value": "217.73.236.242"
 		},

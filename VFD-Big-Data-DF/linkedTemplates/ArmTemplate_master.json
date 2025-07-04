@@ -23,6 +23,10 @@
 			"type": "string",
 			"defaultValue": "https://data.affluences.com/v1/data"
 		},
+		"VFD_LS_Cloud4Wi_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.cloud4wi.com"
+		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"type": "string",
 			"defaultValue": "217.73.236.242"
@@ -77,6 +81,9 @@
 					},
 					"VFD_LS_Affluences_API_properties_typeProperties_url": {
 						"value": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]"
+					},
+					"VFD_LS_Cloud4Wi_API_properties_typeProperties_url": {
+						"value": "[parameters('VFD_LS_Cloud4Wi_API_properties_typeProperties_url')]"
 					},
 					"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 						"value": "[parameters('VFD_LS_Mida_FtpServer_properties_typeProperties_host')]"

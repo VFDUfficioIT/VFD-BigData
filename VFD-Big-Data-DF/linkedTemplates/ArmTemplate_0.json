@@ -23,6 +23,10 @@
 			"type": "string",
 			"defaultValue": "https://data.affluences.com/v1/data"
 		},
+		"VFD_LS_Cloud4Wi_API_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.cloud4wi.com"
+		},
 		"VFD_LS_Mida_FtpServer_properties_typeProperties_host": {
 			"type": "string",
 			"defaultValue": "217.73.236.242"
@@ -71,6 +75,21 @@
 				"type": "RestService",
 				"typeProperties": {
 					"url": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_LS_Cloud4Wi_API')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('VFD_LS_Cloud4Wi_API_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
 				}
@@ -186,6 +205,188 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Affluences_API')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Cloud4Wi_Connections_HTTP')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_LS_Cloud4Wi_API",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"dateStart": {
+						"type": "string"
+					},
+					"dateStop": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "WiFi/HTTP"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@concat('/v2/connections?key=dcd685a1553d0dfb6f3a15ce90751a28&secret=34c2c52eed4cb1d1839e77a869b9637e&dateStart=', dataset().dateStart, '&dateStop=', dataset().dateStop)",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"count": {
+							"type": "integer"
+						},
+						"scrollId": {
+							"type": "string"
+						},
+						"data": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"hotspotIdentifier": {
+										"type": "string"
+									},
+									"dateStart": {
+										"type": "string"
+									},
+									"dateStop": {
+										"type": "string"
+									},
+									"sessionTime": {
+										"type": "integer"
+									},
+									"traffic": {
+										"type": "integer"
+									},
+									"terminateCause": {
+										"type": "string"
+									},
+									"username": {
+										"type": "string"
+									},
+									"macAddressUser": {
+										"type": "string"
+									},
+									"ipAddressUser": {
+										"type": "string"
+									},
+									"venueId": {
+										"type": "string"
+									},
+									"online": {
+										"type": "boolean"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Cloud4Wi_API')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Cloud4Wi_Users_HTTP')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_LS_Cloud4Wi_API",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"username": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "WiFi/HTTP"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@concat('/v2/users?key=dcd685a1553d0dfb6f3a15ce90751a28&secret=34c2c52eed4cb1d1839e77a869b9637e&username=', dataset().username)",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"count": {
+							"type": "integer"
+						},
+						"scrollId": {
+							"type": "string"
+						},
+						"data": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"username": {
+										"type": "string"
+									},
+									"firstName": {
+										"type": "string"
+									},
+									"lastName": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"gender": {
+										"type": "string"
+									},
+									"phone": {
+										"type": "string"
+									},
+									"birthDate": {
+										"type": "string"
+									},
+									"country": {
+										"type": "string"
+									},
+									"zipCode": {
+										"type": "string"
+									},
+									"companyName": {
+										"type": "string"
+									},
+									"wifiArea": {
+										"type": "string"
+									},
+									"creationDate": {
+										"type": "string"
+									},
+									"marketing": {
+										"type": "boolean"
+									},
+									"type": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Cloud4Wi_API')]"
 			]
 		},
 		{
@@ -331,6 +532,52 @@
 						"type": "UTF8"
 					}
 				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_DuomoWiFi_Enriched_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					},
+					"month": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "WiFi/Curated"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('Wifi/connections/', dataset().year, '/', dataset().month)",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -605,165 +852,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Seals_FTPServer_Folder')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_Mida_FtpServer",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Mida/Seals"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "FtpServerLocation",
-						"folderPath": "emissioni"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Validations_FTPServer_Excel')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_Mida_FtpServer",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"fileName": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Mida/Validations"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": "Vidimazioni di ieri",
-					"location": {
-						"type": "FtpServerLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": "vidimazioni"
-					},
-					"firstRowAsHeader": true
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Validations_FTPServer_Folder')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_Mida_FtpServer",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Mida/Validations"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "FtpServerLocation",
-						"folderPath": "vidimazioni"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Affluences_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "string"
-					},
-					"fileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Affluences"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "site_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "site_name",
-						"type": "UTF8"
-					},
-					{
-						"name": "date",
-						"type": "DATE"
-					},
-					{
-						"name": "hour",
-						"type": "UTF8"
-					},
-					{
-						"name": "occupancy",
-						"type": "INT32"
-					},
-					{
-						"name": "entries",
-						"type": "INT32"
-					},
-					{
-						"name": "exits",
-						"type": "INT32"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
 			]
 		}
 	]
