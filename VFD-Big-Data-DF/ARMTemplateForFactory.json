@@ -973,6 +973,807 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Extract_Transform')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline principale per l'estrazione e trasformazione dei dati WiFi del Duomo",
+				"activities": [
+					{
+						"name": "ExtractConnections",
+						"description": "Estrae le connessioni WiFi dall'API Cloud4Wi",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "GET",
+									"requestTimeout": "00:01:40"
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "JsonSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Cloud4Wi_Connections_HTTP",
+								"type": "DatasetReference",
+								"parameters": {
+									"dateStart": {
+										"value": "@pipeline().parameters.p_dateStart",
+										"type": "Expression"
+									},
+									"dateStop": {
+										"value": "@pipeline().parameters.p_dateStop",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Raw_DuomoWiFi_Connections_JSON",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.json')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "LookupUsernames",
+						"description": "Estrae la lista di username unici dal file delle connessioni",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "ExtractConnections",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:05:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_DuomoWiFi_Connections_JSON",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)\n",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)\n",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Wifi_connections_', \n    substring(pipeline().parameters.p_dateStart, 6, 4),\n    substring(pipeline().parameters.p_dateStart, 3, 2), \n    substring(pipeline().parameters.p_dateStart, 0, 2),\n    '.json')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachUsername",
+						"description": "Itera su ogni username per estrarre i dati utente",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupUsernames",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupUsernames').output.value[0].data",
+								"type": "Expression"
+							},
+							"batchCount": 10,
+							"activities": [
+								{
+									"name": "ExtractUserData",
+									"description": "Estrae i dati di un singolo utente",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.00:10:00",
+										"retry": 3,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET",
+												"requestTimeout": "00:01:40"
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Cloud4Wi_Users_HTTP",
+											"type": "DatasetReference",
+											"parameters": {
+												"username": {
+													"value": "@item().username",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Raw_DuomoWiFi_Users_JSON",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@concat('VFD_Wifi_user_', item().username, '.json')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "TransformConnectionsRawToProcessed",
+						"description": "Trasforma le connessioni da JSON Raw a Parquet Processed",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "ForEachUsername",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceConnectionsJSON": {
+										"year": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+											"type": "Expression"
+										},
+										"month": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.json')",
+											"type": "Expression"
+										}
+									},
+									"SinkConnectionsParquet": {
+										"year": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+											"type": "Expression"
+										},
+										"month": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+											"type": "Expression"
+										},
+										"fileName": "temp_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "CopyConnectionsProcessedToFinal",
+						"description": "Copia il file temporaneo al nome finale",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "TransformConnectionsRawToProcessed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": "temp_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "DeleteTempConnectionsFile",
+						"description": "Elimina il file temporaneo delle connessioni",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "CopyConnectionsProcessedToFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:05:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": "temp_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "TransformUsersRawToProcessed",
+						"description": "Consolida tutti i file JSON degli utenti in un singolo Parquet",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DeleteTempConnectionsFile",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceUsersJSON": {
+										"fileName": "dummy.json"
+									},
+									"SinkUsersParquet": {
+										"year": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+											"type": "Expression"
+										},
+										"month": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+											"type": "Expression"
+										},
+										"fileName": "temp_users_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "CopyUsersProcessedToFinal",
+						"description": "Copia il file temporaneo degli utenti al nome finale",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "TransformUsersRawToProcessed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": "temp_users_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Wifi_Users_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "DeleteTempUsersFile",
+						"description": "Elimina il file temporaneo degli utenti",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "CopyUsersProcessedToFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:05:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": "temp_users_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "TransformProcessedToCurated",
+						"description": "Esegue join tra connessioni e utenti per dataset finale arricchito",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DeleteTempUsersFile",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_DuomoWiFi_Processed_Curated",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceConnections": {
+										"year": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+											"type": "Expression"
+										},
+										"month": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+											"type": "Expression"
+										}
+									},
+									"SourceUsers": {
+										"year": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+											"type": "Expression"
+										},
+										"month": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('VFD_Wifi_Users_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+											"type": "Expression"
+										}
+									},
+									"SinkEnrichedData": {
+										"year": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+											"type": "Expression"
+										},
+										"month": {
+											"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+											"type": "Expression"
+										},
+										"fileName": "temp_enriched_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "CopyCuratedToFinal",
+						"description": "Copia il file temporaneo arricchito al nome finale",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "TransformProcessedToCurated",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Curated_DuomoWiFi_Enriched_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": "temp_enriched_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_DuomoWiFi_Enriched_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('VFD_Wifi_Connections_Ext_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "DeleteTempEnrichedFile",
+						"description": "Elimina il file temporaneo arricchito",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "CopyCuratedToFinal",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:05:00",
+							"retry": 1,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_DuomoWiFi_Enriched_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"year": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+										"type": "Expression"
+									},
+									"fileName": "temp_enriched_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_dateStart": {
+						"type": "string",
+						"defaultValue": "26-06-2025"
+					},
+					"p_dateStop": {
+						"type": "string",
+						"defaultValue": "26-06-2025"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Cloud4Wi_Connections_HTTP')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_DuomoWiFi_Connections_JSON')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Connections_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_DuomoWiFi_Connections_Parquet')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Users_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_DuomoWiFi_Users_Parquet')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Processed_Curated')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_DuomoWiFi_Enriched_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Cloud4Wi_Users_HTTP')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_DuomoWiFi_Users_JSON')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Explore_Seals_Folder')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
