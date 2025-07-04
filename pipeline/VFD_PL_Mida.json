@@ -17,29 +17,6 @@
 					},
 					"waitOnCompletion": true
 				}
-			},
-			{
-				"name": "Reprocess Missing Bookings",
-				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "Process Bookings",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "VFD_PL_Mida_Bookings_Reprocess_MissingFiles",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
 			}
 		],
 		"concurrency": 1,
