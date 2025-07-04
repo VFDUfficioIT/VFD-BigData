@@ -1,0 +1,12 @@
+{
+	"name": "VFD_LS_Cloud4Wi_API",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://api.cloud4wi.com",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
