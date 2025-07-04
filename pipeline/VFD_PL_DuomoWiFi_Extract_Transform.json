@@ -61,15 +61,15 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": {
-								"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.json')",
+								"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.json')",
 								"type": "Expression"
 							}
 						}
@@ -240,25 +240,25 @@
 						"datasetParameters": {
 							"SourceConnectionsJSON": {
 								"year": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 									"type": "Expression"
 								},
 								"month": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 									"type": "Expression"
 								},
 								"fileName": {
-									"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.json')",
+									"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.json')",
 									"type": "Expression"
 								}
 							},
 							"SinkConnectionsParquet": {
 								"year": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 									"type": "Expression"
 								},
 								"month": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 									"type": "Expression"
 								},
 								"fileName": "temp_output.parquet"
@@ -299,6 +299,9 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
 						}
 					},
 					"sink": {
@@ -318,11 +321,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": "temp_output.parquet"
@@ -335,15 +338,15 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": {
-								"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+								"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
 								"type": "Expression"
 							}
 						}
@@ -376,11 +379,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": "temp_output.parquet"
@@ -424,11 +427,11 @@
 							},
 							"SinkUsersParquet": {
 								"year": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 									"type": "Expression"
 								},
 								"month": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 									"type": "Expression"
 								},
 								"fileName": "temp_users_output.parquet"
@@ -469,6 +472,9 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
 						}
 					},
 					"sink": {
@@ -488,11 +494,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": "temp_users_output.parquet"
@@ -505,15 +511,15 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": {
-								"value": "@concat('VFD_Wifi_Users_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+								"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
 								"type": "Expression"
 							}
 						}
@@ -546,11 +552,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": "temp_users_output.parquet"
@@ -591,39 +597,39 @@
 						"datasetParameters": {
 							"SourceConnections": {
 								"year": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 									"type": "Expression"
 								},
 								"month": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 									"type": "Expression"
 								},
 								"fileName": {
-									"value": "@concat('VFD_Wifi_connections_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+									"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
 									"type": "Expression"
 								}
 							},
 							"SourceUsers": {
 								"year": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 									"type": "Expression"
 								},
 								"month": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 									"type": "Expression"
 								},
 								"fileName": {
-									"value": "@concat('VFD_Wifi_Users_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+									"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
 									"type": "Expression"
 								}
 							},
 							"SinkEnrichedData": {
 								"year": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 									"type": "Expression"
 								},
 								"month": {
-									"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+									"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 									"type": "Expression"
 								},
 								"fileName": "temp_enriched_output.parquet"
@@ -664,6 +670,9 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
 						}
 					},
 					"sink": {
@@ -683,11 +692,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": "temp_enriched_output.parquet"
@@ -700,15 +709,15 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": {
-								"value": "@concat('VFD_Wifi_Connections_Ext_', formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyyMMdd'), '.parquet')",
+								"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
 								"type": "Expression"
 							}
 						}
@@ -741,11 +750,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"year": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'yyyy')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
 								"type": "Expression"
 							},
 							"month": {
-								"value": "@formatDateTime(parseDateTime(pipeline().parameters.p_dateStart, 'dd-MM-yyyy'), 'MM')",
+								"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
 								"type": "Expression"
 							},
 							"fileName": "temp_enriched_output.parquet"
