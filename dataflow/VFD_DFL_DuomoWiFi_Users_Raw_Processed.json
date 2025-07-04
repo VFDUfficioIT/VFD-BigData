@@ -1,0 +1,80 @@
+{
+	"name": "VFD_DFL_DuomoWiFi_Users_Raw_Processed",
+	"properties": {
+		"description": "Consolida tutti i file JSON degli utenti in un singolo file Parquet",
+		"folder": {
+			"name": "WiFi"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Raw_DuomoWiFi_Users_JSON",
+						"type": "DatasetReference"
+					},
+					"name": "SourceUsersJSON"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkUsersParquet"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FlattenUserData"
+				},
+				{
+					"name": "AddMetadata"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          count as integer,",
+				"          scrollId as string,",
+				"          data as (username as string, firstName as string, lastName as string, email as string, gender as string, phone as string, birthDate as string, country as string, zipCode as string, companyName as string, wifiArea as string, creationDate as string, marketing as boolean, type as string)[]",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'documentPerLine',",
+				"     wildcardPaths:['user_*.json']) ~> SourceUsersJSON",
+				"SourceUsersJSON foldDown(unroll(data),",
+				"     mapColumn(",
+				"          username = data.username,",
+				"          firstName = data.firstName,",
+				"          lastName = data.lastName,",
+				"          email = data.email,",
+				"          gender = data.gender,",
+				"          phone = data.phone,",
+				"          birthDate = data.birthDate,",
+				"          country = data.country,",
+				"          zipCode = data.zipCode,",
+				"          companyName = data.companyName,",
+				"          wifiArea = data.wifiArea,",
+				"          creationDate = data.creationDate,",
+				"          marketing = data.marketing,",
+				"          type = data.type",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> FlattenUserData",
+				"FlattenUserData derive(processing_date = currentUTC(),",
+				"          data_source = 'cloud4wi_users') ~> AddMetadata",
+				"AddMetadata sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:['VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     partitionBy('hash', 1),",
+				"     compressionCodec: 'snappy') ~> SinkUsersParquet"
+			]
+		}
+	}
+}

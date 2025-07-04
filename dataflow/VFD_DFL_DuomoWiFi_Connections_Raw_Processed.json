@@ -1,0 +1,83 @@
+{
+	"name": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed",
+	"properties": {
+		"description": "Trasforma connessioni da JSON Raw a Parquet Processed con calcoli e conversioni",
+		"folder": {
+			"name": "WiFi"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Raw_DuomoWiFi_Connections_JSON",
+						"type": "DatasetReference"
+					},
+					"name": "SourceConnectionsJSON"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkConnectionsParquet"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FlattenData"
+				},
+				{
+					"name": "DerivedColumns"
+				},
+				{
+					"name": "DataTypeConversions"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          count as integer,",
+				"          scrollId as string,",
+				"          data as (hotspotIdentifier as string, dateStart as string, dateStop as string, sessionTime as integer, traffic as long, terminateCause as string, username as string, macAddressUser as string, ipAddressUser as string, venueId as string, online as boolean)[]",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'documentPerLine') ~> SourceConnectionsJSON",
+				"SourceConnectionsJSON foldDown(unroll(data),",
+				"     mapColumn(",
+				"          hotspotIdentifier = data.hotspotIdentifier,",
+				"          dateStart = data.dateStart,",
+				"          dateStop = data.dateStop,",
+				"          sessionTime = data.sessionTime,",
+				"          traffic = data.traffic,",
+				"          terminateCause = data.terminateCause,",
+				"          username = data.username,",
+				"          macAddressUser = data.macAddressUser,",
+				"          ipAddressUser = data.ipAddressUser,",
+				"          venueId = data.venueId,",
+				"          online = data.online",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> FlattenData",
+				"FlattenData derive(sessionTime_minutes = sessionTime / 60,",
+				"          traffic_MB = traffic / (1024 * 1024),",
+				"          processing_date = currentUTC(),",
+				"          data_source = 'cloud4wi_connections') ~> DerivedColumns",
+				"DerivedColumns derive(dateStart_converted = toTimestamp(dateStart, 'yyyy-MM-dd HH:mm:ss'),",
+				"          dateStop_converted = toTimestamp(dateStop, 'yyyy-MM-dd HH:mm:ss')) ~> DataTypeConversions",
+				"DataTypeConversions sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:['VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     partitionBy('hash', 1),",
+				"     compressionCodec: 'snappy') ~> SinkConnectionsParquet"
+			]
+		}
+	}
+}
