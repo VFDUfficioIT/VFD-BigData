@@ -1042,30 +1042,6 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
-					},
-					{
-						"name": "Reprocess Missing Bookings",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Process Bookings",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "VFD_PL_Mida_Bookings_Reprocess_MissingFiles",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
 					}
 				],
 				"concurrency": 1,
@@ -1078,8 +1054,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_FTP')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Reprocess_MissingFiles')]"
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_FTP')]"
 			]
 		},
 		{
