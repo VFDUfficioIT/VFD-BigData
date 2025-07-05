@@ -43,6 +43,10 @@
 			"type": "string",
 			"defaultValue": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
 		},
+		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
+			"type": "string",
+			"defaultValue": "Milano"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -154,6 +158,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
+						"value": "[parameters('VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location')]"
 					}
 				}
 			},

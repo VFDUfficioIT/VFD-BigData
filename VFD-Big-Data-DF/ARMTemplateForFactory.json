@@ -42,6 +42,10 @@
 		"VFD_LS_VisualCrossing_HTTP_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"
+		},
+		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
+			"type": "string",
+			"defaultValue": "Milano"
 		}
 	},
 	"variables": {
@@ -1123,6 +1127,7 @@
 								"value": "@activity('LookupUsernames').output.value[0].data",
 								"type": "Expression"
 							},
+							"isSequential": false,
 							"batchCount": 10,
 							"activities": [
 								{
@@ -5537,14 +5542,20 @@
 													}
 												},
 												"SourceCuratedExisting": {
-													"folderPath": "@pipeline().parameters.folderPath",
+													"folderPath": {
+														"value": "@pipeline().parameters.folderPath",
+														"type": "Expression"
+													},
 													"fileName": {
 														"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
 														"type": "Expression"
 													}
 												},
 												"SinkCurated": {
-													"folderPath": "@pipeline().parameters.folderPath",
+													"folderPath": {
+														"value": "@concat('Weather/',variables('rowYear'))",
+														"type": "Expression"
+													},
 													"fileName": {
 														"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
 														"type": "Expression"
@@ -5615,7 +5626,10 @@
 											"referenceName": "VFD_DS_Curated_Weather_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": "@pipeline().parameters.folderPath",
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
 												"fileName": {
 													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
 													"type": "Expression"
@@ -5628,7 +5642,10 @@
 											"referenceName": "VFD_DS_Curated_Weather_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": "@pipeline().parameters.folderPath",
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
 												"fileName": {
 													"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
 													"type": "Expression"
@@ -8331,6 +8348,38 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Weather_API_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Weather_API_Daily",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"location": "[parameters('VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-05T06:00:00",
+						"timeZone": "W. Europe Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_API_Daily')]"
 			]
 		},
 		{
