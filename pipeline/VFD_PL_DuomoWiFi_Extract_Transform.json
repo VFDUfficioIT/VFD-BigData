@@ -147,6 +147,7 @@
 						"value": "@activity('LookupUsernames').output.value[0].data",
 						"type": "Expression"
 					},
+					"isSequential": false,
 					"batchCount": 10,
 					"activities": [
 						{
