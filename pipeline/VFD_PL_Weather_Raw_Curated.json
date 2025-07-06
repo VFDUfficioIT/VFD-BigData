@@ -336,7 +336,7 @@
 										},
 										"SourceCuratedExisting": {
 											"folderPath": {
-												"value": "@pipeline().parameters.folderPath",
+												"value": "@concat('Weather/',variables('rowYear'))",
 												"type": "Expression"
 											},
 											"fileName": {
@@ -470,7 +470,10 @@
 									"referenceName": "VFD_DS_Curated_Weather_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"folderPath": "@pipeline().parameters.folderPath",
+										"folderPath": {
+											"value": "@concat('Weather/',variables('rowYear'))",
+											"type": "Expression"
+										},
 										"fileName": {
 											"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
 											"type": "Expression"
