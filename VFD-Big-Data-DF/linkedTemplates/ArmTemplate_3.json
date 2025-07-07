@@ -3673,12 +3673,10 @@
 				},
 				"parameters": {
 					"data_inizio": {
-						"type": "String",
-						"defaultValue": "2025-06-01"
+						"type": "String"
 					},
 					"data_fine": {
-						"type": "String",
-						"defaultValue": "2025-06-20"
+						"type": "String"
 					},
 					"location": {
 						"type": "String",
