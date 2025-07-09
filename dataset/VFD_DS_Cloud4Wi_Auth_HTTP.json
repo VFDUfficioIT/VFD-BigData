@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_Cloud4Wi_Auth_HTTP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_LS_Cloud4Wi_API",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "WiFi/HTTP"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": "/v1/sts/login/services"
+			}
+		},
+		"schema": {}
+	}
+}
