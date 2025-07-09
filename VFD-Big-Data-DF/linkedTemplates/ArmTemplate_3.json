@@ -1217,8 +1217,7 @@
 										},
 										"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 									}
-								},
-								"linkedServiceParameters": {}
+								}
 							},
 							"staging": {},
 							"compute": {

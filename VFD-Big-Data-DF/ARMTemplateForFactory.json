@@ -1444,8 +1444,7 @@
 										},
 										"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 									}
-								},
-								"linkedServiceParameters": {}
+								}
 							},
 							"staging": {},
 							"compute": {
@@ -9438,7 +9437,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:[(concat(\"/Cloud4Wi/Wifi/users\",$year,\"/\",$month,\"/VFD_Wifi_user_*.json\"))]) ~> SourceUsersJSON",
+						"     wildcardPaths:[(concat(\"/Cloud4Wi/Wifi/users/\",$year,\"/\",$month,\"/VFD_Wifi_user_*.json\"))]) ~> SourceUsersJSON",
 						"SourceUsersJSON foldDown(unroll(data),",
 						"     mapColumn(",
 						"          username = data.username,",
