@@ -1135,7 +1135,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('LookupUsernames').output.value[0].data",
+								"value": "@activity('LookupUsernames').output.value[0].connections",
 								"type": "Expression"
 							},
 							"isSequential": false,
