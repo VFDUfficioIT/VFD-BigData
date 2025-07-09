@@ -43,7 +43,7 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     documentForm: 'documentPerLine',",
-				"     wildcardPaths:['user_*.json']) ~> SourceUsersJSON",
+				"     wildcardPaths:['VFD_Wifi_user_*.json']) ~> SourceUsersJSON",
 				"SourceUsersJSON foldDown(unroll(data),",
 				"     mapColumn(",
 				"          username = data.username,",
