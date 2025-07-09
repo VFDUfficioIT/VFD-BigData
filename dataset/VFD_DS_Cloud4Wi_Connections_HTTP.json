@@ -30,49 +30,73 @@
 		"schema": {
 			"type": "object",
 			"properties": {
+				"generated": {
+					"type": "string"
+				},
+				"sId": {
+					"type": "string"
+				},
 				"count": {
 					"type": "integer"
 				},
-				"scrollId": {
-					"type": "string"
-				},
-				"data": {
+				"connections": {
 					"type": "array",
 					"items": {
 						"type": "object",
 						"properties": {
-							"hotspotIdentifier": {
-								"type": "string"
-							},
-							"dateStart": {
-								"type": "string"
-							},
-							"dateStop": {
-								"type": "string"
-							},
-							"sessionTime": {
-								"type": "integer"
-							},
-							"traffic": {
-								"type": "integer"
-							},
-							"terminateCause": {
+							"customerId": {
 								"type": "string"
 							},
 							"username": {
 								"type": "string"
 							},
-							"macAddressUser": {
+							"organizationId": {
 								"type": "string"
 							},
-							"ipAddressUser": {
+							"start": {
 								"type": "string"
 							},
-							"venueId": {
+							"startBusiness": {
 								"type": "string"
 							},
-							"online": {
-								"type": "boolean"
+							"stop": {
+								"type": "string"
+							},
+							"stopBusiness": {
+								"type": "string"
+							},
+							"duration": {
+								"type": "integer"
+							},
+							"traffic": {
+								"type": "integer"
+							},
+							"locationName": {
+								"type": "string"
+							},
+							"locationId": {
+								"type": "string"
+							},
+							"hotspotIdentifier": {
+								"type": "string"
+							},
+							"hotspotId": {
+								"type": "string"
+							},
+							"latitude": {
+								"type": "number"
+							},
+							"longitude": {
+								"type": "number"
+							},
+							"macAddressClient": {
+								"type": "string"
+							},
+							"ipAddressClient": {
+								"type": "string"
+							},
+							"terminateCause": {
+								"type": "string"
 							}
 						}
 					}
