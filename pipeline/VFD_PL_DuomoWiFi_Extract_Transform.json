@@ -180,6 +180,10 @@
 									"storeSettings": {
 										"type": "HttpReadSettings",
 										"requestMethod": "GET",
+										"additionalHeaders": {
+											"value": "{\n    \"Authentication\": \"Bearer @{activity('AuthRequest').output.data.token}\"\n}",
+											"type": "Expression"
+										},
 										"requestTimeout": "00:01:40"
 									},
 									"formatSettings": {
@@ -869,14 +873,11 @@
 		"parameters": {
 			"p_dateStart": {
 				"type": "string",
-				"defaultValue": "26-06-2025"
+				"defaultValue": "2025-06-26"
 			},
 			"p_dateStop": {
 				"type": "string",
-				"defaultValue": "26-06-2025"
-			},
-			"p_authToken": {
-				"type": "string"
+				"defaultValue": "2025-06-26"
 			}
 		},
 		"folder": {
