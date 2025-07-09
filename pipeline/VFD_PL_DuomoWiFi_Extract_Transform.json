@@ -9,7 +9,7 @@
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Web1",
+						"activity": "AuthRequest",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -30,7 +30,7 @@
 							"type": "HttpReadSettings",
 							"requestMethod": "GET",
 							"additionalHeaders": {
-								"value": "{\n    \"Authentication\": \"Bearer @{activity('Web1').output.data.Token}\"\n}",
+								"value": "{\n    \"Authentication\": \"Bearer @{activity('AuthRequest').output.data.token}\"\n}",
 								"type": "Expression"
 							},
 							"requestTimeout": "00:01:40"
@@ -815,7 +815,7 @@
 				]
 			},
 			{
-				"name": "Web1",
+				"name": "AuthRequest",
 				"type": "WebActivity",
 				"dependsOn": [],
 				"policy": {
@@ -827,7 +827,42 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"method": "POST"
+					"method": "POST",
+					"url": "https://explore.cloud4wi.com/v1/sts/login/services",
+					"body": {
+						"clientKey": "ck-ffe407c5-e967-44db-a6b0-d6c178b6ee08",
+						"clientSecret": "CWCVPKZCNDYTVKPBZTDSENQKJLLCPKGH"
+					}
+				}
+			},
+			{
+				"name": "LogoutRequest",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "DeleteTempEnrichedFile",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"headers": {
+						"Authentication": {
+							"value": "Bearer @{activity('AuthRequest').output.data.token}",
+							"type": "Expression"
+						}
+					},
+					"url": "https://explore.cloud4wi.com/v1/sts/logout"
 				}
 			}
 		],
