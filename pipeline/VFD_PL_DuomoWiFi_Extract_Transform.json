@@ -807,6 +807,7 @@
 			},
 			{
 				"name": "LogoutRequest",
+				"description": "Richiesta di logout per annullare il token, il body è impostato con dei valori solamente perché DataFactory non accetta un body vuoto in una richiesta post",
 				"type": "WebActivity",
 				"dependsOn": [
 					{
