@@ -241,49 +241,73 @@
 				"schema": {
 					"type": "object",
 					"properties": {
+						"generated": {
+							"type": "string"
+						},
+						"sId": {
+							"type": "string"
+						},
 						"count": {
 							"type": "integer"
 						},
-						"scrollId": {
-							"type": "string"
-						},
-						"data": {
+						"connections": {
 							"type": "array",
 							"items": {
 								"type": "object",
 								"properties": {
-									"hotspotIdentifier": {
-										"type": "string"
-									},
-									"dateStart": {
-										"type": "string"
-									},
-									"dateStop": {
-										"type": "string"
-									},
-									"sessionTime": {
-										"type": "integer"
-									},
-									"traffic": {
-										"type": "integer"
-									},
-									"terminateCause": {
+									"customerId": {
 										"type": "string"
 									},
 									"username": {
 										"type": "string"
 									},
-									"macAddressUser": {
+									"organizationId": {
 										"type": "string"
 									},
-									"ipAddressUser": {
+									"start": {
 										"type": "string"
 									},
-									"venueId": {
+									"startBusiness": {
 										"type": "string"
 									},
-									"online": {
-										"type": "boolean"
+									"stop": {
+										"type": "string"
+									},
+									"stopBusiness": {
+										"type": "string"
+									},
+									"duration": {
+										"type": "integer"
+									},
+									"traffic": {
+										"type": "integer"
+									},
+									"locationName": {
+										"type": "string"
+									},
+									"locationId": {
+										"type": "string"
+									},
+									"hotspotIdentifier": {
+										"type": "string"
+									},
+									"hotspotId": {
+										"type": "string"
+									},
+									"latitude": {
+										"type": "number"
+									},
+									"longitude": {
+										"type": "number"
+									},
+									"macAddressClient": {
+										"type": "string"
+									},
+									"ipAddressClient": {
+										"type": "string"
+									},
+									"terminateCause": {
+										"type": "string"
 									}
 								}
 							}
@@ -318,7 +342,7 @@
 					"location": {
 						"type": "HttpServerLocation",
 						"relativeUrl": {
-							"value": "@concat('/v2/users?username=', dataset().username, '&deleted=false&showUsersDesc=true&limit=1000&offset=0&api_version=v2.0&api_key=dcd685a1553d0dfb6f3a15ce90751a28&api_secret=34c2c52eed4cb1d1839e77a869b9637e')",
+							"value": "@concat('/v2/customers/', dataset().username)",
 							"type": "Expression"
 						}
 					}

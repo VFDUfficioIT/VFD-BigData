@@ -1010,7 +1010,7 @@
 									"type": "HttpReadSettings",
 									"requestMethod": "GET",
 									"additionalHeaders": {
-										"value": "{\n    \"Authentication\": \"Bearer @{activity('AuthRequest').output.data.token}\"\n}",
+										"value": "Authorization: Bearer @{activity('AuthRequest').output.data.token}",
 										"type": "Expression"
 									},
 									"requestTimeout": "00:01:40"
@@ -1052,15 +1052,15 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.json')",
+										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.json')",
 										"type": "Expression"
 									}
 								}
@@ -1104,15 +1104,15 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)\n",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)\n",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)\n",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)\n",
 										"type": "Expression"
 									},
 									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', \n    substring(pipeline().parameters.p_dateStart, 6, 4),\n    substring(pipeline().parameters.p_dateStart, 3, 2), \n    substring(pipeline().parameters.p_dateStart, 0, 2),\n    '.json')",
+										"value": "@concat('VFD_Wifi_connections_', \n    substring(pipeline().parameters.p_dateStart, 0, 4),\n    substring(pipeline().parameters.p_dateStart, 5, 2), \n    substring(pipeline().parameters.p_dateStart, 8, 2),\n    '.json')",
 										"type": "Expression"
 									}
 								}
@@ -1161,7 +1161,7 @@
 												"type": "HttpReadSettings",
 												"requestMethod": "GET",
 												"additionalHeaders": {
-													"value": "{\n    \"Authentication\": \"Bearer @{activity('AuthRequest').output.data.token}\"\n}",
+													"value": "Authorization: Bearer @{activity('AuthRequest').output.data.token}",
 													"type": "Expression"
 												},
 												"requestTimeout": "00:01:40"
@@ -1187,7 +1187,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"username": {
-													"value": "@item().username",
+													"value": "@item().customerId",
 													"type": "Expression"
 												}
 											}
@@ -1237,25 +1237,25 @@
 								"datasetParameters": {
 									"SourceConnectionsJSON": {
 										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 											"type": "Expression"
 										},
 										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
 										"fileName": {
-											"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.json')",
+											"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.json')",
 											"type": "Expression"
 										}
 									},
 									"SinkConnectionsParquet": {
 										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 											"type": "Expression"
 										},
 										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
 										"fileName": "temp_output.parquet"
@@ -1319,11 +1319,11 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": "temp_output.parquet"
@@ -1336,15 +1336,15 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
+										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
 										"type": "Expression"
 									}
 								}
@@ -1377,11 +1377,11 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": "temp_output.parquet"
@@ -1426,11 +1426,11 @@
 									},
 									"SinkUsersParquet": {
 										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 											"type": "Expression"
 										},
 										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
 										"fileName": "temp_users_output.parquet"
@@ -1494,11 +1494,11 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": "temp_users_output.parquet"
@@ -1511,15 +1511,15 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": {
-										"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
+										"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
 										"type": "Expression"
 									}
 								}
@@ -1552,11 +1552,11 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": "temp_users_output.parquet"
@@ -1598,39 +1598,39 @@
 								"datasetParameters": {
 									"SourceConnections": {
 										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 											"type": "Expression"
 										},
 										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
 										"fileName": {
-											"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
+											"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
 											"type": "Expression"
 										}
 									},
 									"SourceUsers": {
 										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 											"type": "Expression"
 										},
 										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
 										"fileName": {
-											"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
+											"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
 											"type": "Expression"
 										}
 									},
 									"SinkEnrichedData": {
 										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 											"type": "Expression"
 										},
 										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
 										"fileName": "temp_enriched_output.parquet"
@@ -1694,11 +1694,11 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": "temp_enriched_output.parquet"
@@ -1711,15 +1711,15 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 6, 4), substring(pipeline().parameters.p_dateStart, 3, 2), substring(pipeline().parameters.p_dateStart, 0, 2), '.parquet')",
+										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
 										"type": "Expression"
 									}
 								}
@@ -1752,11 +1752,11 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 6, 4)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
 										"type": "Expression"
 									},
 									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 3, 2)",
+										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
 									"fileName": "temp_enriched_output.parquet"
@@ -6133,49 +6133,73 @@
 				"schema": {
 					"type": "object",
 					"properties": {
+						"generated": {
+							"type": "string"
+						},
+						"sId": {
+							"type": "string"
+						},
 						"count": {
 							"type": "integer"
 						},
-						"scrollId": {
-							"type": "string"
-						},
-						"data": {
+						"connections": {
 							"type": "array",
 							"items": {
 								"type": "object",
 								"properties": {
-									"hotspotIdentifier": {
-										"type": "string"
-									},
-									"dateStart": {
-										"type": "string"
-									},
-									"dateStop": {
-										"type": "string"
-									},
-									"sessionTime": {
-										"type": "integer"
-									},
-									"traffic": {
-										"type": "integer"
-									},
-									"terminateCause": {
+									"customerId": {
 										"type": "string"
 									},
 									"username": {
 										"type": "string"
 									},
-									"macAddressUser": {
+									"organizationId": {
 										"type": "string"
 									},
-									"ipAddressUser": {
+									"start": {
 										"type": "string"
 									},
-									"venueId": {
+									"startBusiness": {
 										"type": "string"
 									},
-									"online": {
-										"type": "boolean"
+									"stop": {
+										"type": "string"
+									},
+									"stopBusiness": {
+										"type": "string"
+									},
+									"duration": {
+										"type": "integer"
+									},
+									"traffic": {
+										"type": "integer"
+									},
+									"locationName": {
+										"type": "string"
+									},
+									"locationId": {
+										"type": "string"
+									},
+									"hotspotIdentifier": {
+										"type": "string"
+									},
+									"hotspotId": {
+										"type": "string"
+									},
+									"latitude": {
+										"type": "number"
+									},
+									"longitude": {
+										"type": "number"
+									},
+									"macAddressClient": {
+										"type": "string"
+									},
+									"ipAddressClient": {
+										"type": "string"
+									},
+									"terminateCause": {
+										"type": "string"
 									}
 								}
 							}
@@ -6210,7 +6234,7 @@
 					"location": {
 						"type": "HttpServerLocation",
 						"relativeUrl": {
-							"value": "@concat('/v2/users?username=', dataset().username, '&deleted=false&showUsersDesc=true&limit=1000&offset=0&api_version=v2.0&api_key=dcd685a1553d0dfb6f3a15ce90751a28&api_secret=34c2c52eed4cb1d1839e77a869b9637e')",
+							"value": "@concat('/v2/customers/', dataset().username)",
 							"type": "Expression"
 						}
 					}
