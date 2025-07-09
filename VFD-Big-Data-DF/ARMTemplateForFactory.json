@@ -1419,7 +1419,16 @@
 							"dataflow": {
 								"referenceName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed",
 								"type": "DataFlowReference",
-								"parameters": {},
+								"parameters": {
+									"year": {
+										"value": "'@{substring(pipeline().parameters.p_dateStart, 0, 4)}'",
+										"type": "Expression"
+									},
+									"month": {
+										"value": "'@{substring(pipeline().parameters.p_dateStart, 5, 2)}'",
+										"type": "Expression"
+									}
+								},
 								"datasetParameters": {
 									"SourceUsersJSON": {
 										"fileName": "dummy.json"
@@ -1435,7 +1444,8 @@
 										},
 										"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 									}
-								}
+								},
+								"linkedServiceParameters": {}
 							},
 							"staging": {},
 							"compute": {
@@ -9415,6 +9425,10 @@
 						}
 					],
 					"scriptLines": [
+						"parameters{",
+						"     year as string,",
+						"     month as string",
+						"}",
 						"source(output(",
 						"          count as integer,",
 						"          scrollId as string,",
@@ -9424,7 +9438,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:['VFD_Wifi_user_*.json']) ~> SourceUsersJSON",
+						"     wildcardPaths:[(concat(\"/Cloud4Wi/Wifi/users\",$year,\"/\",$month,\"/VFD_Wifi_user_*.json\"))]) ~> SourceUsersJSON",
 						"SourceUsersJSON foldDown(unroll(data),",
 						"     mapColumn(",
 						"          username = data.username,",
