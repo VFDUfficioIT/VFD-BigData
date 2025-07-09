@@ -34,6 +34,10 @@
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     year as string,",
+				"     month as string",
+				"}",
 				"source(output(",
 				"          count as integer,",
 				"          scrollId as string,",
@@ -43,7 +47,7 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     documentForm: 'documentPerLine',",
-				"     wildcardPaths:['VFD_Wifi_user_*.json']) ~> SourceUsersJSON",
+				"     wildcardPaths:[(concat(\"/Cloud4Wi/Wifi/users\",$year,\"/\",$month,\"/VFD_Wifi_user_*.json\"))]) ~> SourceUsersJSON",
 				"SourceUsersJSON foldDown(unroll(data),",
 				"     mapColumn(",
 				"          username = data.username,",
