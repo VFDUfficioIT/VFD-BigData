@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "HttpServer",
 		"typeProperties": {
-			"url": "https://api.cloud4wi.com",
+			"url": "https://explore.cloud4wi.com",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
