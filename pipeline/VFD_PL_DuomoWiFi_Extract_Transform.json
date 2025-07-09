@@ -437,6 +437,16 @@
 					"dataflow": {
 						"referenceName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed",
 						"type": "DataFlowReference",
+						"parameters": {
+							"year": {
+								"value": "'@{substring(pipeline().parameters.p_dateStart, 0, 4)}'",
+								"type": "Expression"
+							},
+							"month": {
+								"value": "'@{substring(pipeline().parameters.p_dateStart, 5, 2)}'",
+								"type": "Expression"
+							}
+						},
 						"datasetParameters": {
 							"SourceUsersJSON": {
 								"fileName": "dummy.json"
