@@ -7,7 +7,14 @@
 				"name": "ExtractConnections",
 				"description": "Estrae le connessioni WiFi dall'API Cloud4Wi",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Web1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:10:00",
 					"retry": 3,
@@ -22,6 +29,10 @@
 						"storeSettings": {
 							"type": "HttpReadSettings",
 							"requestMethod": "GET",
+							"additionalHeaders": {
+								"value": "{\n    \"Authentication\": \"Bearer @{activity('Web1').output.data.Token}\"\n}",
+								"type": "Expression"
+							},
 							"requestTimeout": "00:01:40"
 						},
 						"formatSettings": {
@@ -768,6 +779,56 @@
 						"enablePartitionDiscovery": false
 					}
 				}
+			},
+			{
+				"name": "GetAuthToken",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"requestBody": "{\n  \"clientKey\": \"ck-ffe407c5-e967-44db-a6b0-d6c178b6ee08\",\n  \"clientSecret\": \"CWCVPKZCNDYTVKPBZTDSENQKJLLCPKGH\"\n}",
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Cloud4Wi_Auth_HTTP",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST"
+				}
 			}
 		],
 		"parameters": {
@@ -778,6 +839,9 @@
 			"p_dateStop": {
 				"type": "string",
 				"defaultValue": "26-06-2025"
+			},
+			"p_authToken": {
+				"type": "string"
 			}
 		},
 		"folder": {
