@@ -832,7 +832,10 @@
 							"type": "Expression"
 						}
 					},
-					"url": "https://explore.cloud4wi.com/v1/sts/logout"
+					"url": "https://explore.cloud4wi.com/v1/sts/logout",
+					"body": {
+						"Sample": "Sample"
+					}
 				}
 			}
 		],
