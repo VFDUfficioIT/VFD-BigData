@@ -1258,7 +1258,7 @@
 											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
-										"fileName": "temp_output.parquet"
+										"fileName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet"
 									}
 								}
 							},
@@ -1326,7 +1326,7 @@
 										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
-									"fileName": "temp_output.parquet"
+									"fileName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet"
 								}
 							}
 						],
@@ -1384,7 +1384,7 @@
 										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
-									"fileName": "temp_output.parquet"
+									"fileName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet"
 								}
 							},
 							"enableLogging": false,
@@ -1433,7 +1433,7 @@
 											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
-										"fileName": "temp_users_output.parquet"
+										"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 									}
 								}
 							},
@@ -1501,7 +1501,7 @@
 										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
-									"fileName": "temp_users_output.parquet"
+									"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 								}
 							}
 						],
@@ -1559,7 +1559,7 @@
 										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
-									"fileName": "temp_users_output.parquet"
+									"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 								}
 							},
 							"enableLogging": false,
@@ -1633,7 +1633,7 @@
 											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 											"type": "Expression"
 										},
-										"fileName": "temp_enriched_output.parquet"
+										"fileName": "VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet"
 									}
 								}
 							},
@@ -1701,7 +1701,7 @@
 										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
-									"fileName": "temp_enriched_output.parquet"
+									"fileName": "VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet"
 								}
 							}
 						],
@@ -1759,7 +1759,7 @@
 										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
 										"type": "Expression"
 									},
-									"fileName": "temp_enriched_output.parquet"
+									"fileName": "VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet"
 								}
 							},
 							"enableLogging": false,
@@ -9424,7 +9424,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:['user_*.json']) ~> SourceUsersJSON",
+						"     wildcardPaths:['VFD_Wifi_user_*.json']) ~> SourceUsersJSON",
 						"SourceUsersJSON foldDown(unroll(data),",
 						"     mapColumn(",
 						"          username = data.username,",
