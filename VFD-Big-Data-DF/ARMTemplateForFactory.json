@@ -1010,7 +1010,7 @@
 									"type": "HttpReadSettings",
 									"requestMethod": "GET",
 									"additionalHeaders": {
-										"value": "Authorization: Bearer @{activity('AuthRequest').output.data.token}",
+										"value": "Authorization: Bearer @{activity('AuthRequest').output.token}",
 										"type": "Expression"
 									},
 									"requestTimeout": "00:01:40"
@@ -1161,7 +1161,7 @@
 												"type": "HttpReadSettings",
 												"requestMethod": "GET",
 												"additionalHeaders": {
-													"value": "Authorization: Bearer @{activity('AuthRequest').output.data.token}",
+													"value": "Authorization: Bearer @{activity('AuthRequest').output.token}",
 													"type": "Expression"
 												},
 												"requestTimeout": "00:01:40"
@@ -1816,7 +1816,7 @@
 							"method": "POST",
 							"headers": {
 								"Authentication": {
-									"value": "Bearer @{activity('AuthRequest').output.data.token}",
+									"value": "Bearer @{activity('AuthRequest').output.token}",
 									"type": "Expression"
 								}
 							},
