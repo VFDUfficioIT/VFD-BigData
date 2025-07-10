@@ -47,7 +47,7 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     documentForm: 'documentPerLine') ~> SourceConnectionsJSON",
-				"SourceConnectionsJSON foldDown(unroll(data),",
+				"SourceConnectionsJSON foldDown(unroll(connections),",
 				"     mapColumn(",
 				"          hotspotIdentifier = connections.hotspotIdentifier,",
 				"          start = connections.start,",
