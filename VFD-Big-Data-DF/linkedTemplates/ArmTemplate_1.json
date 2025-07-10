@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -1018,7 +1018,82 @@
 						"fileSystem": "raw"
 					}
 				},
-				"schema": {}
+				"schema": {
+					"type": "object",
+					"properties": {
+						"generated": {
+							"type": "string"
+						},
+						"sId": {
+							"type": "string"
+						},
+						"count": {
+							"type": "integer"
+						},
+						"connections": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"customerId": {
+										"type": "string"
+									},
+									"username": {
+										"type": "string"
+									},
+									"organizationId": {
+										"type": "string"
+									},
+									"start": {
+										"type": "string"
+									},
+									"startBusiness": {
+										"type": "string"
+									},
+									"stop": {
+										"type": "string"
+									},
+									"stopBusiness": {
+										"type": "string"
+									},
+									"duration": {
+										"type": "integer"
+									},
+									"traffic": {
+										"type": "integer"
+									},
+									"locationName": {
+										"type": "string"
+									},
+									"locationId": {
+										"type": "string"
+									},
+									"hotspotIdentifier": {
+										"type": "string"
+									},
+									"hotspotId": {
+										"type": "string"
+									},
+									"latitude": {
+										"type": "number"
+									},
+									"longitude": {
+										"type": "number"
+									},
+									"macAddressClient": {
+										"type": "string"
+									},
+									"ipAddressClient": {
+										"type": "string"
+									},
+									"terminateCause": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				}
 			},
 			"dependsOn": []
 		},

@@ -4,16 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -1815,7 +1815,7 @@
 						"typeProperties": {
 							"method": "POST",
 							"headers": {
-								"Authentication": {
+								"Authorization": {
 									"value": "Bearer @{activity('AuthRequest').output.token}",
 									"type": "Expression"
 								}
@@ -7808,7 +7808,82 @@
 						"fileSystem": "raw"
 					}
 				},
-				"schema": {}
+				"schema": {
+					"type": "object",
+					"properties": {
+						"generated": {
+							"type": "string"
+						},
+						"sId": {
+							"type": "string"
+						},
+						"count": {
+							"type": "integer"
+						},
+						"connections": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"customerId": {
+										"type": "string"
+									},
+									"username": {
+										"type": "string"
+									},
+									"organizationId": {
+										"type": "string"
+									},
+									"start": {
+										"type": "string"
+									},
+									"startBusiness": {
+										"type": "string"
+									},
+									"stop": {
+										"type": "string"
+									},
+									"stopBusiness": {
+										"type": "string"
+									},
+									"duration": {
+										"type": "integer"
+									},
+									"traffic": {
+										"type": "integer"
+									},
+									"locationName": {
+										"type": "string"
+									},
+									"locationId": {
+										"type": "string"
+									},
+									"hotspotIdentifier": {
+										"type": "string"
+									},
+									"hotspotId": {
+										"type": "string"
+									},
+									"latitude": {
+										"type": "number"
+									},
+									"longitude": {
+										"type": "number"
+									},
+									"macAddressClient": {
+										"type": "string"
+									},
+									"ipAddressClient": {
+										"type": "string"
+									},
+									"terminateCause": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -8687,7 +8762,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -8702,18 +8777,8 @@
 					"recurrence": {
 						"frequency": "Day",
 						"interval": 1,
-						"startTime": "2025-05-15T01:16:00",
-						"timeZone": "W. Europe Standard Time",
-						"schedule": {
-							"minutes": [
-								0,
-								20
-							],
-							"hours": [
-								4,
-								10
-							]
-						}
+						"startTime": "2025-07-11T04:00:00",
+						"timeZone": "W. Europe Standard Time"
 					}
 				}
 			},
@@ -9184,36 +9249,37 @@
 					],
 					"scriptLines": [
 						"source(output(",
+						"          generated as string,",
+						"          sId as string,",
 						"          count as integer,",
-						"          scrollId as string,",
-						"          data as (hotspotIdentifier as string, dateStart as string, dateStop as string, sessionTime as integer, traffic as long, terminateCause as string, username as string, macAddressUser as string, ipAddressUser as string, venueId as string, online as boolean)[]",
+						"          connections as (customerId as string, username as string, organizationId as string, start as string, startBusiness as string, stop as string, stopBusiness as string, duration as integer, traffic as integer, locationName as string, locationId as string, hotspotIdentifier as string, hotspotId as string, latitude as double, longitude as double, macAddressClient as string, ipAddressClient as string, terminateCause as string)[]",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'documentPerLine') ~> SourceConnectionsJSON",
-						"SourceConnectionsJSON foldDown(unroll(data),",
+						"SourceConnectionsJSON foldDown(unroll(connections),",
 						"     mapColumn(",
-						"          hotspotIdentifier = data.hotspotIdentifier,",
-						"          dateStart = data.dateStart,",
-						"          dateStop = data.dateStop,",
-						"          sessionTime = data.sessionTime,",
-						"          traffic = data.traffic,",
-						"          terminateCause = data.terminateCause,",
-						"          username = data.username,",
-						"          macAddressUser = data.macAddressUser,",
-						"          ipAddressUser = data.ipAddressUser,",
-						"          venueId = data.venueId,",
-						"          online = data.online",
+						"          hotspotIdentifier = connections.hotspotIdentifier,",
+						"          start = connections.start,",
+						"          stop = connections.stop,",
+						"          duration = connections.duration,",
+						"          traffic = connections.traffic,",
+						"          terminateCause = connections.terminateCause,",
+						"          username = connections.username,",
+						"          macAddressClient = connections.macAddressClient,",
+						"          ipAddressClient = connections.ipAddressClient,",
+						"          locationId = connections.locationId,",
+						"          customerId = connections.customerId",
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> FlattenData",
-						"FlattenData derive(sessionTime_minutes = sessionTime / 60,",
+						"FlattenData derive(sessionTime_minutes = duration / 60,",
 						"          traffic_MB = traffic / (1024 * 1024),",
 						"          processing_date = currentUTC(),",
 						"          data_source = 'cloud4wi_connections') ~> DerivedColumns",
-						"DerivedColumns derive(dateStart_converted = toTimestamp(dateStart, 'yyyy-MM-dd HH:mm:ss'),",
-						"          dateStop_converted = toTimestamp(dateStop, 'yyyy-MM-dd HH:mm:ss')) ~> DataTypeConversions",
+						"DerivedColumns derive(start_converted = toTimestamp(start, 'yyyy-MM-dd HH:mm:ss'),",
+						"          stop_converted = toTimestamp(stop, 'yyyy-MM-dd HH:mm:ss')) ~> DataTypeConversions",
 						"DataTypeConversions sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
