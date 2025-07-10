@@ -2,7 +2,7 @@
 	"name": "VFD_TRG_Mida_Bookings_FTP_Schedule",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
@@ -16,18 +16,8 @@
 			"recurrence": {
 				"frequency": "Day",
 				"interval": 1,
-				"startTime": "2025-05-15T01:16:00",
-				"timeZone": "W. Europe Standard Time",
-				"schedule": {
-					"minutes": [
-						0,
-						20
-					],
-					"hours": [
-						4,
-						10
-					]
-				}
+				"startTime": "2025-07-11T04:00:00",
+				"timeZone": "W. Europe Standard Time"
 			}
 		}
 	}
