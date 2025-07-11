@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_TicketAccessArea_Raw_Excel",
+	"name": "VFD_DS_Raw_TicketAccessArea_Excel",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
