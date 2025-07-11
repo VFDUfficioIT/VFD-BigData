@@ -1,9 +1,14 @@
 {
-	"name": "VFD_DS_Curated_TicketAccessArea_Parquet",
+	"name": "VFD_DS_Curated_AccessAreas_Parquet",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			}
 		},
 		"folder": {
 			"name": "Utils/AccessAreas"
@@ -13,7 +18,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "AssociazioneBigliettiAccessi.parquet",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
 				"folderPath": "utils",
 				"fileSystem": "curated"
 			},
