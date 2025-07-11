@@ -8,7 +8,7 @@
 				"location": "Italy North",
 				"dataFlowProperties": {
 					"computeType": "General",
-					"coreCount": 32,
+					"coreCount": 16,
 					"timeToLive": 10,
 					"cleanup": false,
 					"customProperties": []
