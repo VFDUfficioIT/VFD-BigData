@@ -8,6 +8,12 @@
 		"parameters": {
 			"fileName": {
 				"type": "string"
+			},
+			"year": {
+				"type": "string"
+			},
+			"month": {
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -22,7 +28,10 @@
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "Wifi/users",
+				"folderPath": {
+					"value": "@concat('Wifi/users/', dataset().year, '/', dataset().month)",
+					"type": "Expression"
+				},
 				"fileSystem": "raw"
 			}
 		},
