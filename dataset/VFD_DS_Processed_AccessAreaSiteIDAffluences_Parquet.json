@@ -1,0 +1,24 @@
+{
+	"name": "VFD_DS_Processed_AccessAreaSiteIDAffluences_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Utils/AccessAreas"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "AssociazioneAccessiSiteIDAffluences.parquet",
+				"folderPath": "utils",
+				"fileSystem": "processed"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
