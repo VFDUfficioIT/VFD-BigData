@@ -1,9 +1,14 @@
 {
-	"name": "VFD_DS_Raw_TicketAccessArea_Excel",
+	"name": "VFD_DS_Raw_AccessAreas_Excel",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			}
 		},
 		"folder": {
 			"name": "Utils/AccessAreas"
@@ -11,11 +16,13 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "Associazioni",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "AssociazioneBigliettiAccessi.xlsx",
-				"folderPath": "utils",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "utils/AccessAreas",
 				"fileSystem": "raw"
 			}
 		},
