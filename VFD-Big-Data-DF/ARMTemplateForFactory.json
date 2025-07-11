@@ -8172,7 +8172,8 @@
 						},
 						"folderPath": "utils/AccessAreas",
 						"fileSystem": "raw"
-					}
+					},
+					"firstRowAsHeader": true
 				},
 				"schema": []
 			},
