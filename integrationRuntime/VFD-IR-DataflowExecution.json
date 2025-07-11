@@ -1,0 +1,19 @@
+{
+	"name": "VFD-IR-DataflowExecution",
+	"properties": {
+		"type": "Managed",
+		"description": "IR dedicated to the execution of VFD dataflows and transformation",
+		"typeProperties": {
+			"computeProperties": {
+				"location": "Italy North",
+				"dataFlowProperties": {
+					"computeType": "General",
+					"coreCount": 32,
+					"timeToLive": 30,
+					"cleanup": false,
+					"customProperties": []
+				}
+			}
+		}
+	}
+}
