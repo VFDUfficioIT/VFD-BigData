@@ -1351,6 +1351,10 @@
 						}
 					],
 					"scriptLines": [
+						"parameters{",
+						"     year as string,",
+						"     month as string",
+						"}",
 						"source(output(",
 						"          count as integer,",
 						"          scrollId as string,",
@@ -1360,7 +1364,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:['/Wifi/users/VFD_Wifi_user_*.json']) ~> SourceUsersJSON",
+						"     wildcardPaths:[(concat(\"/Wifi/users/\", $year, \"/\", $month, \"/VFD_Wifi_user_*.json\"))]) ~> SourceUsersJSON",
 						"SourceUsersJSON foldDown(unroll(customers),",
 						"     mapColumn(",
 						"          cid = customers.cid,",
