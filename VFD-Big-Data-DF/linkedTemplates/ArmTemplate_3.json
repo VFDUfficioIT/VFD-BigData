@@ -4,18 +4,372 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
-		},
-		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
-			"type": "string",
-			"defaultValue": "Milano"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Processed_Curated_Daily')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Dataflow per selezionare campi rilevanti dal parquet processed",
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkCurated"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectFields"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          event_guid as string,",
+						"          siae as integer,",
+						"          seal as string,",
+						"          reservationCode as string,",
+						"          inGateTimestamp as timestamp,",
+						"          entranceLabel as string,",
+						"          passCode as string,",
+						"          externalCode as string,",
+						"          processing_date as timestamp,",
+						"          data_source as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"SourceProcessed select(mapColumn(",
+						"          event_guid,",
+						"          siae,",
+						"          seal,",
+						"          reservationCode,",
+						"          inGateTimestamp,",
+						"          entranceLabel,",
+						"          passCode,",
+						"          externalCode,",
+						"          processing_date,",
+						"          data_source",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> SelectFields",
+						"SelectFields sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkCurated"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Raw_Processed')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Dataflow per convertire Excel Validations in Parquet con conversioni di tipo",
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+								"type": "DatasetReference"
+							},
+							"name": "SourceExcel"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkParquet",
+							"rejectedDataLinkedService": {
+								"referenceName": "VFD_Big_Data_DL",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "dataTypeConversions"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          event_guid as string,",
+						"          siae as integer,",
+						"          seal as string,",
+						"          reservationCode as string,",
+						"          inGateTimestamp as string,",
+						"          entranceLabel as string,",
+						"          passCode as string,",
+						"          externalCode as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> SourceExcel",
+						"SourceExcel derive(processing_date = currentUTC(),",
+						"          data_source = 'mida_validations') ~> dataTypeConversions",
+						"dataTypeConversions sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Mida_Validations_Raw_Processed_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkParquet"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Raw_Processed')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Conversione CSV meteo in Parquet senza modifiche",
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Weather_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "SourceRaw"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkProcessed",
+							"rejectedDataLinkedService": {
+								"referenceName": "VFD_Big_Data_DL",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddProcessingMetadata"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> SourceRaw",
+						"SourceRaw derive(processing_date = currentUTC(),",
+						"          data_source = 'visual_crossing_api',",
+						"          datetime_parsed = toDate(datetime)) ~> AddProcessingMetadata",
+						"AddProcessingMetadata sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Weather_Raw_Processed_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkProcessed"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Single_Row_To_Monthly')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Aggiorna file mensile con singola riga filtrata per data",
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						},
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceCuratedExisting"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkCurated"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterTargetDate"
+						},
+						{
+							"name": "RemoveTargetDateFromExisting"
+						},
+						{
+							"name": "UnionWithExisting"
+						},
+						{
+							"name": "SortByDate"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     target_date as string",
+						"}",
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string,",
+						"          processing_date as timestamp,",
+						"          data_source as string,",
+						"          datetime_parsed as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string,",
+						"          processing_date as timestamp,",
+						"          data_source as string,",
+						"          datetime_parsed as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'parquet') ~> SourceCuratedExisting",
+						"SourceProcessed filter(datetime == $target_date) ~> FilterTargetDate",
+						"SourceCuratedExisting filter(datetime != $target_date) ~> RemoveTargetDateFromExisting",
+						"FilterTargetDate, RemoveTargetDateFromExisting union(byName: true)~> UnionWithExisting",
+						"UnionWithExisting sort(asc(datetime, false)) ~> SortByDate",
+						"SortByDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkCurated"
+					]
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Daily_v2')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -276,11 +630,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -434,11 +788,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -602,11 +956,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -1036,11 +1390,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -1211,11 +1565,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -1411,11 +1765,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -1660,11 +2014,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 32,
-								"computeType": "MemoryOptimized"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine",
+							"traceLevel": "Coarse",
 							"parameters": {
 								"folderPath": {
 									"value": "@pipeline().parameters.folderPath",
@@ -1848,9 +2202,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 32,
-								"computeType": "MemoryOptimized"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -2054,9 +2408,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 16,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -2225,9 +2579,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -2669,9 +3023,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -2840,9 +3194,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -2992,7 +3346,10 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Validations_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Validations_Processed_Curated_Daily')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_Raw_Curated')]",
@@ -3039,11 +3396,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -3191,6 +3548,9 @@
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
 									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							},
 							"dataset": {
@@ -3357,11 +3717,11 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "VFD-IR-DataflowExecution",
+											"type": "IntegrationRuntimeReference"
 										},
-										"traceLevel": "Fine"
+										"traceLevel": "Coarse"
 									}
 								},
 								{
@@ -3526,7 +3886,10 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Single_Row_To_Monthly')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Historical_Recovery')]",
@@ -3708,6 +4071,173 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Affluences_Daily_v2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Reprocessing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SetFirstDate",
+						"description": "Imposta per la prima volta la currentDate in base a startDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "RepeatUntilEndDate",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetFirstDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('currentDate'),pipeline().parameters.endDate)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ProcessCurrentDate",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dateStart": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											},
+											"p_dateStop": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "CalculateNextDate",
+									"description": "Usa una variabile temp per calcolare il valore di currentDate + 1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ProcessCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "nextDate",
+										"value": {
+											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetCurrentDate",
+									"description": "Imposta il valore di currentDate con nextDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "CalculateNextDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "currentDate",
+										"value": {
+											"value": "@variables('nextDate')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "WaitForCooldown",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "SetCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 10
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"startDate": {
+						"type": "string"
+					},
+					"endDate": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"currentDate": {
+						"type": "String"
+					},
+					"nextDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
 			]
 		},
 		{
@@ -5581,173 +6111,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Reprocessing')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "SetFirstDate",
-						"description": "Imposta per la prima volta la currentDate in base a startDate",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "currentDate",
-							"value": {
-								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "RepeatUntilEndDate",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "SetFirstDate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@greater(variables('currentDate'),pipeline().parameters.endDate)",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "ProcessCurrentDate",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"p_dateStart": {
-												"value": "@variables('currentDate')",
-												"type": "Expression"
-											},
-											"p_dateStop": {
-												"value": "@variables('currentDate')",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "CalculateNextDate",
-									"description": "Usa una variabile temp per calcolare il valore di currentDate + 1",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ProcessCurrentDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "nextDate",
-										"value": {
-											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetCurrentDate",
-									"description": "Imposta il valore di currentDate con nextDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "CalculateNextDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "currentDate",
-										"value": {
-											"value": "@variables('nextDate')",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "WaitForCooldown",
-									"type": "Wait",
-									"dependsOn": [
-										{
-											"activity": "SetCurrentDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 10
-									}
-								}
-							],
-							"timeout": "0.12:00:00"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"startDate": {
-						"type": "string"
-					},
-					"endDate": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"currentDate": {
-						"type": "String"
-					},
-					"nextDate": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "WiFi"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -5832,274 +6195,6 @@
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_FTP')]",
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Seals_FTP')]",
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Validations_FTP')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Bookings_Process_Year')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline che processa tutti i mesi di un determinato anno",
-				"activities": [
-					{
-						"name": "GetMonths",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Mida/Bookings/',pipeline().parameters.year)",
-										"type": "Expression"
-									}
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ForEachMonth",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetMonths",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetMonths').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "ProcessMonth",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Mida_Bookings_Process_Month",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"year": {
-												"value": "@pipeline().parameters.year",
-												"type": "Expression"
-											},
-											"month": {
-												"value": "@item().name",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"year": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida/Bookings/Reprocessing"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Process_Month')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Weather_API_Daily')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "VFD_PL_Weather_API_Daily",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"location": "[parameters('VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Day",
-						"interval": 1,
-						"startTime": "2025-07-05T06:00:00",
-						"timeZone": "W. Europe Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_API_Daily')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Bookings_Reprocess_MissingFiles')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline che scorre ricorsivamente il layer Raw per trovare file non ancora processati",
-				"activities": [
-					{
-						"name": "GetYears",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": "Mida/Bookings"
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ForEachYear",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetYears",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetYears').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "ProcessYear",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Mida_Bookings_Process_Year",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"year": {
-												"value": "@item().name",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "Mida/Bookings/Reprocessing"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Process_Year')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Mida_Bookings_FTP_Schedule')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "VFD_PL_Mida",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Day",
-						"interval": 1,
-						"startTime": "2025-07-11T04:00:00",
-						"timeZone": "W. Europe Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida')]"
 			]
 		}
 	]

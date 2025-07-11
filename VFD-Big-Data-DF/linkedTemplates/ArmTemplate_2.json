@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -12,6 +12,161 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Emissioni di ieri",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Validations_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Vidimazioni di ieri",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_TicketAccessArea_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Utils/AccessAreas"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Associazioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "AssociazioneBigliettiAccessi.xlsx",
+						"folderPath": "utils",
+						"fileSystem": "raw"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Weather_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Temp_Affluences_JSON')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
@@ -1486,7 +1641,9 @@
 					]
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Users_Processed_Curated_Daily')]",
@@ -1633,364 +1790,6 @@
 						"     postCommands: [],",
 						"     partitionBy('hash', 1),",
 						"     fileName: 'VFD_DFL_Mida_Sales_Curated_output.parquet') ~> SinkCurated"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Processed_Curated_Daily')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Dataflow per selezionare campi rilevanti dal parquet processed",
-				"folder": {
-					"name": "Mida/Validations"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceProcessed"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkCurated"
-						}
-					],
-					"transformations": [
-						{
-							"name": "SelectFields"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          event_guid as string,",
-						"          siae as integer,",
-						"          seal as string,",
-						"          reservationCode as string,",
-						"          inGateTimestamp as timestamp,",
-						"          entranceLabel as string,",
-						"          passCode as string,",
-						"          externalCode as string,",
-						"          processing_date as timestamp,",
-						"          data_source as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> SourceProcessed",
-						"SourceProcessed select(mapColumn(",
-						"          event_guid,",
-						"          siae,",
-						"          seal,",
-						"          reservationCode,",
-						"          inGateTimestamp,",
-						"          entranceLabel,",
-						"          passCode,",
-						"          externalCode,",
-						"          processing_date,",
-						"          data_source",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> SelectFields",
-						"SelectFields sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkCurated"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Dataflow per convertire Excel Validations in Parquet con conversioni di tipo",
-				"folder": {
-					"name": "Mida/Validations"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
-								"type": "DatasetReference"
-							},
-							"name": "SourceExcel"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkParquet",
-							"rejectedDataLinkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "dataTypeConversions"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          event_guid as string,",
-						"          siae as integer,",
-						"          seal as string,",
-						"          reservationCode as string,",
-						"          inGateTimestamp as string,",
-						"          entranceLabel as string,",
-						"          passCode as string,",
-						"          externalCode as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> SourceExcel",
-						"SourceExcel derive(processing_date = currentUTC(),",
-						"          data_source = 'mida_validations') ~> dataTypeConversions",
-						"dataTypeConversions sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Mida_Validations_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkParquet"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Conversione CSV meteo in Parquet senza modifiche",
-				"folder": {
-					"name": "Visual Crossing/Weather"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Weather_CSV",
-								"type": "DatasetReference"
-							},
-							"name": "SourceRaw"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Weather_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkProcessed",
-							"rejectedDataLinkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddProcessingMetadata"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          name as string,",
-						"          datetime as string,",
-						"          tempmax as double,",
-						"          tempmin as double,",
-						"          temp as double,",
-						"          feelslikemax as double,",
-						"          feelslikemin as double,",
-						"          feelslike as double,",
-						"          humidity as double,",
-						"          precip as double,",
-						"          precipprob as double,",
-						"          preciptype as string,",
-						"          windgust as double,",
-						"          windspeed as double,",
-						"          cloudcover as double,",
-						"          visibility as double,",
-						"          sunset as string,",
-						"          conditions as string,",
-						"          description as string,",
-						"          icon as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> SourceRaw",
-						"SourceRaw derive(processing_date = currentUTC(),",
-						"          data_source = 'visual_crossing_api',",
-						"          datetime_parsed = toDate(datetime)) ~> AddProcessingMetadata",
-						"AddProcessingMetadata sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Weather_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkProcessed"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Single_Row_To_Monthly')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Aggiorna file mensile con singola riga filtrata per data",
-				"folder": {
-					"name": "Visual Crossing/Weather"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Weather_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceProcessed"
-						},
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Weather_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceCuratedExisting"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Weather_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkCurated"
-						}
-					],
-					"transformations": [
-						{
-							"name": "FilterTargetDate"
-						},
-						{
-							"name": "RemoveTargetDateFromExisting"
-						},
-						{
-							"name": "UnionWithExisting"
-						},
-						{
-							"name": "SortByDate"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     target_date as string",
-						"}",
-						"source(output(",
-						"          name as string,",
-						"          datetime as string,",
-						"          tempmax as double,",
-						"          tempmin as double,",
-						"          temp as double,",
-						"          feelslikemax as double,",
-						"          feelslikemin as double,",
-						"          feelslike as double,",
-						"          humidity as double,",
-						"          precip as double,",
-						"          precipprob as double,",
-						"          preciptype as string,",
-						"          windgust as double,",
-						"          windspeed as double,",
-						"          cloudcover as double,",
-						"          visibility as double,",
-						"          sunset as string,",
-						"          conditions as string,",
-						"          description as string,",
-						"          icon as string,",
-						"          processing_date as timestamp,",
-						"          data_source as string,",
-						"          datetime_parsed as date",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> SourceProcessed",
-						"source(output(",
-						"          name as string,",
-						"          datetime as string,",
-						"          tempmax as double,",
-						"          tempmin as double,",
-						"          temp as double,",
-						"          feelslikemax as double,",
-						"          feelslikemin as double,",
-						"          feelslike as double,",
-						"          humidity as double,",
-						"          precip as double,",
-						"          precipprob as double,",
-						"          preciptype as string,",
-						"          windgust as double,",
-						"          windspeed as double,",
-						"          cloudcover as double,",
-						"          visibility as double,",
-						"          sunset as string,",
-						"          conditions as string,",
-						"          description as string,",
-						"          icon as string,",
-						"          processing_date as timestamp,",
-						"          data_source as string,",
-						"          datetime_parsed as date",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     format: 'parquet') ~> SourceCuratedExisting",
-						"SourceProcessed filter(datetime == $target_date) ~> FilterTargetDate",
-						"SourceCuratedExisting filter(datetime != $target_date) ~> RemoveTargetDateFromExisting",
-						"FilterTargetDate, RemoveTargetDateFromExisting union(byName: true)~> UnionWithExisting",
-						"UnionWithExisting sort(asc(datetime, false)) ~> SortByDate",
-						"SortByDate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkCurated"
 					]
 				}
 			},

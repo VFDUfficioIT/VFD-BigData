@@ -4,16 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -312,11 +312,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -470,11 +470,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -638,11 +638,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -785,6 +785,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_JSON_to_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_Daily_to_Curated')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Affluences_Daily_Parquet')]",
@@ -1263,11 +1264,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -1438,11 +1439,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -1638,11 +1639,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -1849,6 +1850,7 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Cloud4Wi_Connections_HTTP')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_DuomoWiFi_Connections_JSON')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Connections_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_DuomoWiFi_Connections_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Users_Raw_Processed')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_DuomoWiFi_Users_Parquet')]",
@@ -1856,6 +1858,173 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_DuomoWiFi_Enriched_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Cloud4Wi_Users_HTTP')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_DuomoWiFi_Users_JSON')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Reprocessing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SetFirstDate",
+						"description": "Imposta per la prima volta la currentDate in base a startDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "RepeatUntilEndDate",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetFirstDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('currentDate'),pipeline().parameters.endDate)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ProcessCurrentDate",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dateStart": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											},
+											"p_dateStop": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "CalculateNextDate",
+									"description": "Usa una variabile temp per calcolare il valore di currentDate + 1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ProcessCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "nextDate",
+										"value": {
+											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetCurrentDate",
+									"description": "Imposta il valore di currentDate con nextDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "CalculateNextDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "currentDate",
+										"value": {
+											"value": "@variables('nextDate')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "WaitForCooldown",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "SetCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 10
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"startDate": {
+						"type": "string"
+					},
+					"endDate": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"currentDate": {
+						"type": "String"
+					},
+					"nextDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
 			]
 		},
 		{
@@ -2845,11 +3014,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 32,
-								"computeType": "MemoryOptimized"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine",
+							"traceLevel": "Coarse",
 							"parameters": {
 								"folderPath": {
 									"value": "@pipeline().parameters.folderPath",
@@ -3033,9 +3202,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 32,
-								"computeType": "MemoryOptimized"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -3203,6 +3372,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Sales_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Bookings_Processed_Curated_Daily')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Parquet')]"
@@ -3777,9 +3947,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 16,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -3948,9 +4118,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -4118,6 +4288,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Seals_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Seals_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Seals_Processed_Curated_Daily')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Seals_Parquet')]"
@@ -4783,9 +4954,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -4954,9 +5125,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -5108,6 +5279,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Validations_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Validations_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Validations_Processed_Curated_Daily')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Validations_Parquet')]"
@@ -5547,11 +5719,11 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
@@ -5699,6 +5871,9 @@
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true,
 									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							},
 							"dataset": {
@@ -5865,11 +6040,11 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "VFD-IR-DataflowExecution",
+											"type": "IntegrationRuntimeReference"
 										},
-										"traceLevel": "Fine"
+										"traceLevel": "Coarse"
 									}
 								},
 								{
@@ -6036,6 +6211,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Single_Row_To_Monthly')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
@@ -6661,6 +6837,35 @@
 							"value": "@dataset().folderPath",
 							"type": "Expression"
 						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_TicketAccessArea_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Utils/AccessAreas"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "AssociazioneBigliettiAccessi.parquet",
+						"folderPath": "utils",
 						"fileSystem": "curated"
 					},
 					"compressionCodec": "snappy"
@@ -7567,6 +7772,35 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_TicketAccessArea_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Utils/AccessAreas"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "AssociazioneBigliettiAccessi.parquet",
+						"folderPath": "utils",
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Weather_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -8419,6 +8653,35 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_TicketAccessArea_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Utils/AccessAreas"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Associazioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "AssociazioneBigliettiAccessi.xlsx",
+						"folderPath": "utils",
+						"fileSystem": "raw"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Weather_CSV')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -8817,6 +9080,28 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_API_Daily')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"description": "IR dedicated to the execution of VFD dataflows and transformation",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "Italy North",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 32,
+							"timeToLive": 30,
+							"cleanup": false,
+							"customProperties": []
+						}
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_Daily_to_Curated')]",
@@ -10595,173 +10880,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Reprocessing')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "SetFirstDate",
-						"description": "Imposta per la prima volta la currentDate in base a startDate",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "currentDate",
-							"value": {
-								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "RepeatUntilEndDate",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "SetFirstDate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@greater(variables('currentDate'),pipeline().parameters.endDate)",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "ProcessCurrentDate",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"p_dateStart": {
-												"value": "@variables('currentDate')",
-												"type": "Expression"
-											},
-											"p_dateStop": {
-												"value": "@variables('currentDate')",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "CalculateNextDate",
-									"description": "Usa una variabile temp per calcolare il valore di currentDate + 1",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ProcessCurrentDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "nextDate",
-										"value": {
-											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetCurrentDate",
-									"description": "Imposta il valore di currentDate con nextDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "CalculateNextDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "currentDate",
-										"value": {
-											"value": "@variables('nextDate')",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "WaitForCooldown",
-									"type": "Wait",
-									"dependsOn": [
-										{
-											"activity": "SetCurrentDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 10
-									}
-								}
-							],
-							"timeout": "0.12:00:00"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"startDate": {
-						"type": "string"
-					},
-					"endDate": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"currentDate": {
-						"type": "String"
-					},
-					"nextDate": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "WiFi"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
 			]
 		}
 	]
