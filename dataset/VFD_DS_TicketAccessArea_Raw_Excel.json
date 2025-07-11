@@ -19,6 +19,13 @@
 				"fileSystem": "raw"
 			}
 		},
-		"schema": []
+		"schema": [
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			}
+		]
 	}
 }
