@@ -4,8 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
+		},
+		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart": {
+			"type": "string",
+			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
+		},
+		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop": {
+			"type": "string",
+			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
 		},
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
 			"type": "string",
@@ -16,6 +24,45 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_WiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"p_dateStart": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart')]",
+							"p_dateStop": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-11T16:00:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								4
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",

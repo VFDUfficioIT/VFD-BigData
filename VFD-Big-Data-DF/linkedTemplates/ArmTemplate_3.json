@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -1737,8 +1737,7 @@
 										},
 										"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 									}
-								},
-								"linkedServiceParameters": {}
+								}
 							},
 							"staging": {},
 							"integrationRuntime": {
@@ -2514,23 +2513,23 @@
 				"parameters": {
 					"folderPath": {
 						"type": "String",
-						"defaultValue": "Mida/Bookings/2021/10"
+						"defaultValue": "Mida/Bookings/2025/07"
 					},
 					"fileName": {
 						"type": "String",
-						"defaultValue": "export_vw_summary_reservationPayments20211001.csv"
+						"defaultValue": "export_vw_summary_reservationPayments20250710.csv"
 					},
 					"year": {
 						"type": "string",
-						"defaultValue": "2021"
+						"defaultValue": "2025"
 					},
 					"month": {
 						"type": "string",
-						"defaultValue": "10"
+						"defaultValue": "07"
 					},
 					"day": {
 						"type": "string",
-						"defaultValue": "01"
+						"defaultValue": "10"
 					}
 				},
 				"variables": {

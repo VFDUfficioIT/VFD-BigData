@@ -4,16 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -46,6 +46,14 @@
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
 			"type": "string",
 			"defaultValue": "Milano"
+		},
+		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart": {
+			"type": "string",
+			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
+		},
+		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop": {
+			"type": "string",
+			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
 		}
 	},
 	"variables": {
@@ -1461,8 +1469,7 @@
 										},
 										"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
 									}
-								},
-								"linkedServiceParameters": {}
+								}
 							},
 							"staging": {},
 							"integrationRuntime": {
@@ -3364,23 +3371,23 @@
 				"parameters": {
 					"folderPath": {
 						"type": "String",
-						"defaultValue": "Mida/Bookings/2021/10"
+						"defaultValue": "Mida/Bookings/2025/07"
 					},
 					"fileName": {
 						"type": "String",
-						"defaultValue": "export_vw_summary_reservationPayments20211001.csv"
+						"defaultValue": "export_vw_summary_reservationPayments20250710.csv"
 					},
 					"year": {
 						"type": "string",
-						"defaultValue": "2021"
+						"defaultValue": "2025"
 					},
 					"month": {
 						"type": "string",
-						"defaultValue": "10"
+						"defaultValue": "07"
 					},
 					"day": {
 						"type": "string",
-						"defaultValue": "01"
+						"defaultValue": "10"
 					}
 				},
 				"variables": {
@@ -5312,7 +5319,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_TicketAccessArea_Raw_Curated')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_AccessAreas_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -9427,6 +9434,47 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_WiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"p_dateStart": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart')]",
+							"p_dateStop": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-11T16:00:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								4
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
 			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
 			"apiVersion": "2018-06-01",
@@ -9438,8 +9486,8 @@
 						"location": "Italy North",
 						"dataFlowProperties": {
 							"computeType": "General",
-							"coreCount": 32,
-							"timeToLive": 30,
+							"coreCount": 16,
+							"timeToLive": 10,
 							"cleanup": false,
 							"customProperties": []
 						}

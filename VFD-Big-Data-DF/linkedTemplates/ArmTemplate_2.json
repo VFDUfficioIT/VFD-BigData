@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -428,7 +428,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_TicketAccessArea_Raw_Curated')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_AccessAreas_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
