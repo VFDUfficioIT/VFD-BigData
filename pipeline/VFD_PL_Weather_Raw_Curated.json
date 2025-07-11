@@ -39,11 +39,11 @@
 							}
 						}
 					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
+					"integrationRuntime": {
+						"referenceName": "VFD-IR-DataflowExecution",
+						"type": "IntegrationRuntimeReference"
 					},
-					"traceLevel": "Fine"
+					"traceLevel": "Coarse"
 				}
 			},
 			{
@@ -191,6 +191,9 @@
 							"type": "AzureBlobFSReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
 						}
 					},
 					"dataset": {
@@ -356,11 +359,11 @@
 										}
 									}
 								},
-								"compute": {
-									"coreCount": 8,
-									"computeType": "General"
+								"integrationRuntime": {
+									"referenceName": "VFD-IR-DataflowExecution",
+									"type": "IntegrationRuntimeReference"
 								},
-								"traceLevel": "Fine"
+								"traceLevel": "Coarse"
 							}
 						},
 						{
