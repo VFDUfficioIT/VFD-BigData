@@ -4,16 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -436,6 +436,35 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_AccessAreaSiteIDAffluences_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Utils/AccessAreas"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "AssociazioneAccessiSiteIDAffluences.parquet",
+						"folderPath": "utils",
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Affluences_Daily_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -820,49 +849,6 @@
 						"type": "AzureBlobFSLocation",
 						"fileName": "AssociazioneBigliettiAccessi.parquet",
 						"folderPath": "utils",
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "String"
-					},
-					"fileName": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Visual Crossing/Weather"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
 						"fileSystem": "curated"
 					},
 					"compressionCodec": "snappy"
