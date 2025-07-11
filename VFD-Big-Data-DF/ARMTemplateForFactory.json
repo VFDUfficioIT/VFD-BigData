@@ -4,16 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -10595,6 +10595,173 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Reprocessing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SetFirstDate",
+						"description": "Imposta per la prima volta la currentDate in base a startDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "RepeatUntilEndDate",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetFirstDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('currentDate'),pipeline().parameters.endDate)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ProcessCurrentDate",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dateStart": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											},
+											"p_dateStop": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "CalculateNextDate",
+									"description": "Usa una variabile temp per calcolare il valore di currentDate + 1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ProcessCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "nextDate",
+										"value": {
+											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetCurrentDate",
+									"description": "Imposta il valore di currentDate con nextDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "CalculateNextDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "currentDate",
+										"value": {
+											"value": "@variables('nextDate')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "WaitForCooldown",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "SetCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 10
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"startDate": {
+						"type": "string"
+					},
+					"endDate": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"currentDate": {
+						"type": "String"
+					},
+					"nextDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
 			]
 		}
 	]
