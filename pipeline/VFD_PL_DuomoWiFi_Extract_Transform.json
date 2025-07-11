@@ -281,9 +281,9 @@
 							}
 						}
 					},
-					"compute": {
-						"coreCount": 16,
-						"computeType": "General"
+					"integrationRuntime": {
+						"referenceName": "VFD-IR-DataflowExecution",
+						"type": "IntegrationRuntimeReference"
 					},
 					"traceLevel": "Coarse"
 				}
@@ -454,9 +454,9 @@
 							}
 						}
 					},
-					"compute": {
-						"coreCount": 16,
-						"computeType": "General"
+					"integrationRuntime": {
+						"referenceName": "VFD-IR-DataflowExecution",
+						"type": "IntegrationRuntimeReference"
 					},
 					"traceLevel": "Coarse"
 				}
@@ -652,11 +652,11 @@
 							}
 						}
 					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
+					"integrationRuntime": {
+						"referenceName": "VFD-IR-DataflowExecution",
+						"type": "IntegrationRuntimeReference"
 					},
-					"traceLevel": "Fine"
+					"traceLevel": "Coarse"
 				}
 			},
 			{
