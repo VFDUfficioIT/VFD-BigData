@@ -5292,7 +5292,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "CopyRawToProcessed",
+						"name": "TicketArea_CopyRawToProcessed",
 						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
@@ -5333,25 +5333,29 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "VFD_DS_Raw_TicketAccessArea_Excel",
+								"referenceName": "VFD_DS_Raw_AccessAreas_Excel",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"fileName": "AssociazioneBigliettiAccessi.xlsx"
+								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "VFD_DS_Processed_TicketAccessArea_Parquet",
+								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"fileName": "AssociazioneBigliettiAccessi.parquet"
+								}
 							}
 						]
 					},
 					{
-						"name": "CopyProcessedToCurated",
+						"name": "TicketArea_CopyProcessedToCurated",
 						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "CopyRawToProcessed",
+								"activity": "TicketArea_CopyRawToProcessed",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -5398,16 +5402,155 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "VFD_DS_Processed_TicketAccessArea_Parquet",
+								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"fileName": "AssociazioneBigliettiAccessi.parquet"
+								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "VFD_DS_Curated_TicketAccessArea_Parquet",
+								"referenceName": "VFD_DS_Curated_AccessAreas_Parquet",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"fileName": "AssociazioneBigliettiAccessi.parquet"
+								}
+							}
+						]
+					},
+					{
+						"name": "AreaSiteID_CopyRawToProcessed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "TicketArea_CopyProcessedToCurated",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Raw_AccessAreas_Excel",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": "AssociazioneAccessiSiteIDAffluences.xlsx"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": "AssociazioneAccessiSiteIDAffluences.parquet"
+								}
+							}
+						]
+					},
+					{
+						"name": "AreaSiteID_CopyProcessedToCurated",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "AreaSiteID_CopyRawToProcessed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": "AssociazioneAccessiSiteIDAffluences.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_AccessAreas_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"fileName": "AssociazioneAccessiSiteIDAffluences.parquet"
+								}
 							}
 						]
 					}
@@ -5421,9 +5564,9 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_TicketAccessArea_Excel')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_TicketAccessArea_Parquet')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_TicketAccessArea_Parquet')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_AccessAreas_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_AccessAreas_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_AccessAreas_Parquet')]"
 			]
 		},
 		{
@@ -6623,13 +6766,18 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_AccessAreaSiteIDAffluences_Parquet')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_AccessAreas_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "VFD_Big_Data_DL",
 					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
 				},
 				"folder": {
 					"name": "Utils/AccessAreas"
@@ -6639,8 +6787,11 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneAccessiSiteIDAffluences.parquet",
-						"folderPath": "utils",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "utils/AccessAreas",
 						"fileSystem": "curated"
 					},
 					"compressionCodec": "snappy"
@@ -7018,35 +7169,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_TicketAccessArea_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Utils/AccessAreas"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneBigliettiAccessi.parquet",
-						"folderPath": "utils",
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -7276,13 +7398,18 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_AccessAreaSiteIDAffluences_Parquet')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_AccessAreas_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "VFD_Big_Data_DL",
 					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
 				},
 				"folder": {
 					"name": "Utils/AccessAreas"
@@ -7292,8 +7419,11 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneAccessiSiteIDAffluences.parquet",
-						"folderPath": "utils",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "utils/AccessAreas",
 						"fileSystem": "processed"
 					},
 					"compressionCodec": "snappy"
@@ -7971,35 +8101,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_TicketAccessArea_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Utils/AccessAreas"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneBigliettiAccessi.parquet",
-						"folderPath": "utils",
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Weather_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -8043,13 +8144,18 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_AccessAreaSiteIDAffluences_Excel')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_AccessAreas_Excel')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "VFD_Big_Data_DL",
 					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
 				},
 				"folder": {
 					"name": "Utils/AccessAreas"
@@ -8060,8 +8166,11 @@
 					"sheetName": "Associazioni",
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneAccessiSiteIDAffluences.xlsx",
-						"folderPath": "utils",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "utils/AccessAreas",
 						"fileSystem": "raw"
 					}
 				},
@@ -8873,35 +8982,6 @@
 						"fileSystem": "raw"
 					},
 					"firstRowAsHeader": true
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_TicketAccessArea_Excel')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Utils/AccessAreas"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": "Associazioni",
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneBigliettiAccessi.xlsx",
-						"folderPath": "utils",
-						"fileSystem": "raw"
-					}
 				},
 				"schema": []
 			},

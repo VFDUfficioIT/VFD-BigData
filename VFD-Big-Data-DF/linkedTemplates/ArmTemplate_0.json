@@ -436,13 +436,18 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_AccessAreaSiteIDAffluences_Parquet')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_AccessAreas_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "VFD_Big_Data_DL",
 					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
 				},
 				"folder": {
 					"name": "Utils/AccessAreas"
@@ -452,8 +457,11 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneAccessiSiteIDAffluences.parquet",
-						"folderPath": "utils",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "utils/AccessAreas",
 						"fileSystem": "curated"
 					},
 					"compressionCodec": "snappy"
@@ -831,7 +839,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_TicketAccessArea_Parquet')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -839,16 +847,30 @@
 					"referenceName": "VFD_Big_Data_DL",
 					"type": "LinkedServiceReference"
 				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
 				"folder": {
-					"name": "Utils/AccessAreas"
+					"name": "Visual Crossing/Weather"
 				},
 				"annotations": [],
 				"type": "Parquet",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "AssociazioneBigliettiAccessi.parquet",
-						"folderPath": "utils",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
 						"fileSystem": "curated"
 					},
 					"compressionCodec": "snappy"
