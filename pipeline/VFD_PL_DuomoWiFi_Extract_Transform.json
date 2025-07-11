@@ -221,6 +221,14 @@
 										"fileName": {
 											"value": "@concat('VFD_Wifi_user_', item().username, '.json')",
 											"type": "Expression"
+										},
+										"year": {
+											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
+											"type": "Expression"
+										},
+										"month": {
+											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
+											"type": "Expression"
 										}
 									}
 								}
@@ -439,7 +447,15 @@
 						"type": "DataFlowReference",
 						"datasetParameters": {
 							"SourceUsersJSON": {
-								"fileName": "dummy.json"
+								"fileName": "dummy.json",
+								"year": {
+									"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
+									"type": "Expression"
+								},
+								"month": {
+									"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
+									"type": "Expression"
+								}
 							},
 							"SinkUsersParquet": {
 								"year": {
