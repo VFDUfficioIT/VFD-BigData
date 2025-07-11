@@ -22,7 +22,7 @@
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "utils",
+				"folderPath": "utils/AccessAreas",
 				"fileSystem": "curated"
 			},
 			"compressionCodec": "snappy"
