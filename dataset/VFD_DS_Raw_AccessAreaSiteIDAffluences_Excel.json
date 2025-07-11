@@ -1,0 +1,24 @@
+{
+	"name": "VFD_DS_Raw_AccessAreaSiteIDAffluences_Excel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Utils/AccessAreas"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Associazioni",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "AssociazioneAccessiSiteIDAffluences.xlsx",
+				"folderPath": "utils",
+				"fileSystem": "raw"
+			}
+		},
+		"schema": []
+	}
+}
