@@ -19,13 +19,6 @@
 				"fileSystem": "raw"
 			}
 		},
-		"schema": [
-			{
-				"type": "String"
-			},
-			{
-				"type": "String"
-			}
-		]
+		"schema": []
 	}
 }
