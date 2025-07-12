@@ -5,7 +5,7 @@
 		"description": "IR dedicated to the execution of VFD dataflows and transformation",
 		"typeProperties": {
 			"computeProperties": {
-				"location": "Italy North",
+				"location": "Germany West Central",
 				"dataFlowProperties": {
 					"computeType": "General",
 					"coreCount": 16,
