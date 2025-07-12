@@ -8,7 +8,7 @@
 				"location": "Germany West Central",
 				"dataFlowProperties": {
 					"computeType": "General",
-					"coreCount": 16,
+					"coreCount": 8,
 					"timeToLive": 10,
 					"cleanup": false,
 					"customProperties": []
