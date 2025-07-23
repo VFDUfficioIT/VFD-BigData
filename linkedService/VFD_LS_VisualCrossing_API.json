@@ -8,10 +8,6 @@
 			"url": "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
-		},
-		"connectVia": {
-			"referenceName": "VFD-IR-DataflowExecution",
-			"type": "IntegrationRuntimeReference"
 		}
 	}
 }
