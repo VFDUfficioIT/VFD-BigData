@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DFL_Mida2_Atomic_CREATE_Booking_Complete",
+	"name": "VFD_DFL_Mida2_Atomic_APPEND_Booking_Complete",
 	"properties": {
 		"folder": {
 			"name": "Mida2/Bookings/Atomic"
@@ -12,21 +12,31 @@
 						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "SourceProcessed"
-				}
-			],
-			"sinks": [
+					"name": "SourceNewRecord"
+				},
 				{
 					"dataset": {
 						"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "SinkComplete"
+					"name": "SourceExistingContent"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkTemp"
 				}
 			],
 			"transformations": [
 				{
-					"name": "FilterByReservationCode"
+					"name": "FilterNewRecord"
+				},
+				{
+					"name": "UnionByName"
 				}
 			],
 			"scriptLines": [
@@ -119,11 +129,8 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SourceProcessed",
-				"SourceProcessed filter(reservation_code == $reservationCode) ~> FilterByReservationCode",
-				"FilterByReservationCode sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     input(",
+				"     format: 'parquet') ~> SourceNewRecord",
+				"source(output(",
 				"          guid_pk as string,",
 				"          reservation_progressiveCode as string,",
 				"          reservation_code as string,",
@@ -159,14 +166,22 @@
 				"          updateTimestamp as timestamp,",
 				"          channel_label as string",
 				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> SourceExistingContent",
+				"SourceNewRecord filter(reservation_code == $reservationCode) ~> FilterNewRecord",
+				"FilterNewRecord, SourceExistingContent union(byName: true)~> UnionByName",
+				"UnionByName sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     partitionFileNames:['booking_complete.parquet'],",
+				"     partitionFileNames:['temp_append.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> SinkComplete"
+				"     partitionBy('hash', 1)) ~> SinkTemp"
 			]
 		}
 	}
