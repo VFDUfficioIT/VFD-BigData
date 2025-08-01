@@ -1,0 +1,415 @@
+{
+	"name": "VFD_DS_Curated_Mida_Historical_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderPath": {
+				"type": "string",
+				"defaultValue": "Mida/Bookings/Historical/2025/01"
+			},
+			"fileName": {
+				"type": "string",
+				"defaultValue": "VFD_Mida_Historical_20250101.parquet"
+			}
+		},
+		"folder": {
+			"name": "Mida2/Bookings"
+		},
+		"annotations": [
+			"File storico modifiche - log audit trail - append-only - partizionato per data inserimento"
+		],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "curated"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "guid_pk",
+				"type": "UTF8"
+			},
+			{
+				"name": "reservation_progressiveCode",
+				"type": "UTF8"
+			},
+			{
+				"name": "reservation_code",
+				"type": "UTF8"
+			},
+			{
+				"name": "reservation_status",
+				"type": "INT32"
+			},
+			{
+				"name": "invoiceRequired",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "customer",
+				"type": "UTF8"
+			},
+			{
+				"name": "visitDate",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "reservationPayment_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "parentPayment_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "sliced",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "reservation_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "group_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "group_label",
+				"type": "UTF8"
+			},
+			{
+				"name": "group_email",
+				"type": "UTF8"
+			},
+			{
+				"name": "paymentCode",
+				"type": "UTF8"
+			},
+			{
+				"name": "paymentCondition",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "reservation_amount",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "reservation_amountTax",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "status",
+				"type": "INT32"
+			},
+			{
+				"name": "paymentDate",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "amount",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amountTax",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "paymentMethod",
+				"type": "UTF8"
+			},
+			{
+				"name": "paymentStatus",
+				"type": "INT32"
+			},
+			{
+				"name": "transactionStatus",
+				"type": "INT32"
+			},
+			{
+				"name": "transactionProvider",
+				"type": "UTF8"
+			},
+			{
+				"name": "transactionId",
+				"type": "UTF8"
+			},
+			{
+				"name": "authorizationCode",
+				"type": "UTF8"
+			},
+			{
+				"name": "cardMask",
+				"type": "UTF8"
+			},
+			{
+				"name": "cardType",
+				"type": "UTF8"
+			},
+			{
+				"name": "cardCountry",
+				"type": "UTF8"
+			},
+			{
+				"name": "threeDSecure",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "refundableAmount",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "refundedAmount",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "priceList",
+				"type": "UTF8"
+			},
+			{
+				"name": "priceListType",
+				"type": "UTF8"
+			},
+			{
+				"name": "distributionChannel",
+				"type": "UTF8"
+			},
+			{
+				"name": "bookingPartner",
+				"type": "UTF8"
+			},
+			{
+				"name": "partnerReference",
+				"type": "UTF8"
+			},
+			{
+				"name": "partnerCommission",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "voucher_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "voucher_code",
+				"type": "UTF8"
+			},
+			{
+				"name": "voucher_type",
+				"type": "UTF8"
+			},
+			{
+				"name": "voucher_amount",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "voucher_validFrom",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "voucher_validTo",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "customer_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_firstName",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_lastName",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_email",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_phone",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_birthDate",
+				"type": "DATE"
+			},
+			{
+				"name": "customer_gender",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_nationality",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_address",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_city",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_zipCode",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_country",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_company",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_vatNumber",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_fiscalCode",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_type",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_registrationDate",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "customer_marketingConsent",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "customer_privacyConsent",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "ticket_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "ticket_code",
+				"type": "UTF8"
+			},
+			{
+				"name": "ticket_type",
+				"type": "UTF8"
+			},
+			{
+				"name": "ticket_price",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "ticket_quantity",
+				"type": "INT32"
+			},
+			{
+				"name": "ticket_validFrom",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "ticket_validTo",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "ticket_status",
+				"type": "INT32"
+			},
+			{
+				"name": "ticket_usedDate",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "ticket_refunded",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "pax_adult",
+				"type": "INT32"
+			},
+			{
+				"name": "pax_child",
+				"type": "INT32"
+			},
+			{
+				"name": "pax_infant",
+				"type": "INT32"
+			},
+			{
+				"name": "pax_senior",
+				"type": "INT32"
+			},
+			{
+				"name": "pax_student",
+				"type": "INT32"
+			},
+			{
+				"name": "pax_disabled",
+				"type": "INT32"
+			},
+			{
+				"name": "pax_quantity",
+				"type": "INT32"
+			},
+			{
+				"name": "insertTimestamp",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "updateTimestamp",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "operationType",
+				"type": "UTF8"
+			},
+			{
+				"name": "operationTimestamp",
+				"type": "TIMESTAMP_MILLIS"
+			},
+			{
+				"name": "processedBy",
+				"type": "UTF8"
+			},
+			{
+				"name": "sourceFile",
+				"type": "UTF8"
+			}
+		]
+	}
+}
