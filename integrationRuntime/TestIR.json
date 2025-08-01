@@ -7,7 +7,7 @@
 				"location": "AutoResolve",
 				"dataFlowProperties": {
 					"computeType": "General",
-					"coreCount": 16,
+					"coreCount": 48,
 					"timeToLive": 30,
 					"cleanup": false,
 					"customProperties": []
