@@ -25,10 +25,7 @@
 				},
 				"folderPath": "vendite"
 			},
-			"firstRowAsHeader": true,
-			"columnDelimiter": ";",
-			"escapeChar": "\\",
-			"quoteChar": "\""
+			"firstRowAsHeader": true
 		},
 		"schema": []
 	}
