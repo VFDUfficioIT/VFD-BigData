@@ -361,6 +361,10 @@
 			{
 				"name": "olapUpdateTimestamp",
 				"type": "String"
+			},
+			{
+				"name": "row_id",
+				"type": "String"
 			}
 		]
 	}
