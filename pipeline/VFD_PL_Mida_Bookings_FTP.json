@@ -19,9 +19,7 @@
 						"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
 						"type": "DatasetReference"
 					},
-					"fieldList": [
-						"childItems"
-					],
+					"fieldList": [],
 					"storeSettings": {
 						"type": "FtpReadSettings",
 						"recursive": true,

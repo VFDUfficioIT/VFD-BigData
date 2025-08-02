@@ -13,7 +13,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "FtpServerLocation",
-				"fileName": "*.csv"
+				"fileName": "*.xlsx",
+				"folderPath": "vendite"
 			}
 		}
 	}
