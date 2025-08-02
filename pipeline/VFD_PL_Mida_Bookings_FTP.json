@@ -240,7 +240,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@and(and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(int(variables('dateString')), 20240814)), not(activity('CheckIfExistsOnADLS').output.exists))",
+									"value": "@and(endswith(toLower(variables('fileName')), '.xlsx'), not(activity('CheckIfExistsOnADLS').output.exists))",
 									"type": "Expression"
 								},
 								"ifTrueActivities": [
