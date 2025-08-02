@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Raw_Mida_Bookings_CSV",
+	"name": "VFD_DS_Raw_Mida_Bookings_Excel",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
@@ -17,8 +17,9 @@
 			"name": "Mida/Bookings"
 		},
 		"annotations": [],
-		"type": "DelimitedText",
+		"type": "Excel",
 		"typeProperties": {
+			"sheetName": "export",
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
@@ -31,9 +32,9 @@
 				},
 				"fileSystem": "raw"
 			},
+			"firstRowAsHeader": true,
 			"columnDelimiter": ";",
 			"escapeChar": "\\",
-			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
 		"schema": [
