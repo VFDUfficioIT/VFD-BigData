@@ -211,7 +211,10 @@
 							"typeProperties": {
 								"dataset": {
 									"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@variables('folderPathVar')"
+									}
 								},
 								"fieldList": [
 									"exists"

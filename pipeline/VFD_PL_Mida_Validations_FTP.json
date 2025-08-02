@@ -250,42 +250,17 @@
 												}
 											},
 											"sink": {
-												"type": "ExcelSink",
 												"storeSettings": {
 													"type": "AzureBlobFSWriteSettings"
 												}
 											},
-											"enableStaging": false,
-											"translator": {
-												"type": "TabularTranslator",
-												"typeConversion": true,
-												"typeConversionSettings": {
-													"allowDataTruncation": true,
-													"treatBooleanAsNumber": false
-												}
-											}
+											"enableStaging": false
 										},
 										"inputs": [
 											{
 												"referenceName": "VFD_DS_Mida_Validations_FTPServer_Excel",
 												"type": "DatasetReference",
 												"parameters": {
-													"fileName": {
-														"value": "@variables('fileName')",
-														"type": "Expression"
-													}
-												}
-											}
-										],
-										"outputs": [
-											{
-												"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": {
-														"value": "@variables('folderPathVar')",
-														"type": "Expression"
-													},
 													"fileName": {
 														"value": "@variables('fileName')",
 														"type": "Expression"

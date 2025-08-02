@@ -25,14 +25,24 @@
 							"destfileName": "\"dest\""
 						},
 						"datasetParameters": {
+							"SourceExcel": {
+								"folderPath": "@pipeline().parameters.folderPath",
+								"fileName": {
+									"value": "@pipeline().parameters.fileName",
+									"type": "Expression"
+								}
+							},
 							"SinkParquet": {
 								"folderPath": "@pipeline().parameters.folderPath",
-								"fileName": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')"
+								"fileName": {
+									"value": "@replace(pipeline().parameters.fileName, '.xlsx', '.parquet')",
+									"type": "Expression"
+								}
 							}
 						}
 					},
 					"integrationRuntime": {
-						"referenceName": "VFD-IR-DataflowExecution",
+						"referenceName": "TestIR",
 						"type": "IntegrationRuntimeReference"
 					},
 					"traceLevel": "Coarse",
@@ -204,7 +214,10 @@
 									"value": "@pipeline().parameters.folderPath",
 									"type": "Expression"
 								},
-								"fileName": "@replace(pipeline().parameters.fileName,'.csv','.parquet')"
+								"fileName": {
+									"value": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')",
+									"type": "Expression"
+								}
 							},
 							"SinkCurated": {
 								"folderPath": {
@@ -212,14 +225,14 @@
 									"type": "Expression"
 								},
 								"fileName": {
-									"value": "@concat('Mida_Merged_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)",
+									"value": "@concat('VFD_Mida_Bookings_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)",
 									"type": "Expression"
 								}
 							}
 						}
 					},
 					"integrationRuntime": {
-						"referenceName": "VFD-IR-DataflowExecution",
+						"referenceName": "TestIR",
 						"type": "IntegrationRuntimeReference"
 					},
 					"traceLevel": "Coarse"
