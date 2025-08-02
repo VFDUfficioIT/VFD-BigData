@@ -282,7 +282,7 @@
 											},
 											"enableStaging": false,
 											"dataset": {
-												"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
+												"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
 												"type": "DatasetReference",
 												"parameters": {
 													"folderPath": "@variables('folderPathVar')",
