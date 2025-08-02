@@ -308,7 +308,7 @@
 										]
 									},
 									{
-										"name": "Raw to Curated Pipeline",
+										"name": "Raw to Processed Pipeline",
 										"type": "ExecutePipeline",
 										"dependsOn": [
 											{
@@ -324,7 +324,7 @@
 										"userProperties": [],
 										"typeProperties": {
 											"pipeline": {
-												"referenceName": "VFD_PL_Mida_Bookings_Raw_Curated",
+												"referenceName": "VFD_PL_Mida_Bookings_Raw_Processed",
 												"type": "PipelineReference"
 											},
 											"waitOnCompletion": true,
