@@ -32,10 +32,7 @@
 				},
 				"fileSystem": "raw"
 			},
-			"firstRowAsHeader": true,
-			"columnDelimiter": ";",
-			"escapeChar": "\\",
-			"quoteChar": "\""
+			"firstRowAsHeader": true
 		},
 		"schema": []
 	}
