@@ -251,13 +251,21 @@
 										"userProperties": [],
 										"typeProperties": {
 											"source": {
-												"type": "ExcelSource",
+												"type": "BinarySource",
 												"storeSettings": {
 													"type": "FtpReadSettings",
 													"recursive": true,
-													"enablePartitionDiscovery": false,
 													"useBinaryTransfer": true,
 													"disableChunking": false
+												},
+												"formatSettings": {
+													"type": "BinaryReadSettings"
+												}
+											},
+											"sink": {
+												"type": "BinarySink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings"
 												}
 											},
 											"enableStaging": false,
@@ -272,13 +280,20 @@
 										},
 										"inputs": [
 											{
-												"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Excel",
+												"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Binary",
 												"type": "DatasetReference",
 												"parameters": {
-													"fileName": {
-														"value": "@variables('fileName')",
-														"type": "Expression"
-													}
+													"fileName": "@variables('fileName')"
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
+												"type": "DatasetReference",
+												"parameters": {
+													"folderPath": "@variables('folderPathVar')",
+													"fileName": "@variables('fileName')"
 												}
 											}
 										]

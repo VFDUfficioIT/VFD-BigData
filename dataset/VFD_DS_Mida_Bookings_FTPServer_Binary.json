@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Mida_Bookings_FTPServer_Excel",
+	"name": "VFD_DS_Mida_Bookings_FTPServer_Binary",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_LS_Mida_FtpServer",
@@ -14,9 +14,8 @@
 			"name": "Mida/Bookings"
 		},
 		"annotations": [],
-		"type": "Excel",
+		"type": "Binary",
 		"typeProperties": {
-			"sheetName": "export",
 			"location": {
 				"type": "FtpServerLocation",
 				"fileName": {
@@ -25,8 +24,8 @@
 				},
 				"folderPath": "vendite"
 			},
+			"sheetName": "export",
 			"firstRowAsHeader": true
-		},
-		"schema": []
+		}
 	}
 }
