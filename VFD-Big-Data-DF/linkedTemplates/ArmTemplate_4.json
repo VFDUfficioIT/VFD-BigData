@@ -1723,10 +1723,17 @@
 									"userProperties": [],
 									"typeProperties": {
 										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+											"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": "@variables('folderPathVar')"
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
 											}
 										},
 										"fieldList": [

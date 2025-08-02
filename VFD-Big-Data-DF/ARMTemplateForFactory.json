@@ -2367,10 +2367,17 @@
 									"userProperties": [],
 									"typeProperties": {
 										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+											"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": "@variables('folderPathVar')"
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
 											}
 										},
 										"fieldList": [
@@ -2546,9 +2553,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Bookings_FTPServer_Folder')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Bookings_FTPServer_Binary')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Binary')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Bookings_FTPServer_Binary')]",
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Raw_Processed')]"
 			]
 		},
