@@ -207,20 +207,6 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"dataset": {
-									"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": {
-											"value": "@variables('folderPathVar')",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@variables('fileName')",
-											"type": "Expression"
-										}
-									}
-								},
 								"fieldList": [
 									"exists"
 								],
@@ -265,38 +251,16 @@
 										"userProperties": [],
 										"typeProperties": {
 											"source": {
-												"type": "DelimitedTextSource",
+												"type": "ExcelSource",
 												"storeSettings": {
 													"type": "FtpReadSettings",
 													"recursive": true,
 													"enablePartitionDiscovery": false,
 													"useBinaryTransfer": true,
 													"disableChunking": false
-												},
-												"formatSettings": {
-													"type": "DelimitedTextReadSettings"
-												}
-											},
-											"sink": {
-												"type": "DelimitedTextSink",
-												"storeSettings": {
-													"type": "AzureBlobFSWriteSettings"
-												},
-												"formatSettings": {
-													"type": "DelimitedTextWriteSettings",
-													"quoteAllText": true,
-													"fileExtension": ".txt"
 												}
 											},
 											"enableStaging": false,
-											"translator": {
-												"type": "TabularTranslator",
-												"typeConversion": true,
-												"typeConversionSettings": {
-													"allowDataTruncation": true,
-													"treatBooleanAsNumber": false
-												}
-											},
 											"dataset": {
 												"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
 												"type": "DatasetReference",
@@ -308,25 +272,9 @@
 										},
 										"inputs": [
 											{
-												"referenceName": "VFD_DS_Mida_Bookings_FTPServer_CSV",
+												"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Excel",
 												"type": "DatasetReference",
 												"parameters": {
-													"fileName": {
-														"value": "@variables('fileName')",
-														"type": "Expression"
-													}
-												}
-											}
-										],
-										"outputs": [
-											{
-												"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": {
-														"value": "@variables('folderPathVar')",
-														"type": "Expression"
-													},
 													"fileName": {
 														"value": "@variables('fileName')",
 														"type": "Expression"
