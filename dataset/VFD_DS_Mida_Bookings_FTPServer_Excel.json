@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Mida_Bookings_FTPServer_CSV",
+	"name": "VFD_DS_Mida_Bookings_FTPServer_Excel",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_LS_Mida_FtpServer",
@@ -14,8 +14,9 @@
 			"name": "Mida/Bookings"
 		},
 		"annotations": [],
-		"type": "DelimitedText",
+		"type": "Excel",
 		"typeProperties": {
+			"sheetName": "export",
 			"location": {
 				"type": "FtpServerLocation",
 				"fileName": {
@@ -24,9 +25,9 @@
 				},
 				"folderPath": "vendite"
 			},
+			"firstRowAsHeader": true,
 			"columnDelimiter": ";",
 			"escapeChar": "\\",
-			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
 		"schema": []
