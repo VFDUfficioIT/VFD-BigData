@@ -2134,54 +2134,6 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
-					},
-					{
-						"name": "Process Seals",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Process Bookings",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "VFD_PL_Mida_Seals_FTP",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "Process Validations",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Process Seals",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "VFD_PL_Mida_Validations_FTP",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
 					}
 				],
 				"concurrency": 1,
@@ -2194,9 +2146,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_FTP')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Seals_FTP')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Validations_FTP')]"
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_FTP')]"
 			]
 		},
 		{
@@ -2224,7 +2174,10 @@
 								"parameters": {}
 							},
 							"fieldList": [
-								"childItems"
+								{
+									"value": "childItems",
+									"type": "Expression"
+								}
 							],
 							"storeSettings": {
 								"type": "FtpReadSettings",
@@ -2414,17 +2367,10 @@
 									"userProperties": [],
 									"typeProperties": {
 										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
+											"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": {
-													"value": "@variables('folderPathVar')",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@variables('fileName')",
-													"type": "Expression"
-												}
+												"folderPath": "@variables('folderPathVar')"
 											}
 										},
 										"fieldList": [
@@ -2436,7 +2382,7 @@
 											"enablePartitionDiscovery": false
 										},
 										"formatSettings": {
-											"type": "DelimitedTextReadSettings"
+											"type": "BinaryReadSettings"
 										}
 									}
 								},
@@ -2454,7 +2400,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"expression": {
-											"value": "@and(and(endswith(toLower(variables('fileName')), '.csv'), greaterOrEquals(int(variables('dateString')), 20240814)), not(activity('CheckIfExistsOnADLS').output.exists))",
+											"value": "@and(endswith(toLower(variables('fileName')), '.xlsx'), not(activity('CheckIfExistsOnADLS').output.exists))",
 											"type": "Expression"
 										},
 										"ifTrueActivities": [
@@ -2471,40 +2417,26 @@
 												"userProperties": [],
 												"typeProperties": {
 													"source": {
-														"type": "DelimitedTextSource",
+														"type": "BinarySource",
 														"storeSettings": {
 															"type": "FtpReadSettings",
 															"recursive": true,
-															"enablePartitionDiscovery": false,
 															"useBinaryTransfer": true,
 															"disableChunking": false
 														},
 														"formatSettings": {
-															"type": "DelimitedTextReadSettings"
+															"type": "BinaryReadSettings"
 														}
 													},
 													"sink": {
-														"type": "DelimitedTextSink",
+														"type": "BinarySink",
 														"storeSettings": {
 															"type": "AzureBlobFSWriteSettings"
-														},
-														"formatSettings": {
-															"type": "DelimitedTextWriteSettings",
-															"quoteAllText": true,
-															"fileExtension": ".txt"
 														}
 													},
 													"enableStaging": false,
-													"translator": {
-														"type": "TabularTranslator",
-														"typeConversion": true,
-														"typeConversionSettings": {
-															"allowDataTruncation": true,
-															"treatBooleanAsNumber": false
-														}
-													},
 													"dataset": {
-														"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
+														"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
 														"type": "DatasetReference",
 														"parameters": {
 															"folderPath": "@variables('folderPathVar')",
@@ -2514,35 +2446,26 @@
 												},
 												"inputs": [
 													{
-														"referenceName": "VFD_DS_Mida_Bookings_FTPServer_CSV",
+														"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Binary",
 														"type": "DatasetReference",
 														"parameters": {
-															"fileName": {
-																"value": "@variables('fileName')",
-																"type": "Expression"
-															}
+															"fileName": "@variables('fileName')"
 														}
 													}
 												],
 												"outputs": [
 													{
-														"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
+														"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
 														"type": "DatasetReference",
 														"parameters": {
-															"folderPath": {
-																"value": "@variables('folderPathVar')",
-																"type": "Expression"
-															},
-															"fileName": {
-																"value": "@variables('fileName')",
-																"type": "Expression"
-															}
+															"folderPath": "@variables('folderPathVar')",
+															"fileName": "@variables('fileName')"
 														}
 													}
 												]
 											},
 											{
-												"name": "Raw to Curated Pipeline",
+												"name": "Raw to Processed Pipeline",
 												"type": "ExecutePipeline",
 												"dependsOn": [
 													{
@@ -2558,7 +2481,7 @@
 												"userProperties": [],
 												"typeProperties": {
 													"pipeline": {
-														"referenceName": "VFD_PL_Mida_Bookings_Raw_Curated",
+														"referenceName": "VFD_PL_Mida_Bookings_Raw_Processed",
 														"type": "PipelineReference"
 													},
 													"waitOnCompletion": true,
@@ -2623,9 +2546,10 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Bookings_FTPServer_Folder')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_CSV')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Bookings_FTPServer_CSV')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Raw_Curated')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Bookings_FTPServer_Binary')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Binary')]",
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Raw_Processed')]"
 			]
 		},
 		{
@@ -2829,7 +2753,7 @@
 												"userProperties": [],
 												"typeProperties": {
 													"pipeline": {
-														"referenceName": "VFD_PL_Mida_Bookings_Raw_Curated",
+														"referenceName": "VFD_PL_Mida_Bookings_Raw_Processed",
 														"type": "PipelineReference"
 													},
 													"waitOnCompletion": true,
@@ -2894,7 +2818,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Raw_Curated')]"
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Bookings_Raw_Processed')]"
 			]
 		},
 		{
@@ -3008,7 +2932,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Bookings_Raw_Curated')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Bookings_Raw_Processed')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -3036,20 +2960,26 @@
 									"destfileName": "\"dest\""
 								},
 								"datasetParameters": {
-									"SourceCSV": {
+									"SourceExcel": {
 										"folderPath": "@pipeline().parameters.folderPath",
-										"fileName": "@pipeline().parameters.fileName"
+										"fileName": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
 									},
 									"SinkParquet": {
 										"folderPath": "@pipeline().parameters.folderPath",
-										"fileName": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')"
+										"fileName": {
+											"value": "@replace(pipeline().parameters.fileName, '.xlsx', '.parquet')",
+											"type": "Expression"
+										}
 									}
 								}
 							},
 							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
+							"compute": {
+								"coreCount": 16,
+								"computeType": "General"
 							},
 							"traceLevel": "Coarse",
 							"parameters": {
@@ -3186,183 +3116,6 @@
 								"enablePartitionDiscovery": false
 							}
 						}
-					},
-					{
-						"name": "Processed to Curated Transformation",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Delete Temporary File",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily",
-								"type": "DataFlowReference",
-								"parameters": {
-									"folderPath": "\"folder\"",
-									"fileName": "\"file\""
-								},
-								"datasetParameters": {
-									"SourceProcessed": {
-										"folderPath": {
-											"value": "@pipeline().parameters.folderPath",
-											"type": "Expression"
-										},
-										"fileName": "@replace(pipeline().parameters.fileName,'.csv','.parquet')"
-									},
-									"SinkCurated": {
-										"folderPath": {
-											"value": "@pipeline().parameters.folderPath",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('Mida_Merged_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)",
-											"type": "Expression"
-										}
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Coarse"
-						}
-					},
-					{
-						"name": "Copy Data from Temporary Curated",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Processed to Curated Transformation",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@pipeline().parameters.folderPath",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@pipeline().parameters.folderPath",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('Mida_Merged_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Delete Temporary File Curated",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "Copy Data from Temporary Curated",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@pipeline().parameters.folderPath",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							}
-						}
 					}
 				],
 				"policy": {
@@ -3405,10 +3158,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Sales_Raw_Processed')]",
-				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
-				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida_Bookings_Processed_Curated_Daily')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Parquet')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]"
 			]
 		},
 		{
@@ -3806,34 +3556,28 @@
 												"userProperties": [],
 												"typeProperties": {
 													"source": {
-														"type": "ExcelSource",
+														"type": "BinarySource",
 														"storeSettings": {
 															"type": "FtpReadSettings",
 															"recursive": true,
-															"enablePartitionDiscovery": false,
 															"useBinaryTransfer": true,
 															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
 														}
 													},
 													"sink": {
-														"type": "ExcelSink",
+														"type": "BinarySink",
 														"storeSettings": {
 															"type": "AzureBlobFSWriteSettings"
 														}
 													},
-													"enableStaging": false,
-													"translator": {
-														"type": "TabularTranslator",
-														"typeConversion": true,
-														"typeConversionSettings": {
-															"allowDataTruncation": true,
-															"treatBooleanAsNumber": false
-														}
-													}
+													"enableStaging": false
 												},
 												"inputs": [
 													{
-														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Excel",
+														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Binary",
 														"type": "DatasetReference",
 														"parameters": {
 															"fileName": {
@@ -3845,17 +3589,14 @@
 												],
 												"outputs": [
 													{
-														"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+														"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
 														"type": "DatasetReference",
 														"parameters": {
 															"folderPath": {
 																"value": "@variables('folderPathVar')",
 																"type": "Expression"
 															},
-															"fileName": {
-																"value": "@variables('fileName')",
-																"type": "Expression"
-															}
+															"fileName": "@variables('fileName')"
 														}
 													}
 												]
@@ -3940,7 +3681,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Seals_FTPServer_Folder')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Seals_FTPServer_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Seals_FTPServer_Binary')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Binary')]",
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Seals_Raw_Curated')]"
 			]
 		},
@@ -4804,34 +4546,28 @@
 												"userProperties": [],
 												"typeProperties": {
 													"source": {
-														"type": "ExcelSource",
+														"type": "BinarySource",
 														"storeSettings": {
 															"type": "FtpReadSettings",
 															"recursive": true,
-															"enablePartitionDiscovery": false,
 															"useBinaryTransfer": true,
 															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
 														}
 													},
 													"sink": {
-														"type": "ExcelSink",
+														"type": "BinarySink",
 														"storeSettings": {
 															"type": "AzureBlobFSWriteSettings"
 														}
 													},
-													"enableStaging": false,
-													"translator": {
-														"type": "TabularTranslator",
-														"typeConversion": true,
-														"typeConversionSettings": {
-															"allowDataTruncation": true,
-															"treatBooleanAsNumber": false
-														}
-													}
+													"enableStaging": false
 												},
 												"inputs": [
 													{
-														"referenceName": "VFD_DS_Mida_Validations_FTPServer_Excel",
+														"referenceName": "VFD_DS_Mida_Validations_FTPServer_Binary",
 														"type": "DatasetReference",
 														"parameters": {
 															"fileName": {
@@ -4843,7 +4579,7 @@
 												],
 												"outputs": [
 													{
-														"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+														"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
 														"type": "DatasetReference",
 														"parameters": {
 															"folderPath": {
@@ -4938,7 +4674,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Validations_FTPServer_Folder')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Validations_FTPServer_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Validations_FTPServer_Binary')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Binary')]",
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Validations_Raw_Curated')]"
 			]
 		},
@@ -6544,7 +6281,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "Mida"
+					"name": "Mida/Validations"
 				},
 				"annotations": [],
 				"type": "Binary",
@@ -7030,6 +6767,204 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Bookings/Complete/2025/01"
+					},
+					"fileName": {
+						"type": "string",
+						"defaultValue": "VFD_Mida_Bookings_20250101.parquet"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Bookings"
+				},
+				"annotations": [
+					"File completo prenotazioni - tutti i campi - partizionato per data inserimento"
+				],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "guid_pk",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_progressiveCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_code",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_status",
+						"type": "INT32"
+					},
+					{
+						"name": "invoiceRequired",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "visitDate",
+						"type": "DATE"
+					},
+					{
+						"name": "reservationPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "parentPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "sliced",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_email",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCondition",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amountTax",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "status",
+						"type": "INT32"
+					},
+					{
+						"name": "status_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "stamp",
+						"type": "UTF8"
+					},
+					{
+						"name": "notes",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "transactionType",
+						"type": "UTF8"
+					},
+					{
+						"name": "transactionType_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentLimitDate",
+						"type": "DATE"
+					},
+					{
+						"name": "paymentDate",
+						"type": "DATE"
+					},
+					{
+						"name": "amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountTax",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "priceList",
+						"type": "UTF8"
+					},
+					{
+						"name": "tickets_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "insertTimestamp",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "updateTimestamp",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "channel_label",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Bookings_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -7073,6 +7008,536 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Bookings_Summary_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Bookings/Summary/2025/01"
+					},
+					"fileName": {
+						"type": "string",
+						"defaultValue": "VFD_Mida_BookingsVisitDateSummary_20250101.parquet"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Bookings"
+				},
+				"annotations": [
+					"File summary prenotazioni - subset campi per analytics - partizionato per data visita"
+				],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "reservation_code",
+						"type": "UTF8"
+					},
+					{
+						"name": "priceList",
+						"type": "UTF8"
+					},
+					{
+						"name": "distributionChannel",
+						"type": "UTF8"
+					},
+					{
+						"name": "bookingPartner",
+						"type": "UTF8"
+					},
+					{
+						"name": "pax_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_adult",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_child",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_senior",
+						"type": "INT32"
+					},
+					{
+						"name": "customer_nationality",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_country",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentMethod",
+						"type": "UTF8"
+					},
+					{
+						"name": "insertTimestamp",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "updateTimestamp",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "reservation_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "visitDate",
+						"type": "DATE"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Historical_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Bookings/Historical/2025/01"
+					},
+					"fileName": {
+						"type": "string",
+						"defaultValue": "VFD_Mida_Historical_20250101.parquet"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Bookings"
+				},
+				"annotations": [
+					"File storico modifiche - log audit trail - append-only - partizionato per data inserimento"
+				],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "guid_pk",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_progressiveCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_code",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_status",
+						"type": "INT32"
+					},
+					{
+						"name": "invoiceRequired",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "customer",
+						"type": "UTF8"
+					},
+					{
+						"name": "visitDate",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "reservationPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "parentPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "sliced",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "reservation_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_email",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCondition",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amountTax",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "status",
+						"type": "INT32"
+					},
+					{
+						"name": "paymentDate",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountTax",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "paymentMethod",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentStatus",
+						"type": "INT32"
+					},
+					{
+						"name": "transactionStatus",
+						"type": "INT32"
+					},
+					{
+						"name": "transactionProvider",
+						"type": "UTF8"
+					},
+					{
+						"name": "transactionId",
+						"type": "UTF8"
+					},
+					{
+						"name": "authorizationCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "cardMask",
+						"type": "UTF8"
+					},
+					{
+						"name": "cardType",
+						"type": "UTF8"
+					},
+					{
+						"name": "cardCountry",
+						"type": "UTF8"
+					},
+					{
+						"name": "threeDSecure",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "refundableAmount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "refundedAmount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "priceList",
+						"type": "UTF8"
+					},
+					{
+						"name": "priceListType",
+						"type": "UTF8"
+					},
+					{
+						"name": "distributionChannel",
+						"type": "UTF8"
+					},
+					{
+						"name": "bookingPartner",
+						"type": "UTF8"
+					},
+					{
+						"name": "partnerReference",
+						"type": "UTF8"
+					},
+					{
+						"name": "partnerCommission",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "voucher_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "voucher_code",
+						"type": "UTF8"
+					},
+					{
+						"name": "voucher_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "voucher_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "voucher_validFrom",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "voucher_validTo",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "customer_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_firstName",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_lastName",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_email",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_phone",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_birthDate",
+						"type": "DATE"
+					},
+					{
+						"name": "customer_gender",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_nationality",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_address",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_city",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_zipCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_country",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_company",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_vatNumber",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_fiscalCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_registrationDate",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "customer_marketingConsent",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "customer_privacyConsent",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "ticket_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "ticket_code",
+						"type": "UTF8"
+					},
+					{
+						"name": "ticket_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "ticket_price",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "ticket_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "ticket_validFrom",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "ticket_validTo",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "ticket_status",
+						"type": "INT32"
+					},
+					{
+						"name": "ticket_usedDate",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "ticket_refunded",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "pax_adult",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_child",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_infant",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_senior",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_student",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_disabled",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "insertTimestamp",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "updateTimestamp",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "operationType",
+						"type": "UTF8"
+					},
+					{
+						"name": "operationTimestamp",
+						"type": "TIMESTAMP_MILLIS"
+					},
+					{
+						"name": "processedBy",
+						"type": "UTF8"
+					},
+					{
+						"name": "sourceFile",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Seals_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -7093,6 +7558,53 @@
 					"name": "Mida/Seals"
 				},
 				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Temp_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Bookings/Temp"
+					},
+					"fileName": {
+						"type": "string",
+						"defaultValue": "temp_operation.parquet"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Bookings"
+				},
+				"annotations": [
+					"File temporaneo per operazioni atomiche - schema flessibile"
+				],
 				"type": "Parquet",
 				"typeProperties": {
 					"location": {
@@ -7245,7 +7757,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Bookings_FTPServer_CSV')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Bookings_FTPServer_Binary')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -7262,21 +7774,19 @@
 					"name": "Mida/Bookings"
 				},
 				"annotations": [],
-				"type": "DelimitedText",
+				"type": "Binary",
 				"typeProperties": {
 					"location": {
 						"type": "FtpServerLocation",
 						"fileName": {
 							"value": "@dataset().fileName",
 							"type": "Expression"
-						}
+						},
+						"folderPath": "vendite"
 					},
-					"columnDelimiter": ";",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
+					"sheetName": "export",
+					"firstRowAsHeader": true
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
@@ -7299,7 +7809,8 @@
 				"typeProperties": {
 					"location": {
 						"type": "FtpServerLocation",
-						"fileName": "*.csv"
+						"fileName": "*.xlsx",
+						"folderPath": "vendite"
 					}
 				}
 			},
@@ -7308,7 +7819,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Seals_FTPServer_Excel')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Seals_FTPServer_Binary')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -7325,9 +7836,8 @@
 					"name": "Mida/Seals"
 				},
 				"annotations": [],
-				"type": "Excel",
+				"type": "Binary",
 				"typeProperties": {
-					"sheetName": "Emissioni di ieri",
 					"location": {
 						"type": "FtpServerLocation",
 						"fileName": {
@@ -7336,9 +7846,9 @@
 						},
 						"folderPath": "emissioni"
 					},
+					"sheetName": "Emissioni di ieri",
 					"firstRowAsHeader": true
-				},
-				"schema": []
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
@@ -7370,7 +7880,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Validations_FTPServer_Excel')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Validations_FTPServer_Binary')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -7387,9 +7897,8 @@
 					"name": "Mida/Validations"
 				},
 				"annotations": [],
-				"type": "Excel",
+				"type": "Binary",
 				"typeProperties": {
-					"sheetName": "Vidimazioni di ieri",
 					"location": {
 						"type": "FtpServerLocation",
 						"fileName": {
@@ -7398,9 +7907,9 @@
 						},
 						"folderPath": "vidimazioni"
 					},
+					"sheetName": "Vidimazioni di ieri",
 					"firstRowAsHeader": true
-				},
-				"schema": []
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
@@ -8541,7 +9050,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Bookings_CSV')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Bookings_Binary')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -8561,7 +9070,7 @@
 					"name": "Mida/Bookings"
 				},
 				"annotations": [],
-				"type": "DelimitedText",
+				"type": "Binary",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
@@ -8574,338 +9083,52 @@
 							"type": "Expression"
 						},
 						"fileSystem": "raw"
-					},
-					"columnDelimiter": ";",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Bookings_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
 				},
-				"schema": [
-					{
-						"name": "guid_pk",
+				"parameters": {
+					"folderPath": {
 						"type": "String"
 					},
-					{
-						"name": "reservation_progressiveCode",
-						"type": "String"
-					},
-					{
-						"name": "reservation_code",
-						"type": "String"
-					},
-					{
-						"name": "reservation_status",
-						"type": "String"
-					},
-					{
-						"name": "invoiceRequired",
-						"type": "String"
-					},
-					{
-						"name": "customer",
-						"type": "String"
-					},
-					{
-						"name": "visitDate",
-						"type": "String"
-					},
-					{
-						"name": "reservationPayment_guid",
-						"type": "String"
-					},
-					{
-						"name": "parentPayment_guid",
-						"type": "String"
-					},
-					{
-						"name": "sliced",
-						"type": "String"
-					},
-					{
-						"name": "reservation_guid",
-						"type": "String"
-					},
-					{
-						"name": "group_guid",
-						"type": "String"
-					},
-					{
-						"name": "group_label",
-						"type": "String"
-					},
-					{
-						"name": "group_email",
-						"type": "String"
-					},
-					{
-						"name": "paymentCode",
-						"type": "String"
-					},
-					{
-						"name": "paymentCondition",
-						"type": "String"
-					},
-					{
-						"name": "reservation_amount",
-						"type": "String"
-					},
-					{
-						"name": "reservation_amountTax",
-						"type": "String"
-					},
-					{
-						"name": "status",
-						"type": "String"
-					},
-					{
-						"name": "status_text",
-						"type": "String"
-					},
-					{
-						"name": "stamp",
-						"type": "String"
-					},
-					{
-						"name": "notes",
-						"type": "String"
-					},
-					{
-						"name": "transactionType",
-						"type": "String"
-					},
-					{
-						"name": "transactionType_text",
-						"type": "String"
-					},
-					{
-						"name": "paymentLimitDate",
-						"type": "String"
-					},
-					{
-						"name": "paymentDate",
-						"type": "String"
-					},
-					{
-						"name": "refund",
-						"type": "String"
-					},
-					{
-						"name": "refunded",
-						"type": "String"
-					},
-					{
-						"name": "convention_label",
-						"type": "String"
-					},
-					{
-						"name": "receiptCode",
-						"type": "String"
-					},
-					{
-						"name": "insertTimestamp",
-						"type": "String"
-					},
-					{
-						"name": "updateTimestamp",
-						"type": "String"
-					},
-					{
-						"name": "owner",
-						"type": "String"
-					},
-					{
-						"name": "owner_text",
-						"type": "String"
-					},
-					{
-						"name": "sessionId",
-						"type": "String"
-					},
-					{
-						"name": "terminal_label",
-						"type": "String"
-					},
-					{
-						"name": "terminalGroup_label",
-						"type": "String"
-					},
-					{
-						"name": "gateway_guid",
-						"type": "String"
-					},
-					{
-						"name": "gateway_label",
-						"type": "String"
-					},
-					{
-						"name": "transactionID",
-						"type": "String"
-					},
-					{
-						"name": "bankAccount_guid",
-						"type": "String"
-					},
-					{
-						"name": "bankAccount_label",
-						"type": "String"
-					},
-					{
-						"name": "channel_guid",
-						"type": "String"
-					},
-					{
-						"name": "channel_label",
-						"type": "String"
-					},
-					{
-						"name": "channelType",
-						"type": "String"
-					},
-					{
-						"name": "detail_guid",
-						"type": "String"
-					},
-					{
-						"name": "extra_guid",
-						"type": "String"
-					},
-					{
-						"name": "priceList",
-						"type": "String"
-					},
-					{
-						"name": "event",
-						"type": "String"
-					},
-					{
-						"name": "detailType",
-						"type": "String"
-					},
-					{
-						"name": "detail_text",
-						"type": "String"
-					},
-					{
-						"name": "detail_label",
-						"type": "String"
-					},
-					{
-						"name": "detail_count",
-						"type": "String"
-					},
-					{
-						"name": "paymentDetail_guid",
-						"type": "String"
-					},
-					{
-						"name": "detail_payingPartecipants",
-						"type": "String"
-					},
-					{
-						"name": "detail_quantity",
-						"type": "String"
-					},
-					{
-						"name": "tickets_quantity",
-						"type": "String"
-					},
-					{
-						"name": "pax_quantity",
-						"type": "String"
-					},
-					{
-						"name": "costCenter_guid",
-						"type": "String"
-					},
-					{
-						"name": "costCenter_label",
-						"type": "String"
-					},
-					{
-						"name": "object_receipt",
-						"type": "String"
-					},
-					{
-						"name": "object_taxCode",
-						"type": "String"
-					},
-					{
-						"name": "object_taxNotes",
-						"type": "String"
-					},
-					{
-						"name": "object_amount",
-						"type": "String"
-					},
-					{
-						"name": "object_taxPercentage",
-						"type": "String"
-					},
-					{
-						"name": "amount",
-						"type": "String"
-					},
-					{
-						"name": "amountNet",
-						"type": "String"
-					},
-					{
-						"name": "amountPresale",
-						"type": "String"
-					},
-					{
-						"name": "amountSold",
-						"type": "String"
-					},
-					{
-						"name": "amountPayed",
-						"type": "String"
-					},
-					{
-						"name": "amountPending",
-						"type": "String"
-					},
-					{
-						"name": "amountCanceled",
-						"type": "String"
-					},
-					{
-						"name": "externalId",
-						"type": "String"
-					},
-					{
-						"name": "amountRefunded",
-						"type": "String"
-					},
-					{
-						"name": "invoiceSummary",
-						"type": "String"
-					},
-					{
-						"name": "eventCalendar_guid",
-						"type": "String"
-					},
-					{
-						"name": "passDetail_guid",
-						"type": "String"
-					},
-					{
-						"name": "paymentCostCenter_guid",
-						"type": "String"
-					},
-					{
-						"name": "organization_guid",
-						"type": "String"
-					},
-					{
-						"name": "venue_guid",
-						"type": "String"
-					},
-					{
-						"name": "olapUpdateTimestamp",
+					"fileName": {
 						"type": "String"
 					}
-				]
+				},
+				"folder": {
+					"name": "Mida/Bookings"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "export",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -8939,6 +9162,49 @@
 						},
 						"fileSystem": "raw"
 					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"sheetName": "Emissioni di ieri",
+					"firstRowAsHeader": true
 				}
 			},
 			"dependsOn": [
@@ -8984,6 +9250,49 @@
 					"firstRowAsHeader": true
 				},
 				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Validations_Binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"sheetName": "Vidimazioni di ieri",
+					"firstRowAsHeader": true
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -9377,7 +9686,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -9475,6 +9784,27 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/TestIR')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 48,
+							"timeToLive": 10,
+							"cleanup": false,
+							"customProperties": []
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
 			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
 			"apiVersion": "2018-06-01",
@@ -9483,10 +9813,10 @@
 				"description": "IR dedicated to the execution of VFD dataflows and transformation",
 				"typeProperties": {
 					"computeProperties": {
-						"location": "Italy North",
+						"location": "West Europe",
 						"dataFlowProperties": {
 							"computeType": "General",
-							"coreCount": 16,
+							"coreCount": 8,
 							"timeToLive": 10,
 							"cleanup": false,
 							"customProperties": []
@@ -10204,6 +10534,555 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida2_Atomic_APPEND_Booking_Complete')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Mida2/Bookings/Atomic"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceNewRecord"
+						},
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceExistingContent"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkTemp"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterNewRecord"
+						},
+						{
+							"name": "UnionByName"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     reservationCode as string",
+						"}",
+						"source(output(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as decimal(10,2),",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          refund as string,",
+						"          refunded as string,",
+						"          convention_label as string,",
+						"          receiptCode as decimal(10,2),",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          owner as string,",
+						"          owner_text as string,",
+						"          sessionId as string,",
+						"          terminal_label as decimal(10,2),",
+						"          terminalGroup_label as decimal(10,2),",
+						"          gateway_guid as string,",
+						"          gateway_label as string,",
+						"          transactionID as string,",
+						"          bankAccount_guid as decimal(10,2),",
+						"          bankAccount_label as decimal(10,2),",
+						"          channel_guid as string,",
+						"          channel_label as string,",
+						"          channelType as string,",
+						"          detail_guid as string,",
+						"          extra_guid as decimal(10,2),",
+						"          priceList as string,",
+						"          event as string,",
+						"          detailType as string,",
+						"          detail_text as string,",
+						"          detail_label as string,",
+						"          detail_count as integer,",
+						"          paymentDetail_guid as string,",
+						"          detail_payingPartecipants as integer,",
+						"          detail_quantity as integer,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          costCenter_guid as string,",
+						"          costCenter_label as string,",
+						"          object_receipt as integer,",
+						"          object_taxCode as string,",
+						"          object_taxNotes as string,",
+						"          object_amount as decimal(10,2),",
+						"          object_taxPercentage as decimal(10,2),",
+						"          amount as decimal(10,2),",
+						"          amountNet as decimal(10,2),",
+						"          amountPresale as decimal(10,2),",
+						"          amountSold as decimal(10,2),",
+						"          amountPayed as decimal(10,2),",
+						"          amountPending as decimal(10,2),",
+						"          amountCanceled as decimal(10,2),",
+						"          externalId as string,",
+						"          amountRefunded as decimal(10,2),",
+						"          invoiceSummary as decimal(10,2),",
+						"          eventCalendar_guid as string,",
+						"          passDetail_guid as decimal(10,2),",
+						"          paymentCostCenter_guid as decimal(10,2),",
+						"          organization_guid as string,",
+						"          venue_guid as string,",
+						"          olapUpdateTimestamp as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceNewRecord",
+						"source(output(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as decimal(10,2),",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          amount as decimal(10,2),",
+						"          amountTax as decimal(10,2),",
+						"          priceList as string,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          insertTimestamp as timestamp,",
+						"          updateTimestamp as timestamp,",
+						"          channel_label as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceExistingContent",
+						"SourceNewRecord filter(reservation_code == $reservationCode) ~> FilterNewRecord",
+						"FilterNewRecord, SourceExistingContent union(byName: true)~> UnionByName",
+						"UnionByName sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['temp_append.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SinkTemp"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Temp_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida2_Atomic_CREATE_Booking_Complete')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Mida2/Bookings/Atomic"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkComplete"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterByReservationCode"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     reservationCode as string",
+						"}",
+						"source(output(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as decimal(10,2),",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          refund as string,",
+						"          refunded as string,",
+						"          convention_label as string,",
+						"          receiptCode as decimal(10,2),",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          owner as string,",
+						"          owner_text as string,",
+						"          sessionId as string,",
+						"          terminal_label as decimal(10,2),",
+						"          terminalGroup_label as decimal(10,2),",
+						"          gateway_guid as string,",
+						"          gateway_label as string,",
+						"          transactionID as string,",
+						"          bankAccount_guid as decimal(10,2),",
+						"          bankAccount_label as decimal(10,2),",
+						"          channel_guid as string,",
+						"          channel_label as string,",
+						"          channelType as string,",
+						"          detail_guid as string,",
+						"          extra_guid as decimal(10,2),",
+						"          priceList as string,",
+						"          event as string,",
+						"          detailType as string,",
+						"          detail_text as string,",
+						"          detail_label as string,",
+						"          detail_count as integer,",
+						"          paymentDetail_guid as string,",
+						"          detail_payingPartecipants as integer,",
+						"          detail_quantity as integer,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          costCenter_guid as string,",
+						"          costCenter_label as string,",
+						"          object_receipt as integer,",
+						"          object_taxCode as string,",
+						"          object_taxNotes as string,",
+						"          object_amount as decimal(10,2),",
+						"          object_taxPercentage as decimal(10,2),",
+						"          amount as decimal(10,2),",
+						"          amountNet as decimal(10,2),",
+						"          amountPresale as decimal(10,2),",
+						"          amountSold as decimal(10,2),",
+						"          amountPayed as decimal(10,2),",
+						"          amountPending as decimal(10,2),",
+						"          amountCanceled as decimal(10,2),",
+						"          externalId as string,",
+						"          amountRefunded as decimal(10,2),",
+						"          invoiceSummary as decimal(10,2),",
+						"          eventCalendar_guid as string,",
+						"          passDetail_guid as decimal(10,2),",
+						"          paymentCostCenter_guid as decimal(10,2),",
+						"          organization_guid as string,",
+						"          venue_guid as string,",
+						"          olapUpdateTimestamp as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"SourceProcessed filter(reservation_code == $reservationCode) ~> FilterByReservationCode",
+						"FilterByReservationCode sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as decimal(10,2),",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          amount as decimal(10,2),",
+						"          amountTax as decimal(10,2),",
+						"          priceList as string,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          insertTimestamp as timestamp,",
+						"          updateTimestamp as timestamp,",
+						"          channel_label as string",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['booking_complete.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SinkComplete"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida2_Atomic_CREATE_Booking_Summary')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Mida2/Bookings/Atomic"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkSummary"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterByReservationCode"
+						},
+						{
+							"name": "SelectSummaryFields"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     reservationCode as string",
+						"}",
+						"source(output(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as decimal(10,2),",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          refund as string,",
+						"          refunded as string,",
+						"          convention_label as string,",
+						"          receiptCode as decimal(10,2),",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          owner as string,",
+						"          owner_text as string,",
+						"          sessionId as string,",
+						"          terminal_label as decimal(10,2),",
+						"          terminalGroup_label as decimal(10,2),",
+						"          gateway_guid as string,",
+						"          gateway_label as string,",
+						"          transactionID as string,",
+						"          bankAccount_guid as decimal(10,2),",
+						"          bankAccount_label as decimal(10,2),",
+						"          channel_guid as string,",
+						"          channel_label as string,",
+						"          channelType as string,",
+						"          detail_guid as string,",
+						"          extra_guid as decimal(10,2),",
+						"          priceList as string,",
+						"          event as string,",
+						"          detailType as string,",
+						"          detail_text as string,",
+						"          detail_label as string,",
+						"          detail_count as integer,",
+						"          paymentDetail_guid as string,",
+						"          detail_payingPartecipants as integer,",
+						"          detail_quantity as integer,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          costCenter_guid as string,",
+						"          costCenter_label as string,",
+						"          object_receipt as integer,",
+						"          object_taxCode as string,",
+						"          object_taxNotes as string,",
+						"          object_amount as decimal(10,2),",
+						"          object_taxPercentage as decimal(10,2),",
+						"          amount as decimal(10,2),",
+						"          amountNet as decimal(10,2),",
+						"          amountPresale as decimal(10,2),",
+						"          amountSold as decimal(10,2),",
+						"          amountPayed as decimal(10,2),",
+						"          amountPending as decimal(10,2),",
+						"          amountCanceled as decimal(10,2),",
+						"          externalId as string,",
+						"          amountRefunded as decimal(10,2),",
+						"          invoiceSummary as decimal(10,2),",
+						"          eventCalendar_guid as string,",
+						"          passDetail_guid as decimal(10,2),",
+						"          paymentCostCenter_guid as decimal(10,2),",
+						"          organization_guid as string,",
+						"          venue_guid as string,",
+						"          olapUpdateTimestamp as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"SourceProcessed filter(reservation_code == $reservationCode) ~> FilterByReservationCode",
+						"FilterByReservationCode select(mapColumn(",
+						"          reservation_code,",
+						"          priceList,",
+						"          channel_label,",
+						"          pax_quantity,",
+						"          insertTimestamp,",
+						"          updateTimestamp,",
+						"          reservation_amount,",
+						"          visitDate",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectSummaryFields",
+						"SelectSummaryFields sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          reservation_code as string,",
+						"          priceList as string,",
+						"          distributionChannel as string,",
+						"          bookingPartner as string,",
+						"          pax_quantity as integer,",
+						"          pax_adult as integer,",
+						"          pax_child as integer,",
+						"          pax_senior as integer,",
+						"          customer_nationality as string,",
+						"          customer_country as string,",
+						"          paymentMethod as string,",
+						"          insertTimestamp as timestamp,",
+						"          updateTimestamp as timestamp,",
+						"          reservation_amount as decimal(10,2),",
+						"          visitDate as date",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['booking_summary.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SinkSummary"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Summary_Parquet')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Bookings_Processed_Curated_Daily')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -10384,10 +11263,10 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Bookings_CSV",
+								"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
 								"type": "DatasetReference"
 							},
-							"name": "SourceCSV"
+							"name": "SourceExcel"
 						}
 					],
 					"sinks": [
@@ -10403,110 +11282,17 @@
 							}
 						}
 					],
-					"transformations": [
-						{
-							"name": "dataTypeConversions"
-						}
-					],
+					"transformations": [],
 					"scriptLines": [
 						"parameters{",
 						"     folderPath as string (\"folder\"),",
 						"     sourcefileName as string (\"source\"),",
 						"     destfileName as string (\"dest\")",
 						"}",
-						"source(output(",
-						"          guid_pk as string,",
-						"          reservation_progressiveCode as string,",
-						"          reservation_code as string,",
-						"          reservation_status as integer,",
-						"          invoiceRequired as string,",
-						"          customer as decimal(10,2),",
-						"          visitDate as string,",
-						"          reservationPayment_guid as string,",
-						"          parentPayment_guid as string,",
-						"          sliced as string,",
-						"          reservation_guid as string,",
-						"          group_guid as string,",
-						"          group_label as string,",
-						"          group_email as string,",
-						"          paymentCode as string,",
-						"          paymentCondition as decimal(10,2),",
-						"          reservation_amount as decimal(10,2),",
-						"          reservation_amountTax as decimal(10,2),",
-						"          status as integer,",
-						"          status_text as string,",
-						"          stamp as string,",
-						"          notes as decimal(10,2),",
-						"          transactionType as string,",
-						"          transactionType_text as string,",
-						"          paymentLimitDate as string,",
-						"          paymentDate as string,",
-						"          refund as string,",
-						"          refunded as string,",
-						"          convention_label as string,",
-						"          receiptCode as decimal(10,2),",
-						"          insertTimestamp as string,",
-						"          updateTimestamp as string,",
-						"          owner as string,",
-						"          owner_text as string,",
-						"          sessionId as string,",
-						"          terminal_label as decimal(10,2),",
-						"          terminalGroup_label as decimal(10,2),",
-						"          gateway_guid as string,",
-						"          gateway_label as string,",
-						"          transactionID as string,",
-						"          bankAccount_guid as decimal(10,2),",
-						"          bankAccount_label as decimal(10,2),",
-						"          channel_guid as string,",
-						"          channel_label as string,",
-						"          channelType as string,",
-						"          detail_guid as string,",
-						"          extra_guid as decimal(10,2),",
-						"          priceList as string,",
-						"          event as string,",
-						"          detailType as string,",
-						"          detail_text as string,",
-						"          detail_label as string,",
-						"          detail_count as integer,",
-						"          paymentDetail_guid as string,",
-						"          detail_payingPartecipants as integer,",
-						"          detail_quantity as integer,",
-						"          tickets_quantity as integer,",
-						"          pax_quantity as integer,",
-						"          costCenter_guid as string,",
-						"          costCenter_label as string,",
-						"          object_receipt as integer,",
-						"          object_taxCode as string,",
-						"          object_taxNotes as string,",
-						"          object_amount as decimal(10,2),",
-						"          object_taxPercentage as decimal(10,2),",
-						"          amount as decimal(10,2),",
-						"          amountNet as decimal(10,2),",
-						"          amountPresale as decimal(10,2),",
-						"          amountSold as decimal(10,2),",
-						"          amountPayed as decimal(10,2),",
-						"          amountPending as decimal(10,2),",
-						"          amountCanceled as decimal(10,2),",
-						"          externalId as string,",
-						"          amountRefunded as decimal(10,2),",
-						"          invoiceSummary as decimal(10,2),",
-						"          eventCalendar_guid as string,",
-						"          passDetail_guid as decimal(10,2),",
-						"          paymentCostCenter_guid as decimal(10,2),",
-						"          organization_guid as string,",
-						"          venue_guid as string,",
-						"          olapUpdateTimestamp as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
+						"source(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> SourceCSV",
-						"SourceCSV derive(visitDate = case(!isNull(visitDate) && !equals(trim(visitDate), ''), toDate(visitDate, 'dd/MM/yyyy')),",
-						"          paymentLimitDate = case(!isNull(paymentLimitDate) && !equals(trim(paymentLimitDate), ''), toDate(paymentLimitDate, 'dd/MM/yyyy')),",
-						"          paymentDate = case(!isNull(paymentDate) && !equals(trim(paymentDate), ''), toDate(paymentDate, 'dd/MM/yyyy')),",
-						"          insertTimestamp = case(!isNull(insertTimestamp) && !equals(trim(insertTimestamp), ''), toDate(insertTimestamp, 'dd/MM/yyyy')),",
-						"          olapUpdateTimestamp = case(!isNull(olapUpdateTimestamp) && !equals(trim(olapUpdateTimestamp), ''), toDate(olapUpdateTimestamp, 'dd/MM/yyyy')),",
-						"          updateTimestamp = case(!isNull(updateTimestamp) && !equals(trim(updateTimestamp), ''), toDate(updateTimestamp, 'dd/MM/yyyy'))) ~> dataTypeConversions",
-						"dataTypeConversions sink(allowSchemaDrift: true,",
+						"     ignoreNoFilesFound: false) ~> SourceExcel",
+						"SourceExcel sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          guid_pk as string,",
@@ -10602,7 +11388,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_CSV')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Excel')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Bookings_Parquet')]",
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
 			]
