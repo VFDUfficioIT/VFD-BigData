@@ -19,7 +19,9 @@
 						"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
 						"type": "DatasetReference"
 					},
-					"fieldList": [],
+					"fieldList": [
+						"itemName"
+					],
 					"storeSettings": {
 						"type": "FtpReadSettings",
 						"recursive": true,
@@ -207,6 +209,10 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+									"type": "DatasetReference"
+								},
 								"fieldList": [
 									"exists"
 								],
@@ -216,7 +222,7 @@
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
+									"type": "BinaryReadSettings"
 								}
 							}
 						},

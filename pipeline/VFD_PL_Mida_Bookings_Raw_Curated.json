@@ -25,10 +25,6 @@
 							"destfileName": "\"dest\""
 						},
 						"datasetParameters": {
-							"SourceCSV": {
-								"folderPath": "@pipeline().parameters.folderPath",
-								"fileName": "@pipeline().parameters.fileName"
-							},
 							"SinkParquet": {
 								"folderPath": "@pipeline().parameters.folderPath",
 								"fileName": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')"
