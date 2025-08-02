@@ -17,52 +17,6 @@
 					},
 					"waitOnCompletion": true
 				}
-			},
-			{
-				"name": "Process Seals",
-				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "Process Bookings",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "VFD_PL_Mida_Seals_FTP",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "Process Validations",
-				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "Process Seals",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "VFD_PL_Mida_Validations_FTP",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
 			}
 		],
 		"concurrency": 1,
