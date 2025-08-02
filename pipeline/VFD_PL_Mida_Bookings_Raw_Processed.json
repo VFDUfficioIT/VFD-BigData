@@ -135,7 +135,7 @@
 								"type": "Expression"
 							},
 							"fileName": {
-								"value": "@replace(pipeline().parameters.fileName,'.csv','.parquet')",
+								"value": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')",
 								"type": "Expression"
 							}
 						}
