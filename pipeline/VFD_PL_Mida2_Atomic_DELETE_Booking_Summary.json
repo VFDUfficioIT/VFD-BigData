@@ -1,0 +1,325 @@
+{
+	"name": "VFD_PL_Mida2_Atomic_DELETE_Booking_Summary",
+	"properties": {
+		"description": "Pipeline atomica per rimozione di una prenotazione dal file summary",
+		"activities": [
+			{
+				"name": "Check Summary File Exists",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "@pipeline().parameters.targetFolderPath",
+							"fileName": "@pipeline().parameters.targetFileName"
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If Summary Exists Then Delete Record",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check Summary File Exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Check Summary File Exists').output.exists",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Log - Summary File Not Found",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "warningMessage",
+								"value": "DELETE_SUMMARY_FILE_NOT_FOUND: Cannot delete from non-existing summary file"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Delete Record From Summary",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "VFD_DFL_Mida2_Atomic_DELETE_Booking_Summary",
+									"type": "DataFlowReference",
+									"parameters": {
+										"reservationCode": {
+											"value": "'@{pipeline().parameters.reservationCode}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "Check Summary Temp Size",
+							"type": "GetMetadata",
+							"dependsOn": [
+								{
+									"activity": "Delete Record From Summary",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
+									}
+								},
+								"fieldList": [
+									"size"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							}
+						},
+						{
+							"name": "If Summary Not Empty Replace Else Delete",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Check Summary Temp Size",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@greater(activity('Check Summary Temp Size').output.size, 1000)",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Delete Empty Summary File",
+										"type": "Delete",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"dataset": {
+												"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+												"type": "DatasetReference",
+												"parameters": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
+											},
+											"enableLogging": false,
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": false,
+												"enablePartitionDiscovery": false
+											}
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Replace Summary File",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "ParquetSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												}
+											},
+											"sink": {
+												"type": "ParquetSink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings"
+												},
+												"formatSettings": {
+													"type": "ParquetWriteSettings"
+												}
+											},
+											"enableStaging": false
+										},
+										"inputs": [
+											{
+												"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+												"type": "DatasetReference",
+												"parameters": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+												"type": "DatasetReference",
+												"parameters": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
+											}
+										]
+									}
+								]
+							}
+						},
+						{
+							"name": "Delete Summary Delete Temp",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "If Summary Not Empty Replace Else Delete",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"reservationCode": {
+				"type": "String",
+				"defaultValue": "RVFDTEST001"
+			},
+			"targetFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/VisitDateSummary/2025/01"
+			},
+			"targetFileName": {
+				"type": "String",
+				"defaultValue": "VFD_Mida_BookingsVisitDateSummary_20250101.parquet"
+			},
+			"tempFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Temp"
+			},
+			"tempFileName": {
+				"type": "String",
+				"defaultValue": "temp_delete_summary.parquet"
+			}
+		},
+		"variables": {
+			"warningMessage": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida2/Bookings/Atomic"
+		},
+		"annotations": [
+			"Pipeline atomica per rimozione prenotazioni summary",
+			"Elimina il file se diventa vuoto dopo la rimozione"
+		]
+	}
+}

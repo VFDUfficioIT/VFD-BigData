@@ -1,0 +1,238 @@
+{
+	"name": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete",
+	"properties": {
+		"description": "Pipeline atomica per aggiornamento di una prenotazione nel file completo",
+		"activities": [
+			{
+				"name": "Check Complete File Exists",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "@pipeline().parameters.targetFolderPath",
+							"fileName": "@pipeline().parameters.targetFileName"
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If File Exists Then Update",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check Complete File Exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Check Complete File Exists').output.exists",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Fail - Complete File Not Found",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "UPDATE_COMPLETE_FILE_NOT_FOUND: Cannot update booking in non-existing file",
+								"errorCode": "UPDATE_COMPLETE_FILE_NOT_FOUND"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Update Record In File",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "VFD_DFL_Mida2_Atomic_UPDATE_Booking_Complete",
+									"type": "DataFlowReference",
+									"parameters": {
+										"reservationCode": {
+											"value": "'@{pipeline().parameters.reservationCode}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "Copy Updated Temp To Final",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Update Record In File",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.targetFolderPath",
+										"fileName": "@pipeline().parameters.targetFileName"
+									}
+								}
+							]
+						},
+						{
+							"name": "Delete Update Temp File",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Copy Updated Temp To Final",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"reservationCode": {
+				"type": "String",
+				"defaultValue": "RVFDTEST001"
+			},
+			"targetFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Complete/2025/01"
+			},
+			"targetFileName": {
+				"type": "String",
+				"defaultValue": "VFD_Mida_Bookings_20250101.parquet"
+			},
+			"tempFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Temp"
+			},
+			"tempFileName": {
+				"type": "String",
+				"defaultValue": "temp_update_complete.parquet"
+			}
+		},
+		"folder": {
+			"name": "Mida2/Bookings/Atomic"
+		},
+		"annotations": [
+			"Pipeline atomica per aggiornamento prenotazioni complete",
+			"Fallisce se il file target non esiste"
+		]
+	}
+}
