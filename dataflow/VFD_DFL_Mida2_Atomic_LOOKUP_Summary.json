@@ -1,0 +1,86 @@
+{
+	"name": "VFD_DFL_Mida2_Atomic_LOOKUP_Summary",
+	"properties": {
+		"folder": {
+			"name": "Mida2/Bookings/Atomic"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SourceSummaryFile"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkTemp"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FilterByReservationCode"
+				},
+				{
+					"name": "WindowGetLatest"
+				},
+				{
+					"name": "FilterLatestOnly"
+				},
+				{
+					"name": "SelectLookupFields"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     reservationCode as string",
+				"}",
+				"source(output(",
+				"          reservation_code as string,",
+				"          priceList as string,",
+				"          channel_label as string,",
+				"          pax_quantity as integer,",
+				"          insertTimestamp as date,",
+				"          updateTimestamp as date,",
+				"          reservation_amount as decimal(10,2),",
+				"          visitDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true,",
+				"     format: 'parquet') ~> SourceSummaryFile",
+				"SourceSummaryFile filter(reservation_code == $reservationCode) ~> FilterByReservationCode",
+				"FilterByReservationCode window(over(reservation_code),",
+				"     asc(updateTimestamp, true),",
+				"     rn = rowNumber()) ~> WindowGetLatest",
+				"WindowGetLatest filter(rn == 1) ~> FilterLatestOnly",
+				"FilterLatestOnly select(mapColumn(",
+				"          reservation_code,",
+				"          visitDate,",
+				"          updateTimestamp,",
+				"          reservation_amount,",
+				"          pax_quantity",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectLookupFields",
+				"SelectLookupFields sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:['temp_lookup_summary.parquet'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> SinkTemp"
+			]
+		}
+	}
+}
