@@ -1,0 +1,143 @@
+{
+	"name": "VFD_PL_Mida2_Atomic_LOOKUP_Summary",
+	"properties": {
+		"description": "Pipeline atomica per lookup record nel file Summary",
+		"activities": [
+			{
+				"name": "Check Summary File Exists",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "@pipeline().parameters.summaryFolderPath",
+							"fileName": "@pipeline().parameters.summaryFileName"
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If Summary File Exists Then Lookup",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check Summary File Exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Check Summary File Exists').output.exists",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Log Summary File Not Found",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "lookupResult",
+								"value": "SUMMARY_FILE_NOT_FOUND"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Execute Lookup In Summary",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "VFD_DFL_Mida2_Atomic_LOOKUP_Summary",
+									"type": "DataFlowReference",
+									"parameters": {
+										"reservationCode": {
+											"value": "'@{pipeline().parameters.reservationCodeToLookup}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"reservationCodeToLookup": {
+				"type": "String",
+				"defaultValue": "RVFDTEST001"
+			},
+			"summaryFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/VisitDateSummary/2025/01"
+			},
+			"summaryFileName": {
+				"type": "String",
+				"defaultValue": "VFD_Mida_BookingsVisitDateSummary_20250101.parquet"
+			},
+			"tempFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Temp"
+			},
+			"tempFileName": {
+				"type": "String",
+				"defaultValue": "temp_lookup_summary.parquet"
+			}
+		},
+		"variables": {
+			"lookupResult": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida2/Bookings/Atomic"
+		},
+		"annotations": [
+			"Pipeline atomica per lookup nel file summary",
+			"Produce output in file temporaneo per pipeline chiamante"
+		]
+	}
+}

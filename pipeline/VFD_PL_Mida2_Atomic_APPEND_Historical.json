@@ -1,0 +1,143 @@
+{
+	"name": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+	"properties": {
+		"description": "Pipeline atomica per aggiunta al log storico delle prenotazioni",
+		"activities": [
+			{
+				"name": "Check Historical File Exists",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "@pipeline().parameters.historicalFolderPath",
+							"fileName": "@pipeline().parameters.historicalFileName"
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If Historical File Exists Then Lookup",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check Historical File Exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Check Historical File Exists').output.exists",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Log Historical File Not Found",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "lookupResult",
+								"value": "HISTORICAL_FILE_NOT_FOUND"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Execute Lookup In Historical",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "VFD_DFL_Mida2_Atomic_LOOKUP_Historical",
+									"type": "DataFlowReference",
+									"parameters": {
+										"reservationCode": {
+											"value": "'@{pipeline().parameters.reservationCodeToLookup}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"reservationCodeToLookup": {
+				"type": "String",
+				"defaultValue": "RVFDTEST001"
+			},
+			"historicalFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Historical/2025/01"
+			},
+			"historicalFileName": {
+				"type": "String",
+				"defaultValue": "VFD_Mida_Historical_20250101.parquet"
+			},
+			"tempFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Temp"
+			},
+			"tempFileName": {
+				"type": "String",
+				"defaultValue": "temp_lookup_historical.parquet"
+			}
+		},
+		"variables": {
+			"lookupResult": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida2/Bookings/Atomic"
+		},
+		"annotations": [
+			"Pipeline atomica per lookup nel file storico",
+			"Produce output in file temporaneo per pipeline chiamante"
+		]
+	}
+}

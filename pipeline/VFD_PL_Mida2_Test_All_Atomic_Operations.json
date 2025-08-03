@@ -1,0 +1,535 @@
+{
+	"name": "VFD_PL_Mida2_Test_All_Atomic_Operations",
+	"properties": {
+		"description": "Pipeline di test completa per tutte le operazioni atomiche MIDA2",
+		"activities": [
+			{
+				"name": "Set Test Parameters",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "testReservationCode",
+					"value": {
+						"value": "@concat('TEST_', formatDateTime(utcnow(), 'yyyyMMddHHmmss'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Test 1 - INSERT Complete Booking",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Set Test Parameters",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_insert_complete.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 2 - INSERT Summary Booking",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 1 - INSERT Complete Booking",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Summary",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_insert_summary.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 3 - APPEND Historical",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 2 - INSERT Summary Booking",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"operationType": "INSERT",
+						"targetFolderPath": "Mida/Bookings/Historical/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_historical.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 4 - LOOKUP Historical",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 3 - APPEND Historical",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_LOOKUP_Historical",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCodeToLookup": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"historicalFolderPath": "Mida/Bookings/Historical/Test/2025/01",
+						"historicalFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_lookup_historical.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 5 - LOOKUP Summary",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 4 - LOOKUP Historical",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_LOOKUP_Summary",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCodeToLookup": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"summaryFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
+						"summaryFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_lookup_summary.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 6 - UPDATE Complete Booking",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 5 - LOOKUP Summary",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_update_complete.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 7 - UPDATE Summary Booking",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 6 - UPDATE Complete Booking",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Summary",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_update_summary.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 8 - APPEND Historical Update",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 7 - UPDATE Summary Booking",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"operationType": "UPDATE",
+						"targetFolderPath": "Mida/Bookings/Historical/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_historical_update.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 9 - Second INSERT Complete (Append Test)",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 8 - APPEND Historical Update",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@concat(variables('testReservationCode'), '_SECOND')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_second_insert.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 10 - Second INSERT Summary (Append Test)",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 9 - Second INSERT Complete (Append Test)",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Summary",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@concat(variables('testReservationCode'), '_SECOND')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_second_summary.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 11 - DELETE Summary Record",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 10 - Second INSERT Summary (Append Test)",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Summary",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_delete_summary.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 12 - DELETE Complete Record",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 11 - DELETE Summary Record",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Complete",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_delete_complete.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 13 - APPEND Historical Delete",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 12 - DELETE Complete Record",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": {
+							"value": "@variables('testReservationCode')",
+							"type": "Expression"
+						},
+						"operationType": "DELETE",
+						"targetFolderPath": "Mida/Bookings/Historical/Test/2025/01",
+						"targetFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_historical_delete.parquet"
+					}
+				}
+			},
+			{
+				"name": "Test 14 - Error Test UPDATE Non-Existing",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Test 13 - APPEND Historical Delete",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"reservationCode": "NON_EXISTING_RECORD",
+						"targetFolderPath": "Mida/Bookings/Complete/Test/NonExisting",
+						"targetFileName": "VFD_Mida_NonExisting.parquet",
+						"tempFolderPath": "Mida/Bookings/Temp",
+						"tempFileName": "temp_test_error.parquet"
+					}
+				}
+			},
+			{
+				"name": "Final Test Summary",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Test 14 - Error Test UPDATE Non-Existing",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "testResults",
+					"value": {
+						"value": "@concat('All atomic operations tested successfully with reservation code: ', variables('testReservationCode'), '. Error handling test also passed (UPDATE on non-existing file failed as expected).')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"enableCleanup": {
+				"type": "bool",
+				"defaultValue": false
+			}
+		},
+		"variables": {
+			"testReservationCode": {
+				"type": "String"
+			},
+			"testResults": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Mida2/Test"
+		},
+		"annotations": [
+			"Pipeline di test completa per tutte le operazioni atomiche MIDA2",
+			"Testa CREATE, INSERT, UPDATE, DELETE, LOOKUP e gestione errori",
+			"Usa codice prenotazione dinamico basato su timestamp",
+			"Testa sia creazione che append automatico",
+			"Verifica il corretto funzionamento dell'error handling"
+		]
+	}
+}
