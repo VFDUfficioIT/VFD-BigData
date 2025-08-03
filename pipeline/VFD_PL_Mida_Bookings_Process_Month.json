@@ -196,10 +196,6 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"pipeline": {
-												"referenceName": "VFD_PL_Mida_Bookings_Raw_Processed",
-												"type": "PipelineReference"
-											},
 											"waitOnCompletion": true,
 											"parameters": {
 												"folderPath": {
