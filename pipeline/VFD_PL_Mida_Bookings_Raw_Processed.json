@@ -16,31 +16,6 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "VFD_DFL_Mida_Sales_Raw_Processed",
-						"type": "DataFlowReference",
-						"parameters": {
-							"folderPath": "\"folder\"",
-							"sourcefileName": "\"source\"",
-							"destfileName": "\"dest\""
-						},
-						"datasetParameters": {
-							"SourceExcel": {
-								"folderPath": "@pipeline().parameters.folderPath",
-								"fileName": {
-									"value": "@pipeline().parameters.fileName",
-									"type": "Expression"
-								}
-							},
-							"SinkParquet": {
-								"folderPath": "@pipeline().parameters.folderPath",
-								"fileName": {
-									"value": "@replace(pipeline().parameters.fileName, '.xlsx', '.parquet')",
-									"type": "Expression"
-								}
-							}
-						}
-					},
 					"compute": {
 						"coreCount": 16,
 						"computeType": "General"
