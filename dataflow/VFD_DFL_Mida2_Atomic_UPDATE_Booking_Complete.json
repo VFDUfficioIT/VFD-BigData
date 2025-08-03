@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DFL_Mida2_Atomic_APPEND_Booking_Complete",
+	"name": "VFD_DFL_Mida2_Atomic_UPDATE_Booking_Complete",
 	"properties": {
 		"folder": {
 			"name": "Mida2/Bookings/Atomic"
@@ -37,6 +37,12 @@
 				},
 				{
 					"name": "UnionByName"
+				},
+				{
+					"name": "WindowGetLatest"
+				},
+				{
+					"name": "FilterLatestOnly"
 				}
 			],
 			"scriptLines": [
@@ -221,10 +227,14 @@
 				"     format: 'parquet') ~> SourceExistingContent",
 				"SourceNewRecord filter(reservation_code == $reservationCode) ~> FilterNewRecord",
 				"FilterNewRecord, SourceExistingContent union(byName: true)~> UnionByName",
-				"UnionByName sink(allowSchemaDrift: true,",
+				"UnionByName window(over(reservation_code),",
+				"     desc(updateTimestamp, true),",
+				"     rn = rowNumber()) ~> WindowGetLatest",
+				"WindowGetLatest filter(rn == 1) ~> FilterLatestOnly",
+				"FilterLatestOnly sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     partitionFileNames:['temp_append.parquet'],",
+				"     partitionFileNames:['temp_update.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",

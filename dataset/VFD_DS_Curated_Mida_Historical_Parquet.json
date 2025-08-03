@@ -8,7 +8,7 @@
 		"parameters": {
 			"folderPath": {
 				"type": "string",
-				"defaultValue": "Mida/Bookings/Historical/2025/01"
+				"defaultValue": "Mida2/Bookings/Historical/2025/01"
 			},
 			"fileName": {
 				"type": "string",
@@ -56,15 +56,17 @@
 			},
 			{
 				"name": "invoiceRequired",
-				"type": "BOOLEAN"
-			},
-			{
-				"name": "customer",
 				"type": "UTF8"
 			},
 			{
+				"name": "customer",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
 				"name": "visitDate",
-				"type": "TIMESTAMP_MILLIS"
+				"type": "DATE"
 			},
 			{
 				"name": "reservationPayment_guid",
@@ -76,7 +78,7 @@
 			},
 			{
 				"name": "sliced",
-				"type": "BOOLEAN"
+				"type": "UTF8"
 			},
 			{
 				"name": "reservation_guid",
@@ -121,69 +123,127 @@
 				"type": "INT32"
 			},
 			{
+				"name": "status_text",
+				"type": "UTF8"
+			},
+			{
+				"name": "stamp",
+				"type": "UTF8"
+			},
+			{
+				"name": "notes",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "transactionType",
+				"type": "UTF8"
+			},
+			{
+				"name": "transactionType_text",
+				"type": "UTF8"
+			},
+			{
+				"name": "paymentLimitDate",
+				"type": "DATE"
+			},
+			{
 				"name": "paymentDate",
-				"type": "TIMESTAMP_MILLIS"
+				"type": "DATE"
 			},
 			{
-				"name": "amount",
+				"name": "refund",
+				"type": "UTF8"
+			},
+			{
+				"name": "refunded",
+				"type": "UTF8"
+			},
+			{
+				"name": "convention_label",
+				"type": "UTF8"
+			},
+			{
+				"name": "receiptCode",
 				"type": "DECIMAL",
 				"precision": 10,
 				"scale": 2
 			},
 			{
-				"name": "amountTax",
+				"name": "insertTimestamp",
+				"type": "DATE"
+			},
+			{
+				"name": "updateTimestamp",
+				"type": "DATE"
+			},
+			{
+				"name": "owner",
+				"type": "UTF8"
+			},
+			{
+				"name": "owner_text",
+				"type": "UTF8"
+			},
+			{
+				"name": "sessionId",
+				"type": "UTF8"
+			},
+			{
+				"name": "terminal_label",
 				"type": "DECIMAL",
 				"precision": 10,
 				"scale": 2
 			},
 			{
-				"name": "paymentMethod",
-				"type": "UTF8"
-			},
-			{
-				"name": "paymentStatus",
-				"type": "INT32"
-			},
-			{
-				"name": "transactionStatus",
-				"type": "INT32"
-			},
-			{
-				"name": "transactionProvider",
-				"type": "UTF8"
-			},
-			{
-				"name": "transactionId",
-				"type": "UTF8"
-			},
-			{
-				"name": "authorizationCode",
-				"type": "UTF8"
-			},
-			{
-				"name": "cardMask",
-				"type": "UTF8"
-			},
-			{
-				"name": "cardType",
-				"type": "UTF8"
-			},
-			{
-				"name": "cardCountry",
-				"type": "UTF8"
-			},
-			{
-				"name": "threeDSecure",
-				"type": "BOOLEAN"
-			},
-			{
-				"name": "refundableAmount",
+				"name": "terminalGroup_label",
 				"type": "DECIMAL",
 				"precision": 10,
 				"scale": 2
 			},
 			{
-				"name": "refundedAmount",
+				"name": "gateway_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "gateway_label",
+				"type": "UTF8"
+			},
+			{
+				"name": "transactionID",
+				"type": "UTF8"
+			},
+			{
+				"name": "bankAccount_guid",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "bankAccount_label",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "channel_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "channel_label",
+				"type": "UTF8"
+			},
+			{
+				"name": "channelType",
+				"type": "UTF8"
+			},
+			{
+				"name": "detail_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "extra_guid",
 				"type": "DECIMAL",
 				"precision": 10,
 				"scale": 2
@@ -193,193 +253,39 @@
 				"type": "UTF8"
 			},
 			{
-				"name": "priceListType",
+				"name": "event",
 				"type": "UTF8"
 			},
 			{
-				"name": "distributionChannel",
+				"name": "detailType",
 				"type": "UTF8"
 			},
 			{
-				"name": "bookingPartner",
+				"name": "detail_text",
 				"type": "UTF8"
 			},
 			{
-				"name": "partnerReference",
+				"name": "detail_label",
 				"type": "UTF8"
 			},
 			{
-				"name": "partnerCommission",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
-			},
-			{
-				"name": "voucher_guid",
-				"type": "UTF8"
-			},
-			{
-				"name": "voucher_code",
-				"type": "UTF8"
-			},
-			{
-				"name": "voucher_type",
-				"type": "UTF8"
-			},
-			{
-				"name": "voucher_amount",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
-			},
-			{
-				"name": "voucher_validFrom",
-				"type": "TIMESTAMP_MILLIS"
-			},
-			{
-				"name": "voucher_validTo",
-				"type": "TIMESTAMP_MILLIS"
-			},
-			{
-				"name": "customer_guid",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_firstName",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_lastName",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_email",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_phone",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_birthDate",
-				"type": "DATE"
-			},
-			{
-				"name": "customer_gender",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_nationality",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_address",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_city",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_zipCode",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_country",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_company",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_vatNumber",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_fiscalCode",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_type",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_registrationDate",
-				"type": "TIMESTAMP_MILLIS"
-			},
-			{
-				"name": "customer_marketingConsent",
-				"type": "BOOLEAN"
-			},
-			{
-				"name": "customer_privacyConsent",
-				"type": "BOOLEAN"
-			},
-			{
-				"name": "ticket_guid",
-				"type": "UTF8"
-			},
-			{
-				"name": "ticket_code",
-				"type": "UTF8"
-			},
-			{
-				"name": "ticket_type",
-				"type": "UTF8"
-			},
-			{
-				"name": "ticket_price",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
-			},
-			{
-				"name": "ticket_quantity",
+				"name": "detail_count",
 				"type": "INT32"
 			},
 			{
-				"name": "ticket_validFrom",
-				"type": "TIMESTAMP_MILLIS"
+				"name": "paymentDetail_guid",
+				"type": "UTF8"
 			},
 			{
-				"name": "ticket_validTo",
-				"type": "TIMESTAMP_MILLIS"
-			},
-			{
-				"name": "ticket_status",
+				"name": "detail_payingPartecipants",
 				"type": "INT32"
 			},
 			{
-				"name": "ticket_usedDate",
-				"type": "TIMESTAMP_MILLIS"
-			},
-			{
-				"name": "ticket_refunded",
-				"type": "BOOLEAN"
-			},
-			{
-				"name": "pax_adult",
+				"name": "detail_quantity",
 				"type": "INT32"
 			},
 			{
-				"name": "pax_child",
-				"type": "INT32"
-			},
-			{
-				"name": "pax_infant",
-				"type": "INT32"
-			},
-			{
-				"name": "pax_senior",
-				"type": "INT32"
-			},
-			{
-				"name": "pax_student",
-				"type": "INT32"
-			},
-			{
-				"name": "pax_disabled",
+				"name": "tickets_quantity",
 				"type": "INT32"
 			},
 			{
@@ -387,12 +293,126 @@
 				"type": "INT32"
 			},
 			{
-				"name": "insertTimestamp",
-				"type": "TIMESTAMP_MILLIS"
+				"name": "costCenter_guid",
+				"type": "UTF8"
 			},
 			{
-				"name": "updateTimestamp",
-				"type": "TIMESTAMP_MILLIS"
+				"name": "costCenter_label",
+				"type": "UTF8"
+			},
+			{
+				"name": "object_receipt",
+				"type": "INT32"
+			},
+			{
+				"name": "object_taxCode",
+				"type": "UTF8"
+			},
+			{
+				"name": "object_taxNotes",
+				"type": "UTF8"
+			},
+			{
+				"name": "object_amount",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "object_taxPercentage",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amount",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amountNet",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amountPresale",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amountSold",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amountPayed",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amountPending",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "amountCanceled",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "externalId",
+				"type": "UTF8"
+			},
+			{
+				"name": "amountRefunded",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "invoiceSummary",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "eventCalendar_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "passDetail_guid",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "paymentCostCenter_guid",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "organization_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "venue_guid",
+				"type": "UTF8"
+			},
+			{
+				"name": "olapUpdateTimestamp",
+				"type": "DATE"
+			},
+			{
+				"name": "row_id",
+				"type": "UTF8"
 			},
 			{
 				"name": "operationType",
@@ -401,14 +421,6 @@
 			{
 				"name": "operationTimestamp",
 				"type": "TIMESTAMP_MILLIS"
-			},
-			{
-				"name": "processedBy",
-				"type": "UTF8"
-			},
-			{
-				"name": "sourceFile",
-				"type": "UTF8"
 			}
 		]
 	}

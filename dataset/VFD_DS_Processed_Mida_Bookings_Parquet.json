@@ -48,7 +48,7 @@
 			},
 			{
 				"name": "reservation_status",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "invoiceRequired",
@@ -56,13 +56,11 @@
 			},
 			{
 				"name": "customer",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "visitDate",
-				"type": "DATE"
+				"type": "UTF8"
 			},
 			{
 				"name": "reservationPayment_guid",
@@ -98,25 +96,19 @@
 			},
 			{
 				"name": "paymentCondition",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "reservation_amount",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "reservation_amountTax",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "status",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "status_text",
@@ -128,9 +120,7 @@
 			},
 			{
 				"name": "notes",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "transactionType",
@@ -142,11 +132,11 @@
 			},
 			{
 				"name": "paymentLimitDate",
-				"type": "DATE"
+				"type": "UTF8"
 			},
 			{
 				"name": "paymentDate",
-				"type": "DATE"
+				"type": "UTF8"
 			},
 			{
 				"name": "refund",
@@ -162,17 +152,15 @@
 			},
 			{
 				"name": "receiptCode",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "insertTimestamp",
-				"type": "DATE"
+				"type": "UTF8"
 			},
 			{
 				"name": "updateTimestamp",
-				"type": "DATE"
+				"type": "UTF8"
 			},
 			{
 				"name": "owner",
@@ -188,15 +176,11 @@
 			},
 			{
 				"name": "terminal_label",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "terminalGroup_label",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "gateway_guid",
@@ -212,15 +196,11 @@
 			},
 			{
 				"name": "bankAccount_guid",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "bankAccount_label",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "channel_guid",
@@ -240,9 +220,7 @@
 			},
 			{
 				"name": "extra_guid",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "priceList",
@@ -266,7 +244,7 @@
 			},
 			{
 				"name": "detail_count",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "paymentDetail_guid",
@@ -274,19 +252,19 @@
 			},
 			{
 				"name": "detail_payingPartecipants",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "detail_quantity",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "tickets_quantity",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "pax_quantity",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "costCenter_guid",
@@ -298,7 +276,7 @@
 			},
 			{
 				"name": "object_receipt",
-				"type": "INT32"
+				"type": "UTF8"
 			},
 			{
 				"name": "object_taxCode",
@@ -310,57 +288,39 @@
 			},
 			{
 				"name": "object_amount",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "object_taxPercentage",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "amount",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "amountNet",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "amountPresale",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "amountSold",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "amountPayed",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "amountPending",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "amountCanceled",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "externalId",
@@ -368,15 +328,11 @@
 			},
 			{
 				"name": "amountRefunded",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "invoiceSummary",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "eventCalendar_guid",
@@ -384,15 +340,11 @@
 			},
 			{
 				"name": "passDetail_guid",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "paymentCostCenter_guid",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "organization_guid",
@@ -404,7 +356,11 @@
 			},
 			{
 				"name": "olapUpdateTimestamp",
-				"type": "DATE"
+				"type": "UTF8"
+			},
+			{
+				"name": "row_id",
+				"type": "UTF8"
 			}
 		]
 	}

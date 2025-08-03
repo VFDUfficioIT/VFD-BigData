@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DFL_Mida2_Atomic_APPEND_Booking_Complete",
+	"name": "VFD_DFL_Mida2_Atomic_APPEND_Historical",
 	"properties": {
 		"folder": {
 			"name": "Mida2/Bookings/Atomic"
@@ -16,10 +16,10 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+						"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "SourceExistingContent"
+					"name": "SourceExistingHistorical"
 				}
 			],
 			"sinks": [
@@ -36,12 +36,16 @@
 					"name": "FilterNewRecord"
 				},
 				{
+					"name": "AddAuditFields"
+				},
+				{
 					"name": "UnionByName"
 				}
 			],
 			"scriptLines": [
 				"parameters{",
-				"     reservationCode as string",
+				"     reservationCode as string,",
+				"     operationType as string",
 				"}",
 				"source(output(",
 				"          guid_pk as string,",
@@ -213,18 +217,22 @@
 				"          organization_guid as string,",
 				"          venue_guid as string,",
 				"          olapUpdateTimestamp as date,",
-				"          row_id as string",
+				"          row_id as string,",
+				"          operationType as string,",
+				"          operationTimestamp as timestamp",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SourceExistingContent",
+				"     format: 'parquet') ~> SourceExistingHistorical",
 				"SourceNewRecord filter(reservation_code == $reservationCode) ~> FilterNewRecord",
-				"FilterNewRecord, SourceExistingContent union(byName: true)~> UnionByName",
+				"FilterNewRecord derive(operationType = $operationType,",
+				"          operationTimestamp = currentTimestamp()) ~> AddAuditFields",
+				"AddAuditFields, SourceExistingHistorical union(byName: true)~> UnionByName",
 				"UnionByName sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     partitionFileNames:['temp_append.parquet'],",
+				"     partitionFileNames:['temp_append_historical.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",

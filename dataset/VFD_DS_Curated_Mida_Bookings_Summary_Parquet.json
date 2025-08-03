@@ -8,7 +8,7 @@
 		"parameters": {
 			"folderPath": {
 				"type": "string",
-				"defaultValue": "Mida/Bookings/Summary/2025/01"
+				"defaultValue": "Mida2/Bookings/Summary/2025/01"
 			},
 			"fileName": {
 				"type": "string",
@@ -47,11 +47,7 @@
 				"type": "UTF8"
 			},
 			{
-				"name": "distributionChannel",
-				"type": "UTF8"
-			},
-			{
-				"name": "bookingPartner",
+				"name": "channel_label",
 				"type": "UTF8"
 			},
 			{
@@ -59,36 +55,12 @@
 				"type": "INT32"
 			},
 			{
-				"name": "pax_adult",
-				"type": "INT32"
-			},
-			{
-				"name": "pax_child",
-				"type": "INT32"
-			},
-			{
-				"name": "pax_senior",
-				"type": "INT32"
-			},
-			{
-				"name": "customer_nationality",
-				"type": "UTF8"
-			},
-			{
-				"name": "customer_country",
-				"type": "UTF8"
-			},
-			{
-				"name": "paymentMethod",
-				"type": "UTF8"
-			},
-			{
 				"name": "insertTimestamp",
-				"type": "TIMESTAMP_MILLIS"
+				"type": "DATE"
 			},
 			{
 				"name": "updateTimestamp",
-				"type": "TIMESTAMP_MILLIS"
+				"type": "DATE"
 			},
 			{
 				"name": "reservation_amount",

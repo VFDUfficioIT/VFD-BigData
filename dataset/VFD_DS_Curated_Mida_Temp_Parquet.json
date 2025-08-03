@@ -8,7 +8,7 @@
 		"parameters": {
 			"folderPath": {
 				"type": "string",
-				"defaultValue": "Mida/Bookings/Temp"
+				"defaultValue": "Mida2/Bookings/Temp"
 			},
 			"fileName": {
 				"type": "string",

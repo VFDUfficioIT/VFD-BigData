@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DFL_Mida2_Atomic_CREATE_Booking_Summary",
+	"name": "VFD_DFL_Mida2_Atomic_UPDATE_Booking_Summary",
 	"properties": {
 		"folder": {
 			"name": "Mida2/Bookings/Atomic"
@@ -12,24 +12,40 @@
 						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "SourceProcessed"
-				}
-			],
-			"sinks": [
+					"name": "SourceNewRecord"
+				},
 				{
 					"dataset": {
 						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "SinkSummary"
+					"name": "SourceExistingContent"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkTemp"
 				}
 			],
 			"transformations": [
 				{
-					"name": "FilterByReservationCode"
+					"name": "FilterNewRecord"
 				},
 				{
 					"name": "SelectSummaryFields"
+				},
+				{
+					"name": "UnionByName"
+				},
+				{
+					"name": "WindowGetLatest"
+				},
+				{
+					"name": "FilterLatestOnly"
 				}
 			],
 			"scriptLines": [
@@ -123,9 +139,23 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SourceProcessed",
-				"SourceProcessed filter(reservation_code == $reservationCode) ~> FilterByReservationCode",
-				"FilterByReservationCode select(mapColumn(",
+				"     format: 'parquet') ~> SourceNewRecord",
+				"source(output(",
+				"          reservation_code as string,",
+				"          priceList as string,",
+				"          channel_label as string,",
+				"          pax_quantity as integer,",
+				"          insertTimestamp as date,",
+				"          updateTimestamp as date,",
+				"          reservation_amount as decimal(10,2),",
+				"          visitDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> SourceExistingContent",
+				"SourceNewRecord filter(reservation_code == $reservationCode) ~> FilterNewRecord",
+				"FilterNewRecord select(mapColumn(",
 				"          reservation_code,",
 				"          priceList,",
 				"          channel_label,",
@@ -137,26 +167,21 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelectSummaryFields",
-				"SelectSummaryFields sink(allowSchemaDrift: true,",
+				"SelectSummaryFields, SourceExistingContent union(byName: true)~> UnionByName",
+				"UnionByName window(over(reservation_code),",
+				"     desc(updateTimestamp, true),",
+				"     rn = rowNumber()) ~> WindowGetLatest",
+				"WindowGetLatest filter(rn == 1) ~> FilterLatestOnly",
+				"FilterLatestOnly sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     input(",
-				"          reservation_code as string,",
-				"          priceList as string,",
-				"          channel_label as string,",
-				"          pax_quantity as integer,",
-				"          insertTimestamp as date,",
-				"          updateTimestamp as date,",
-				"          reservation_amount as decimal(10,2),",
-				"          visitDate as date",
-				"     ),",
 				"     format: 'parquet',",
-				"     partitionFileNames:['booking_summary.parquet'],",
+				"     partitionFileNames:['temp_update_summary.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> SinkSummary"
+				"     partitionBy('hash', 1)) ~> SinkTemp"
 			]
 		}
 	}
