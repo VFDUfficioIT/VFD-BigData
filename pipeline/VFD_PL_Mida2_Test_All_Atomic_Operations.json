@@ -21,11 +21,59 @@
 				}
 			},
 			{
+				"name": "Set Test Date Paths",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set Test Parameters",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "testDatePath",
+					"value": {
+						"value": "@formatDateTime(utcnow(), 'yyyy/MM')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set Test File Names",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set Test Date Paths",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "testFileDate",
+					"value": {
+						"value": "@formatDateTime(utcnow(), 'yyyyMMdd')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
 				"name": "Test 1 - INSERT Complete Booking",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Set Test Parameters",
+						"activity": "Set Test File Names",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,8 +94,22 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_insert_complete.parquet"
 					}
@@ -79,8 +141,22 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_insert_summary.parquet"
 					}
@@ -113,8 +189,22 @@
 							"type": "Expression"
 						},
 						"operationType": "INSERT",
-						"targetFolderPath": "Mida/Bookings/Historical/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_historical.parquet"
 					}
@@ -146,8 +236,14 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"historicalFolderPath": "Mida/Bookings/Historical/Test/2025/01",
-						"historicalFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"historicalFolderPath": {
+							"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"historicalFileName": {
+							"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_lookup_historical.parquet"
 					}
@@ -179,8 +275,14 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"summaryFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
-						"summaryFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"summaryFolderPath": {
+							"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"summaryFileName": {
+							"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_lookup_summary.parquet"
 					}
@@ -212,8 +314,22 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_update_complete.parquet"
 					}
@@ -245,8 +361,22 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_update_summary.parquet"
 					}
@@ -279,15 +409,29 @@
 							"type": "Expression"
 						},
 						"operationType": "UPDATE",
-						"targetFolderPath": "Mida/Bookings/Historical/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_historical_update.parquet"
 					}
 				}
 			},
 			{
-				"name": "Test 9 - Second INSERT Complete (Append Test)",
+				"name": "Test 9 - Second INSERT Complete Append Test",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
@@ -312,19 +456,33 @@
 							"value": "@concat(variables('testReservationCode'), '_SECOND')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_Second_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_second_insert.parquet"
 					}
 				}
 			},
 			{
-				"name": "Test 10 - Second INSERT Summary (Append Test)",
+				"name": "Test 10 - Second INSERT Summary Append Test",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Test 9 - Second INSERT Complete (Append Test)",
+						"activity": "Test 9 - Second INSERT Complete Append Test",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -345,8 +503,22 @@
 							"value": "@concat(variables('testReservationCode'), '_SECOND')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_Second_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_second_summary.parquet"
 					}
@@ -357,7 +529,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Test 10 - Second INSERT Summary (Append Test)",
+						"activity": "Test 10 - Second INSERT Summary Append Test",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -378,8 +550,14 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/VisitDateSummary/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Summary_20250101.parquet",
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_delete_summary.parquet"
 					}
@@ -411,8 +589,14 @@
 							"value": "@variables('testReservationCode')",
 							"type": "Expression"
 						},
-						"targetFolderPath": "Mida/Bookings/Complete/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Complete_20250101.parquet",
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_delete_complete.parquet"
 					}
@@ -445,8 +629,22 @@
 							"type": "Expression"
 						},
 						"operationType": "DELETE",
-						"targetFolderPath": "Mida/Bookings/Historical/Test/2025/01",
-						"targetFileName": "VFD_Mida_Test_Historical_20250101.parquet",
+						"processedFolderPath": {
+							"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"processedFileName": {
+							"value": "@concat('VFD_Mida_Test_Processed_Deleted_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
+						"targetFolderPath": {
+							"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+							"type": "Expression"
+						},
+						"targetFileName": {
+							"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+							"type": "Expression"
+						},
 						"tempFolderPath": "Mida/Bookings/Temp",
 						"tempFileName": "temp_test_historical_delete.parquet"
 					}
@@ -475,6 +673,8 @@
 					"waitOnCompletion": true,
 					"parameters": {
 						"reservationCode": "NON_EXISTING_RECORD",
+						"processedFolderPath": "Mida/Bookings/Processed/Test/NonExisting",
+						"processedFileName": "VFD_Mida_NonExisting_Processed.parquet",
 						"targetFolderPath": "Mida/Bookings/Complete/Test/NonExisting",
 						"targetFileName": "VFD_Mida_NonExisting.parquet",
 						"tempFolderPath": "Mida/Bookings/Temp",
@@ -483,7 +683,7 @@
 				}
 			},
 			{
-				"name": "Final Test Summary",
+				"name": "Final Test Summary Success",
 				"type": "SetVariable",
 				"dependsOn": [
 					{
@@ -501,9 +701,168 @@
 				"typeProperties": {
 					"variableName": "testResults",
 					"value": {
-						"value": "@concat('All atomic operations tested successfully with reservation code: ', variables('testReservationCode'), '. Error handling test also passed (UPDATE on non-existing file failed as expected).')",
+						"value": "@concat('✅ ALL ATOMIC OPERATIONS TESTED SUCCESSFULLY! ', char(10), 'Test Reservation Code: ', variables('testReservationCode'), char(10), 'Test Date Path: ', variables('testDatePath'), char(10), 'Operations completed: INSERT, UPDATE, DELETE, LOOKUP for Complete, Summary and Historical files', char(10), 'Error handling verified: UPDATE on non-existing file failed as expected', char(10), 'Test execution completed at: ', utcnow())",
 						"type": "Expression"
 					}
+				}
+			},
+			{
+				"name": "Cleanup Test Files",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Final Test Summary Success",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@pipeline().parameters.enableCleanup",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Log Cleanup Skipped",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "cleanupResults",
+								"value": "ℹ️ Test files cleanup skipped (enableCleanup = false)"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Delete Test Complete File",
+							"type": "Delete",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+										"fileName": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')"
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Delete Test Summary File",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Delete Test Complete File",
+									"dependencyConditions": [
+										"Completed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+										"fileName": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')"
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Delete Test Historical File",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Delete Test Summary File",
+									"dependencyConditions": [
+										"Completed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+										"fileName": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')"
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Log Cleanup Completed",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Delete Test Historical File",
+									"dependencyConditions": [
+										"Completed"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "cleanupResults",
+								"value": "🧹 Test files cleanup completed successfully"
+							}
+						}
+					]
 				}
 			}
 		],
@@ -517,7 +876,16 @@
 			"testReservationCode": {
 				"type": "String"
 			},
+			"testDatePath": {
+				"type": "String"
+			},
+			"testFileDate": {
+				"type": "String"
+			},
 			"testResults": {
+				"type": "String"
+			},
+			"cleanupResults": {
 				"type": "String"
 			}
 		},
@@ -525,11 +893,14 @@
 			"name": "Mida2/Test"
 		},
 		"annotations": [
-			"Pipeline di test completa per tutte le operazioni atomiche MIDA2",
-			"Testa CREATE, INSERT, UPDATE, DELETE, LOOKUP e gestione errori",
-			"Usa codice prenotazione dinamico basato su timestamp",
-			"Testa sia creazione che append automatico",
-			"Verifica il corretto funzionamento dell'error handling"
+			"🧪 Pipeline di test completa per tutte le operazioni atomiche MIDA2",
+			"✅ Testa CREATE, INSERT, UPDATE, DELETE, LOOKUP e gestione errori",
+			"📅 Usa codice prenotazione dinamico basato su timestamp per test univoci",
+			"📂 Genera percorsi di test dinamici basati sulla data corrente",
+			"🔄 Testa sia creazione che append automatico",
+			"⚠️ Verifica il corretto funzionamento dell'error handling",
+			"🧹 Include funzionalità di cleanup opzionale dei file di test",
+			"🎯 Test comprensivo di tutte le 12 operazioni atomiche implementate"
 		]
 	}
 }
