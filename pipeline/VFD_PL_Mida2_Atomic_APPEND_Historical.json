@@ -20,8 +20,8 @@
 						"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": "@pipeline().parameters.historicalFolderPath",
-							"fileName": "@pipeline().parameters.historicalFileName"
+							"folderPath": "@pipeline().parameters.targetFolderPath",
+							"fileName": "@pipeline().parameters.targetFileName"
 						}
 					},
 					"fieldList": [
@@ -38,7 +38,7 @@
 				}
 			},
 			{
-				"name": "If Historical File Exists Then Lookup",
+				"name": "If Historical Exists Then Append Else Create",
 				"type": "IfCondition",
 				"dependsOn": [
 					{
@@ -56,23 +56,7 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "Log Historical File Not Found",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "lookupResult",
-								"value": "HISTORICAL_FILE_NOT_FOUND"
-							}
-						}
-					],
-					"ifTrueActivities": [
-						{
-							"name": "Execute Lookup In Historical",
+							"name": "Create New Historical File",
 							"type": "ExecuteDataFlow",
 							"dependsOn": [],
 							"policy": {
@@ -85,22 +69,16 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "VFD_DFL_Mida2_Atomic_LOOKUP_Historical",
+									"referenceName": "VFD_DFL_Mida2_Atomic_CREATE_Historical",
 									"type": "DataFlowReference",
 									"parameters": {
 										"reservationCode": {
-											"value": "'@{pipeline().parameters.reservationCodeToLookup}'",
+											"value": "'@{pipeline().parameters.reservationCode}'",
 											"type": "Expression"
-										}
-									},
-									"datasetParameters": {
-										"SourceHistorical": {
-											"folderPath": "Mida2/Bookings/Historical/2025/01",
-											"fileName": "VFD_Mida_Historical_20250101.parquet"
 										},
-										"SinkTemp": {
-											"folderPath": "Mida2/Bookings/Temp",
-											"fileName": "temp_operation.parquet"
+										"operationType": {
+											"value": "'@{pipeline().parameters.operationType}'",
+											"type": "Expression"
 										}
 									}
 								},
@@ -111,20 +89,164 @@
 								"traceLevel": "Fine"
 							}
 						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Append To Historical Log",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "VFD_DFL_Mida2_Atomic_APPEND_Historical",
+									"type": "DataFlowReference",
+									"parameters": {
+										"reservationCode": {
+											"value": "'@{pipeline().parameters.reservationCode}'",
+											"type": "Expression"
+										},
+										"operationType": {
+											"value": "'@{pipeline().parameters.operationType}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "Copy Historical Temp To Final",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Append To Historical Log",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.targetFolderPath",
+										"fileName": "@pipeline().parameters.targetFileName"
+									}
+								}
+							]
+						},
+						{
+							"name": "Delete Historical Temp File",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Copy Historical Temp To Final",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							}
+						}
 					]
 				}
 			}
 		],
 		"parameters": {
-			"reservationCodeToLookup": {
+			"reservationCode": {
 				"type": "String",
 				"defaultValue": "RVFDTEST001"
 			},
-			"historicalFolderPath": {
+			"operationType": {
+				"type": "String",
+				"defaultValue": "INSERT"
+			},
+			"processedFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Processed/2025/01"
+			},
+			"processedFileName": {
+				"type": "String",
+				"defaultValue": "VFD_Mida_Processed_20250101.parquet"
+			},
+			"targetFolderPath": {
 				"type": "String",
 				"defaultValue": "Mida/Bookings/Historical/2025/01"
 			},
-			"historicalFileName": {
+			"targetFileName": {
 				"type": "String",
 				"defaultValue": "VFD_Mida_Historical_20250101.parquet"
 			},
@@ -134,20 +256,15 @@
 			},
 			"tempFileName": {
 				"type": "String",
-				"defaultValue": "temp_lookup_historical.parquet"
-			}
-		},
-		"variables": {
-			"lookupResult": {
-				"type": "String"
+				"defaultValue": "temp_append_historical.parquet"
 			}
 		},
 		"folder": {
 			"name": "Mida2/Bookings/Atomic"
 		},
 		"annotations": [
-			"Pipeline atomica per lookup nel file storico",
-			"Produce output in file temporaneo per pipeline chiamante"
+			"Pipeline atomica per append al log storico",
+			"Append-only: non modifica mai record esistenti"
 		]
 	}
 }

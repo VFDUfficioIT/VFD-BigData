@@ -202,6 +202,14 @@
 				"type": "String",
 				"defaultValue": "RVFDTEST001"
 			},
+			"processedFolderPath": {
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Processed/2025/01"
+			},
+			"processedFileName": {
+				"type": "String",
+				"defaultValue": "VFD_Mida_Processed_20250101.parquet"
+			},
 			"targetFolderPath": {
 				"type": "String",
 				"defaultValue": "Mida/Bookings/VisitDateSummary/2025/01"
