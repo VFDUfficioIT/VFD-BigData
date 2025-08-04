@@ -1004,14 +1004,8 @@
 									"value": "@variables('testReservationCode')",
 									"type": "Expression"
 								},
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments20250726004.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
 									"type": "Expression"
@@ -1051,14 +1045,8 @@
 									"value": "@variables('testReservationCode')",
 									"type": "Expression"
 								},
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments20250726004.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
 									"type": "Expression"
@@ -1224,14 +1212,8 @@
 									"value": "@variables('testReservationCode')",
 									"type": "Expression"
 								},
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments20250726004.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
 									"type": "Expression"
@@ -1271,14 +1253,8 @@
 									"value": "@variables('testReservationCode')",
 									"type": "Expression"
 								},
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments20250726004.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
 									"type": "Expression"
@@ -1366,14 +1342,8 @@
 									"value": "@concat(variables('testReservationCode'), '_SECOND')",
 									"type": "Expression"
 								},
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_Second_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments20250726004.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
 									"type": "Expression"
@@ -1413,14 +1383,8 @@
 									"value": "@concat(variables('testReservationCode'), '_SECOND')",
 									"type": "Expression"
 								},
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_Second_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments20250726004.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
 									"type": "Expression"
@@ -1539,14 +1503,8 @@
 									"type": "Expression"
 								},
 								"operationType": "DELETE",
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_Deleted_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments20250726004.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
 									"type": "Expression"
