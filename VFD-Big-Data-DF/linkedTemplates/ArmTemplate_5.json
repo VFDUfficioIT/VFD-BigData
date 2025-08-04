@@ -1,0 +1,3077 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "VFD-Big-Data-DF"
+		},
+		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart": {
+			"type": "string",
+			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
+		},
+		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop": {
+			"type": "string",
+			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
+		},
+		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
+			"type": "string",
+			"defaultValue": "Milano"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_Raw_Curated')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per convertire CSV meteo in Parquet e aggiornare file mensili con ForEach",
+				"activities": [
+					{
+						"name": "Raw to Processed Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Weather_Raw_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceRaw": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
+									},
+									"SinkProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Coarse"
+						}
+					},
+					{
+						"name": "Copy Raw to Processed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Raw to Processed Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary Processed",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Raw to Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Get Processed Data Rows",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Delete Temporary Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach Weather Row",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Processed Data Rows",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Processed Data Rows').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetRowYear",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowYear",
+										"value": {
+											"value": "@substring(item().datetime, 0, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowMonth",
+										"value": {
+											"value": "@substring(item().datetime, 5, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowDate",
+										"value": {
+											"value": "@item().datetime",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Update Monthly File",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "SetRowDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "VFD_DFL_Weather_Single_Row_To_Monthly",
+											"type": "DataFlowReference",
+											"parameters": {
+												"target_date": {
+													"value": "'@{variables('rowDate')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SourceProcessed": {
+													"folderPath": {
+														"value": "@pipeline().parameters.folderPath",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SourceCuratedExisting": {
+													"folderPath": {
+														"value": "@concat('Weather/',variables('rowYear'))",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SinkCurated": {
+													"folderPath": {
+														"value": "@concat('Weather/',variables('rowYear'))",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Coarse"
+									}
+								},
+								{
+									"name": "Copy to Final Monthly File",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Update Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Delete Temporary Monthly",
+									"type": "Delete",
+									"dependsOn": [
+										{
+											"activity": "Copy to Final Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					}
+				},
+				"variables": {
+					"rowYear": {
+						"type": "String"
+					},
+					"rowMonth": {
+						"type": "String"
+					},
+					"rowDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Historical_Recovery')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per il recupero storico dei dati Affluences dall'1 novembre 2024 al 15 maggio 2025",
+				"activities": [
+					{
+						"name": "SetStartDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime('2025-06-07', 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetEndDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "endDate",
+							"value": {
+								"value": "@formatDateTime('2025-06-09', 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ProcessUntilEndDate",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetStartDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "SetEndDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('currentDate'), variables('endDate'))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ExecuteDailyPipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_Affluences_Daily_v2",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"date": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "CalculateNextDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ExecuteDailyPipeline",
+											"dependencyConditions": [
+												"Completed"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "tempDate",
+										"value": {
+											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "UpdateCurrentDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "CalculateNextDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "currentDate",
+										"value": {
+											"value": "@variables('tempDate')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "WaitForCooldown",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "UpdateCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 10
+									}
+								}
+							],
+							"timeout": "7.00:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"currentDate": {
+						"type": "String"
+					},
+					"endDate": {
+						"type": "String"
+					},
+					"tempDate": {
+						"type": "String"
+					},
+					"progressMessage": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Reprocessing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SetFirstDate",
+						"description": "Imposta per la prima volta la currentDate in base a startDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "RepeatUntilEndDate",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetFirstDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('currentDate'),pipeline().parameters.endDate)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ProcessCurrentDate",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dateStart": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											},
+											"p_dateStop": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "CalculateNextDate",
+									"description": "Usa una variabile temp per calcolare il valore di currentDate + 1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ProcessCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "nextDate",
+										"value": {
+											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetCurrentDate",
+									"description": "Imposta il valore di currentDate con nextDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "CalculateNextDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "currentDate",
+										"value": {
+											"value": "@variables('nextDate')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "WaitForCooldown",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "SetCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 10
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"startDate": {
+						"type": "string"
+					},
+					"endDate": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"currentDate": {
+						"type": "String"
+					},
+					"nextDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Test_All_Atomic_Operations')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline di test completa per tutte le operazioni atomiche MIDA2",
+				"activities": [
+					{
+						"name": "Set Test Parameters",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "testReservationCode",
+							"value": {
+								"value": "@concat('TEST_', formatDateTime(utcnow(), 'yyyyMMddHHmmss'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Test Date Paths",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set Test Parameters",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "testDatePath",
+							"value": {
+								"value": "@formatDateTime(utcnow(), 'yyyy/MM')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Test File Names",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set Test Date Paths",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "testFileDate",
+							"value": {
+								"value": "@formatDateTime(utcnow(), 'yyyyMMdd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Test 1 - INSERT Complete Booking",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Set Test File Names",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_insert_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 2 - INSERT Summary Booking",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 1 - INSERT Complete Booking",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_insert_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 3 - APPEND Historical",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 2 - INSERT Summary Booking",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"operationType": "INSERT",
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 4 - LOOKUP Historical",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 3 - APPEND Historical",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_LOOKUP_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCodeToLookup": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"historicalFolderPath": {
+									"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"historicalFileName": {
+									"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_lookup_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 5 - LOOKUP Summary",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 4 - LOOKUP Historical",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_LOOKUP_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCodeToLookup": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"summaryFolderPath": {
+									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"summaryFileName": {
+									"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_lookup_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 6 - UPDATE Complete Booking",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 5 - LOOKUP Summary",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_update_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 7 - UPDATE Summary Booking",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 6 - UPDATE Complete Booking",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_update_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 8 - APPEND Historical Update",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 7 - UPDATE Summary Booking",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"operationType": "UPDATE",
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_historical_update.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 9 - Second INSERT Complete Append Test",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 8 - APPEND Historical Update",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@concat(variables('testReservationCode'), '_SECOND')",
+									"type": "Expression"
+								},
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_Second_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_second_insert.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 10 - Second INSERT Summary Append Test",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 9 - Second INSERT Complete Append Test",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@concat(variables('testReservationCode'), '_SECOND')",
+									"type": "Expression"
+								},
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_Second_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_second_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 11 - DELETE Summary Record",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 10 - Second INSERT Summary Append Test",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_delete_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 12 - DELETE Complete Record",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 11 - DELETE Summary Record",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_delete_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 13 - APPEND Historical Delete",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 12 - DELETE Complete Record",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": {
+									"value": "@variables('testReservationCode')",
+									"type": "Expression"
+								},
+								"operationType": "DELETE",
+								"processedFolderPath": {
+									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"processedFileName": {
+									"value": "@concat('VFD_Mida_Test_Processed_Deleted_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"targetFolderPath": {
+									"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+									"type": "Expression"
+								},
+								"targetFileName": {
+									"value": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')",
+									"type": "Expression"
+								},
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_historical_delete.parquet"
+							}
+						}
+					},
+					{
+						"name": "Test 14 - Error Test UPDATE Non-Existing",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Test 13 - APPEND Historical Delete",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"reservationCode": "NON_EXISTING_RECORD",
+								"processedFolderPath": "Mida/Bookings/Processed/Test/NonExisting",
+								"processedFileName": "VFD_Mida_NonExisting_Processed.parquet",
+								"targetFolderPath": "Mida/Bookings/Complete/Test/NonExisting",
+								"targetFileName": "VFD_Mida_NonExisting.parquet",
+								"tempFolderPath": "Mida/Bookings/Temp",
+								"tempFileName": "temp_test_error.parquet"
+							}
+						}
+					},
+					{
+						"name": "Final Test Summary Success",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Test 14 - Error Test UPDATE Non-Existing",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "testResults",
+							"value": {
+								"value": "@concat('✅ ALL ATOMIC OPERATIONS TESTED SUCCESSFULLY! ', char(10), 'Test Reservation Code: ', variables('testReservationCode'), char(10), 'Test Date Path: ', variables('testDatePath'), char(10), 'Operations completed: INSERT, UPDATE, DELETE, LOOKUP for Complete, Summary and Historical files', char(10), 'Error handling verified: UPDATE on non-existing file failed as expected', char(10), 'Test execution completed at: ', utcnow())",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Cleanup Test Files",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Final Test Summary Success",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@pipeline().parameters.enableCleanup",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Log Cleanup Skipped",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "cleanupResults",
+										"value": "ℹ️ Test files cleanup skipped (enableCleanup = false)"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Delete Test Complete File",
+									"type": "Delete",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "@concat('Mida/Bookings/Complete/Test/', variables('testDatePath'))",
+												"fileName": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')"
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": false,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "Delete Test Summary File",
+									"type": "Delete",
+									"dependsOn": [
+										{
+											"activity": "Delete Test Complete File",
+											"dependencyConditions": [
+												"Completed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "@concat('Mida/Bookings/VisitDateSummary/Test/', variables('testDatePath'))",
+												"fileName": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')"
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": false,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "Delete Test Historical File",
+									"type": "Delete",
+									"dependsOn": [
+										{
+											"activity": "Delete Test Summary File",
+											"dependencyConditions": [
+												"Completed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
+												"fileName": "@concat('VFD_Mida_Test_Historical_', variables('testFileDate'), '.parquet')"
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": false,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "Log Cleanup Completed",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Delete Test Historical File",
+											"dependencyConditions": [
+												"Completed"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "cleanupResults",
+										"value": "🧹 Test files cleanup completed successfully"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"enableCleanup": {
+						"type": "bool",
+						"defaultValue": false
+					}
+				},
+				"variables": {
+					"testReservationCode": {
+						"type": "String"
+					},
+					"testDatePath": {
+						"type": "String"
+					},
+					"testFileDate": {
+						"type": "String"
+					},
+					"testResults": {
+						"type": "String"
+					},
+					"cleanupResults": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Test"
+				},
+				"annotations": [
+					"🧪 Pipeline di test completa per tutte le operazioni atomiche MIDA2",
+					"✅ Testa CREATE, INSERT, UPDATE, DELETE, LOOKUP e gestione errori",
+					"📅 Usa codice prenotazione dinamico basato su timestamp per test univoci",
+					"📂 Genera percorsi di test dinamici basati sulla data corrente",
+					"🔄 Testa sia creazione che append automatico",
+					"⚠️ Verifica il corretto funzionamento dell'error handling",
+					"🧹 Include funzionalità di cleanup opzionale dei file di test",
+					"🎯 Test comprensivo di tutte le 12 operazioni atomiche implementate"
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Seals_FTP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire i dati di emissioni biglietti (Seals) da FTP a Data Lake",
+				"activities": [
+					{
+						"name": "ListFTPFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEachFTPFile",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ListFTPFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ListFTPFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "fileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetYear",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "year",
+										"value": {
+											"value": "@substring(item().name, 25, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "month",
+										"value": {
+											"value": "@substring(item().name, 29, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetDay",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "day",
+										"value": {
+											"value": "@substring(item().name, 31, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetFolderPathVar",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetDay",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "folderPathVar",
+										"value": {
+											"value": "@concat('Mida/Seals/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckIfExistsOnADLS",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetFolderPathVar",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckIfExistsOnADLS",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckIfExistsOnADLS').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "CopyFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": true,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@variables('folderPathVar')",
+																"type": "Expression"
+															},
+															"fileName": "@variables('fileName')"
+														}
+													}
+												]
+											},
+											{
+												"name": "Raw to Curated Pipeline",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "CopyFromFTP",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "VFD_PL_Mida_Seals_Raw_Curated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"folderPath": {
+															"value": "@variables('folderPathVar')",
+															"type": "Expression"
+														},
+														"fileName": {
+															"value": "@variables('fileName')",
+															"type": "Expression"
+														},
+														"year": {
+															"value": "@variables('year')",
+															"type": "Expression"
+														},
+														"month": {
+															"value": "@variables('month')",
+															"type": "Expression"
+														},
+														"day": {
+															"value": "@variables('day')",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPathVar": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Validations_FTP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire i dati di vidimazioni (Validations) da FTP a Data Lake",
+				"activities": [
+					{
+						"name": "ListFTPFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Validations_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEachFTPFile",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ListFTPFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ListFTPFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "fileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetYear",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "year",
+										"value": {
+											"value": "@substring(item().name, 27, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "month",
+										"value": {
+											"value": "@substring(item().name, 31, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetDay",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "day",
+										"value": {
+											"value": "@substring(item().name, 33, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetFolderPathVar",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetDay",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "folderPathVar",
+										"value": {
+											"value": "@concat('Mida/Validations/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckIfExistsOnADLS",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetFolderPathVar",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckIfExistsOnADLS",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckIfExistsOnADLS').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "CopyFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": true,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Validations_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@variables('folderPathVar')",
+																"type": "Expression"
+															},
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											},
+											{
+												"name": "Raw to Curated Pipeline",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "CopyFromFTP",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "VFD_PL_Mida_Validations_Raw_Curated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"folderPath": {
+															"value": "@variables('folderPathVar')",
+															"type": "Expression"
+														},
+														"fileName": {
+															"value": "@variables('fileName')",
+															"type": "Expression"
+														},
+														"year": {
+															"value": "@variables('year')",
+															"type": "Expression"
+														},
+														"month": {
+															"value": "@variables('month')",
+															"type": "Expression"
+														},
+														"day": {
+															"value": "@variables('day')",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPathVar": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_API_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire dati meteo da Visual Crossing API e processarli",
+				"activities": [
+					{
+						"name": "SetDataInizio",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "data_inizio",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.data_inizio, formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetDataFine",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "data_fine",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.data_fine, formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetLocation",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "location",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.location, 'Milano')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetYear",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetDataInizio",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "year",
+							"value": {
+								"value": "@substring(variables('data_inizio'), 0, 4)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetMonth",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetYear",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "month",
+							"value": {
+								"value": "@substring(variables('data_inizio'), 5, 2)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetFolderPath",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetMonth",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "folderPath",
+							"value": {
+								"value": "@concat('Weather/', variables('year'), '/', variables('month'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetFileName",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetDataFine",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "SetFolderPath",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "fileName",
+							"value": {
+								"value": "@concat('weather_', replace(variables('data_inizio'), '-', ''), '_', replace(variables('data_fine'), '-', ''), '.csv')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CheckIfExistsInRaw",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "SetFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Weather_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@variables('folderPath')",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@variables('fileName')",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "IfNotExistsInRaw",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "CheckIfExistsInRaw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(activity('CheckIfExistsInRaw').output.exists)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "CopyFromAPI",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_VisualCrossing_HTTP_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"data_inizio": "@variables('data_inizio')",
+												"data_fine": "@variables('data_fine')",
+												"location": "@variables('location')"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Raw_Weather_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPath')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Raw to Curated Pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "IfNotExistsInRaw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Weather_Raw_Curated",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"folderPath": {
+									"value": "@variables('folderPath')",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@variables('fileName')",
+									"type": "Expression"
+								},
+								"year": {
+									"value": "@variables('year')",
+									"type": "Expression"
+								},
+								"month": {
+									"value": "@variables('month')",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"data_inizio": {
+						"type": "String"
+					},
+					"data_fine": {
+						"type": "String"
+					},
+					"location": {
+						"type": "String",
+						"defaultValue": "Milano"
+					}
+				},
+				"variables": {
+					"data_inizio": {
+						"type": "String"
+					},
+					"data_fine": {
+						"type": "String"
+					},
+					"location": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_Raw_Curated')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Affluences_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Affluences_Daily_v2",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-06-11T06:00:00",
+						"timeZone": "W. Europe Standard Time"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Mida_Bookings_FTP_Schedule')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Mida",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-11T04:00:00",
+						"timeZone": "W. Europe Standard Time"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_WiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"p_dateStart": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart')]",
+							"p_dateStop": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-11T16:00:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								4
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Weather_API_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Weather_API_Daily",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"location": "[parameters('VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-05T06:00:00",
+						"timeZone": "W. Europe Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_API_Daily')]"
+			]
+		}
+	]
+}

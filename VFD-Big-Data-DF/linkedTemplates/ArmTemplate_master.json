@@ -186,6 +186,26 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'VFD-Big-Data-DF_ArmTemplate_3')]"
+			]
+		},
+		{
+			"name": "VFD-Big-Data-DF_ArmTemplate_5",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_5.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart": {
 						"value": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart')]"
@@ -199,7 +219,7 @@
 				}
 			},
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'VFD-Big-Data-DF_ArmTemplate_3')]"
+				"[resourceId('Microsoft.Resources/deployments', 'VFD-Big-Data-DF_ArmTemplate_4')]"
 			]
 		}
 	]
