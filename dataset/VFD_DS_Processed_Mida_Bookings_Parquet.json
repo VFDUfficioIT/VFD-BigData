@@ -7,10 +7,12 @@
 		},
 		"parameters": {
 			"folderPath": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "Mida/Bookings/Processed/2025/01"
 			},
 			"fileName": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "VFD_Mida_Processed_20250101.parquet\""
 			}
 		},
 		"folder": {
