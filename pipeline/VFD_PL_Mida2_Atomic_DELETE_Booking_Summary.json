@@ -38,7 +38,7 @@
 				}
 			},
 			{
-				"name": "If Summary Exists Then Delete Record",
+				"name": "If File Exists Then Process Else Log",
 				"type": "IfCondition",
 				"dependsOn": [
 					{
@@ -56,9 +56,30 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "Log - Summary File Not Found",
+							"name": "Set File Exists False",
 							"type": "SetVariable",
 							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "fileExists",
+								"value": "false"
+							}
+						},
+						{
+							"name": "Log - Summary File Not Found",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Set File Exists False",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"secureOutput": false,
 								"secureInput": false
@@ -72,9 +93,30 @@
 					],
 					"ifTrueActivities": [
 						{
+							"name": "Set File Exists True",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "fileExists",
+								"value": "true"
+							}
+						},
+						{
 							"name": "Delete Record From Summary",
 							"type": "ExecuteDataFlow",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Set File Exists True",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -102,7 +144,7 @@
 							}
 						},
 						{
-							"name": "Check Summary Temp Size",
+							"name": "Get Summary Temp File Size",
 							"type": "GetMetadata",
 							"dependsOn": [
 								{
@@ -143,121 +185,128 @@
 							}
 						},
 						{
-							"name": "If Summary Not Empty Replace Else Delete",
-							"type": "IfCondition",
+							"name": "Set Temp File Size",
+							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "Check Summary Temp Size",
+									"activity": "Get Summary Temp File Size",
 									"dependencyConditions": [
 										"Succeeded"
 									]
 								}
 							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
 							"userProperties": [],
 							"typeProperties": {
-								"expression": {
-									"value": "@greater(activity('Check Summary Temp Size').output.size, 1000)",
+								"variableName": "tempFileSize",
+								"value": {
+									"value": "@string(activity('Get Summary Temp File Size').output.size)",
 									"type": "Expression"
-								},
-								"ifFalseActivities": [
-									{
-										"name": "Delete Empty Summary File",
-										"type": "Delete",
-										"dependsOn": [],
-										"policy": {
-											"timeout": "0.12:00:00",
-											"retry": 0,
-											"retryIntervalInSeconds": 30,
-											"secureOutput": false,
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"dataset": {
-												"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@pipeline().parameters.targetFolderPath",
-													"fileName": "@pipeline().parameters.targetFileName"
-												}
-											},
-											"enableLogging": false,
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": false,
-												"enablePartitionDiscovery": false
-											}
-										}
-									}
-								],
-								"ifTrueActivities": [
-									{
-										"name": "Replace Summary File",
-										"type": "Copy",
-										"dependsOn": [],
-										"policy": {
-											"timeout": "0.12:00:00",
-											"retry": 0,
-											"retryIntervalInSeconds": 30,
-											"secureOutput": false,
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"source": {
-												"type": "ParquetSource",
-												"storeSettings": {
-													"type": "AzureBlobFSReadSettings",
-													"recursive": false,
-													"enablePartitionDiscovery": false
-												}
-											},
-											"sink": {
-												"type": "ParquetSink",
-												"storeSettings": {
-													"type": "AzureBlobFSWriteSettings"
-												},
-												"formatSettings": {
-													"type": "ParquetWriteSettings"
-												}
-											},
-											"enableStaging": false
-										},
-										"inputs": [
-											{
-												"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@pipeline().parameters.tempFolderPath",
-													"fileName": "@pipeline().parameters.tempFileName"
-												}
-											}
-										],
-										"outputs": [
-											{
-												"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@pipeline().parameters.targetFolderPath",
-													"fileName": "@pipeline().parameters.targetFileName"
-												}
-											}
-										]
-									}
-								]
+								}
 							}
-						},
+						}
+					]
+				}
+			},
+			{
+				"name": "If Temp File Not Empty Replace Summary",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "If File Exists Then Process Else Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@and(greater(int(variables('tempFileSize')), 1000), equals(variables('fileExists'), 'true'))",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
 						{
-							"name": "Delete Summary Delete Temp",
-							"type": "Delete",
-							"dependsOn": [
+							"name": "Replace Summary File",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
 								{
-									"activity": "If Summary Not Empty Replace Else Delete",
-									"dependencyConditions": [
-										"Succeeded"
-									]
+									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
+									}
 								}
 							],
+							"outputs": [
+								{
+									"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "@pipeline().parameters.targetFolderPath",
+										"fileName": "@pipeline().parameters.targetFileName"
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "If Temp File Empty Delete Summary",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "If Temp File Not Empty Replace Summary",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@and(lessOrEqual(int(variables('tempFileSize')), 1000), equals(variables('fileExists'), 'true'))",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Delete Empty Summary File",
+							"type": "Delete",
+							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -268,11 +317,11 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataset": {
-									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+									"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "@pipeline().parameters.tempFileName"
+										"folderPath": "@pipeline().parameters.targetFolderPath",
+										"fileName": "@pipeline().parameters.targetFileName"
 									}
 								},
 								"enableLogging": false,
@@ -284,6 +333,42 @@
 							}
 						}
 					]
+				}
+			},
+			{
+				"name": "Delete Summary Temp File Cleanup",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "If Temp File Empty Delete Summary",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "@pipeline().parameters.tempFolderPath",
+							"fileName": "@pipeline().parameters.tempFileName"
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": false,
+						"enablePartitionDiscovery": false
+					}
 				}
 			}
 		],
@@ -310,6 +395,14 @@
 			}
 		},
 		"variables": {
+			"fileExists": {
+				"type": "String",
+				"defaultValue": "false"
+			},
+			"tempFileSize": {
+				"type": "String",
+				"defaultValue": "0"
+			},
 			"warningMessage": {
 				"type": "String"
 			}
@@ -319,7 +412,8 @@
 		},
 		"annotations": [
 			"Pipeline atomica per rimozione prenotazioni summary",
-			"Elimina il file se diventa vuoto dopo la rimozione"
+			"Usa logica appiattita per evitare If Condition annidate",
+			"Gestisce automaticamente file vuoti dopo cancellazione"
 		]
 	}
 }
