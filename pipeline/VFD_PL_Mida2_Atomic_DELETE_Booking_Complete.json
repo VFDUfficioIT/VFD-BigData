@@ -92,6 +92,16 @@
 											"value": "'@{pipeline().parameters.reservationCode}'",
 											"type": "Expression"
 										}
+									},
+									"datasetParameters": {
+										"SourceExistingContent": {
+											"folderPath": "Mida2/Bookings/Complete/2025/01",
+											"fileName": "VFD_Mida_Bookings_20250101.parquet"
+										},
+										"SinkTemp": {
+											"folderPath": "Mida2/Bookings/Temp",
+											"fileName": "temp_operation.parquet"
+										}
 									}
 								},
 								"compute": {
