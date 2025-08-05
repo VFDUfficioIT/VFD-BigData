@@ -10,8 +10,8 @@
 					"type": "PipelineReference"
 				},
 				"parameters": {
-					"p_dateStart": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')",
-					"p_dateStop": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
+					"p_dateStart": "@formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')",
+					"p_dateStop": "@formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
 				}
 			}
 		],
