@@ -3,18 +3,7 @@
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
-		"pipelines": [
-			{
-				"pipelineReference": {
-					"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
-					"type": "PipelineReference"
-				},
-				"parameters": {
-					"p_dateStart": "@formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')",
-					"p_dateStop": "@formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
-				}
-			}
-		],
+		"pipelines": [],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
