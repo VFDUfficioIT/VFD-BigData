@@ -5050,11 +5050,11 @@
 								},
 								"operationType": "INSERT",
 								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
+									"value": "Mida/Bookings/2025/07",
 									"type": "Expression"
 								},
 								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_', variables('testFileDate'), '.parquet')",
+									"value": "export_vw_summary_reservationPayments2025072604.parquet",
 									"type": "Expression"
 								},
 								"targetFolderPath": {
