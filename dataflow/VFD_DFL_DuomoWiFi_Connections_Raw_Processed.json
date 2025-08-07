@@ -31,9 +31,6 @@
 				},
 				{
 					"name": "DerivedColumns"
-				},
-				{
-					"name": "DataTypeConversions"
 				}
 			],
 			"scriptLines": [
@@ -65,8 +62,7 @@
 				"     skipDuplicateMapOutputs: false) ~> FlattenData",
 				"FlattenData derive(sessionTime_minutes = duration / 60,",
 				"          traffic_MB = traffic / (1024 * 1024)) ~> DerivedColumns",
-				"DerivedColumns derive() ~> DataTypeConversions",
-				"DataTypeConversions sink(allowSchemaDrift: true,",
+				"DerivedColumns sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          hotspotIdentifier as string,",
