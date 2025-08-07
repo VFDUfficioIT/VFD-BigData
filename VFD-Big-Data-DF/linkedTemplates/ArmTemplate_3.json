@@ -359,9 +359,6 @@
 						},
 						{
 							"name": "DerivedColumns"
-						},
-						{
-							"name": "DataTypeConversions"
 						}
 					],
 					"scriptLines": [
@@ -392,12 +389,8 @@
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> FlattenData",
 						"FlattenData derive(sessionTime_minutes = duration / 60,",
-						"          traffic_MB = traffic / (1024 * 1024),",
-						"          processing_date = currentUTC(),",
-						"          data_source = 'cloud4wi_connections') ~> DerivedColumns",
-						"DerivedColumns derive(start_converted = toTimestamp(start, 'yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\''),",
-						"          stop_converted = toTimestamp(stop, 'yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'')) ~> DataTypeConversions",
-						"DataTypeConversions sink(allowSchemaDrift: true,",
+						"          traffic_MB = traffic / (1024 * 1024)) ~> DerivedColumns",
+						"DerivedColumns sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          hotspotIdentifier as string,",
@@ -534,10 +527,6 @@
 						"          customerId,",
 						"          sessionTime_minutes,",
 						"          traffic_MB,",
-						"          processing_date,",
-						"          data_source,",
-						"          start_converted,",
-						"          stop_converted,",
 						"          user_cid = cid,",
 						"          user_firstName = firstName,",
 						"          user_lastName = lastName,",
