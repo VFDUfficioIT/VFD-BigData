@@ -977,6 +977,87 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline wrapper per esecuzione giornaliera automatica - usa SEMPRE la data di ieri",
+				"activities": [
+					{
+						"name": "Set_Yesterday_Date",
+						"description": "Imposta la data di ieri per entrambi i parametri",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "yesterday_date",
+							"value": {
+								"value": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Execute_WiFi_Extract_Transform",
+						"description": "Esegue la pipeline principale con la data di ieri",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Set_Yesterday_Date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"p_dateStart": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								},
+								"p_dateStop": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"yesterday_date": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": [
+					"Daily Execution",
+					"Wrapper Pipeline",
+					"No Parameters"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Extract_Transform')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -9584,7 +9665,112 @@
 					},
 					"compressionCodec": "snappy"
 				},
-				"schema": []
+				"schema": [
+					{
+						"name": "hotspotIdentifier",
+						"type": "String"
+					},
+					{
+						"name": "start",
+						"type": "String"
+					},
+					{
+						"name": "stop",
+						"type": "String"
+					},
+					{
+						"name": "duration",
+						"type": "Int32"
+					},
+					{
+						"name": "traffic",
+						"type": "Int32"
+					},
+					{
+						"name": "terminateCause",
+						"type": "String"
+					},
+					{
+						"name": "username",
+						"type": "String"
+					},
+					{
+						"name": "macAddressClient",
+						"type": "String"
+					},
+					{
+						"name": "ipAddressClient",
+						"type": "String"
+					},
+					{
+						"name": "locationId",
+						"type": "String"
+					},
+					{
+						"name": "customerId",
+						"type": "String"
+					},
+					{
+						"name": "sessionTime_minutes",
+						"type": "Double"
+					},
+					{
+						"name": "traffic_MB",
+						"type": "Double"
+					},
+					{
+						"name": "processing_date",
+						"type": "DateTime"
+					},
+					{
+						"name": "data_source",
+						"type": "String"
+					},
+					{
+						"name": "start_converted",
+						"type": "DateTime"
+					},
+					{
+						"name": "stop_converted",
+						"type": "DateTime"
+					},
+					{
+						"name": "user_firstName",
+						"type": "String"
+					},
+					{
+						"name": "user_lastName",
+						"type": "String"
+					},
+					{
+						"name": "user_email",
+						"type": "String"
+					},
+					{
+						"name": "user_gender",
+						"type": "String"
+					},
+					{
+						"name": "user_phone",
+						"type": "String"
+					},
+					{
+						"name": "user_birthDate",
+						"type": "String"
+					},
+					{
+						"name": "user_country",
+						"type": "String"
+					},
+					{
+						"name": "user_zipCode",
+						"type": "String"
+					},
+					{
+						"name": "user_wifiArea",
+						"type": "String"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -11123,7 +11309,76 @@
 					},
 					"compressionCodec": "snappy"
 				},
-				"schema": []
+				"schema": [
+					{
+						"name": "hotspotIdentifier",
+						"type": "String"
+					},
+					{
+						"name": "start",
+						"type": "String"
+					},
+					{
+						"name": "stop",
+						"type": "String"
+					},
+					{
+						"name": "duration",
+						"type": "Int32"
+					},
+					{
+						"name": "traffic",
+						"type": "Int32"
+					},
+					{
+						"name": "terminateCause",
+						"type": "String"
+					},
+					{
+						"name": "username",
+						"type": "String"
+					},
+					{
+						"name": "macAddressClient",
+						"type": "String"
+					},
+					{
+						"name": "ipAddressClient",
+						"type": "String"
+					},
+					{
+						"name": "locationId",
+						"type": "String"
+					},
+					{
+						"name": "customerId",
+						"type": "String"
+					},
+					{
+						"name": "sessionTime_minutes",
+						"type": "Double"
+					},
+					{
+						"name": "traffic_MB",
+						"type": "Double"
+					},
+					{
+						"name": "processing_date",
+						"type": "DateTime"
+					},
+					{
+						"name": "data_source",
+						"type": "String"
+					},
+					{
+						"name": "start_converted",
+						"type": "DateTime"
+					},
+					{
+						"name": "stop_converted",
+						"type": "DateTime"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -11169,7 +11424,52 @@
 					},
 					"compressionCodec": "snappy"
 				},
-				"schema": []
+				"schema": [
+					{
+						"name": "cid",
+						"type": "String"
+					},
+					{
+						"name": "username",
+						"type": "String"
+					},
+					{
+						"name": "firstName",
+						"type": "String"
+					},
+					{
+						"name": "lastName",
+						"type": "String"
+					},
+					{
+						"name": "email",
+						"type": "String"
+					},
+					{
+						"name": "gender",
+						"type": "String"
+					},
+					{
+						"name": "phone",
+						"type": "String"
+					},
+					{
+						"name": "birthDate",
+						"type": "String"
+					},
+					{
+						"name": "country",
+						"type": "String"
+					},
+					{
+						"name": "zipCode",
+						"type": "String"
+					},
+					{
+						"name": "wifiArea",
+						"type": "String"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
@@ -13327,6 +13627,25 @@
 						"          stop_converted = toTimestamp(stop, 'yyyy-MM-dd HH:mm:ss')) ~> DataTypeConversions",
 						"DataTypeConversions sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     input(",
+						"          hotspotIdentifier as string,",
+						"          start as string,",
+						"          stop as string,",
+						"          duration as integer,",
+						"          traffic as integer,",
+						"          terminateCause as string,",
+						"          username as string,",
+						"          macAddressClient as string,",
+						"          ipAddressClient as string,",
+						"          locationId as string,",
+						"          customerId as string,",
+						"          sessionTime_minutes as double,",
+						"          traffic_MB as double,",
+						"          processing_date as any,",
+						"          data_source as string,",
+						"          start_converted as any,",
+						"          stop_converted as any",
+						"     ),",
 						"     format: 'parquet',",
 						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet'],",
 						"     umask: 0022,",
@@ -13389,28 +13708,29 @@
 					"scriptLines": [
 						"source(output(",
 						"          hotspotIdentifier as string,",
-						"          dateStart as string,",
-						"          dateStop as string,",
-						"          sessionTime as integer,",
-						"          traffic as long,",
+						"          start as string,",
+						"          stop as string,",
+						"          duration as integer,",
+						"          traffic as integer,",
 						"          terminateCause as string,",
 						"          username as string,",
-						"          macAddressUser as string,",
-						"          ipAddressUser as string,",
-						"          venueId as string,",
-						"          online as boolean,",
+						"          macAddressClient as string,",
+						"          ipAddressClient as string,",
+						"          locationId as string,",
+						"          customerId as string,",
 						"          sessionTime_minutes as double,",
 						"          traffic_MB as double,",
 						"          processing_date as timestamp,",
 						"          data_source as string,",
-						"          dateStart_converted as timestamp,",
-						"          dateStop_converted as timestamp",
+						"          start_converted as timestamp,",
+						"          stop_converted as timestamp",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     format: 'parquet') ~> SourceConnections",
 						"source(output(",
+						"          cid as string,",
 						"          username as string,",
 						"          firstName as string,",
 						"          lastName as string,",
@@ -13420,13 +13740,7 @@
 						"          birthDate as string,",
 						"          country as string,",
 						"          zipCode as string,",
-						"          companyName as string,",
-						"          wifiArea as string,",
-						"          creationDate as string,",
-						"          marketing as boolean,",
-						"          type as string,",
-						"          processing_date as timestamp,",
-						"          data_source as string",
+						"          wifiArea as string",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
@@ -13439,20 +13753,21 @@
 						"     broadcast: 'auto')~> LeftJoinConnectionsUsers",
 						"LeftJoinConnectionsUsers select(mapColumn(",
 						"          hotspotIdentifier,",
-						"          dateStart,",
-						"          dateStop,",
-						"          sessionTime,",
+						"          start,",
+						"          stop,",
+						"          duration,",
 						"          traffic,",
 						"          terminateCause,",
 						"          username = SourceConnections@username,",
-						"          macAddressUser,",
-						"          ipAddressUser,",
-						"          venueId,",
-						"          online,",
+						"          macAddressClient,",
+						"          ipAddressClient,",
+						"          locationId,",
+						"          customerId,",
 						"          sessionTime_minutes,",
 						"          traffic_MB,",
-						"          dateStart_converted,",
-						"          dateStop_converted,",
+						"          start_converted,",
+						"          stop_converted,",
+						"          user_cid = cid,",
 						"          user_firstName = firstName,",
 						"          user_lastName = lastName,",
 						"          user_email = email,",
@@ -13461,17 +13776,40 @@
 						"          user_birthDate = birthDate,",
 						"          user_country = country,",
 						"          user_zipCode = zipCode,",
-						"          user_companyName = companyName,",
-						"          user_wifiArea = wifiArea,",
-						"          user_creationDate = creationDate,",
-						"          user_marketing = marketing,",
-						"          user_type = type,",
-						"          processing_date = SourceConnections@processing_date",
+						"          user_wifiArea = wifiArea",
 						"     ),",
 						"     skipDuplicateMapInputs: false,",
 						"     skipDuplicateMapOutputs: false) ~> SelectAndRenameColumns",
 						"SelectAndRenameColumns sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     input(",
+						"          hotspotIdentifier as string,",
+						"          start as string,",
+						"          stop as string,",
+						"          duration as integer,",
+						"          traffic as integer,",
+						"          terminateCause as string,",
+						"          username as string,",
+						"          macAddressClient as string,",
+						"          ipAddressClient as string,",
+						"          locationId as string,",
+						"          customerId as string,",
+						"          sessionTime_minutes as double,",
+						"          traffic_MB as double,",
+						"          processing_date as any,",
+						"          data_source as string,",
+						"          start_converted as any,",
+						"          stop_converted as any,",
+						"          user_firstName as string,",
+						"          user_lastName as string,",
+						"          user_email as string,",
+						"          user_gender as string,",
+						"          user_phone as string,",
+						"          user_birthDate as string,",
+						"          user_country as string,",
+						"          user_zipCode as string,",
+						"          user_wifiArea as string",
+						"     ),",
 						"     format: 'parquet',",
 						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet'],",
 						"     umask: 0022,",
@@ -13555,6 +13893,19 @@
 						"     skipDuplicateMapOutputs: false) ~> FlattenUserData",
 						"FlattenUserData sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     input(",
+						"          cid as string,",
+						"          username as string,",
+						"          firstName as string,",
+						"          lastName as string,",
+						"          email as string,",
+						"          gender as string,",
+						"          phone as string,",
+						"          birthDate as string,",
+						"          country as string,",
+						"          zipCode as string,",
+						"          wifiArea as string",
+						"     ),",
 						"     format: 'parquet',",
 						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet'],",
 						"     umask: 0022,",
@@ -16645,87 +16996,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Daily')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline wrapper per esecuzione giornaliera automatica - usa SEMPRE la data di ieri",
-				"activities": [
-					{
-						"name": "Set_Yesterday_Date",
-						"description": "Imposta la data di ieri per entrambi i parametri",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "yesterday_date",
-							"value": {
-								"value": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Execute_WiFi_Extract_Transform",
-						"description": "Esegue la pipeline principale con la data di ieri",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Set_Yesterday_Date",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"p_dateStart": {
-									"value": "@variables('yesterday_date')",
-									"type": "Expression"
-								},
-								"p_dateStop": {
-									"value": "@variables('yesterday_date')",
-									"type": "Expression"
-								}
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"yesterday_date": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "WiFi"
-				},
-				"annotations": [
-					"Daily Execution",
-					"Wrapper Pipeline",
-					"No Parameters"
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
 			]
 		}
 	]
