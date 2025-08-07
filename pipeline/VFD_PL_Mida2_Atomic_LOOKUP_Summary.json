@@ -92,6 +92,16 @@
 											"value": "'@{pipeline().parameters.reservationCodeToLookup}'",
 											"type": "Expression"
 										}
+									},
+									"datasetParameters": {
+										"SourceSummaryFile": {
+											"folderPath": "@pipeline().parameters.summaryFolderPath",
+											"fileName": "@pipeline().parameters.summaryFileName"
+										},
+										"SinkTemp": {
+											"folderPath": "@pipeline().parameters.tempFolderPath",
+											"fileName": "@pipeline().parameters.tempFileName"
+										}
 									}
 								},
 								"compute": {
