@@ -36,6 +36,111 @@
 			},
 			"compressionCodec": "snappy"
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "hotspotIdentifier",
+				"type": "String"
+			},
+			{
+				"name": "start",
+				"type": "String"
+			},
+			{
+				"name": "stop",
+				"type": "String"
+			},
+			{
+				"name": "duration",
+				"type": "Int32"
+			},
+			{
+				"name": "traffic",
+				"type": "Int32"
+			},
+			{
+				"name": "terminateCause",
+				"type": "String"
+			},
+			{
+				"name": "username",
+				"type": "String"
+			},
+			{
+				"name": "macAddressClient",
+				"type": "String"
+			},
+			{
+				"name": "ipAddressClient",
+				"type": "String"
+			},
+			{
+				"name": "locationId",
+				"type": "String"
+			},
+			{
+				"name": "customerId",
+				"type": "String"
+			},
+			{
+				"name": "sessionTime_minutes",
+				"type": "Double"
+			},
+			{
+				"name": "traffic_MB",
+				"type": "Double"
+			},
+			{
+				"name": "processing_date",
+				"type": "DateTime"
+			},
+			{
+				"name": "data_source",
+				"type": "String"
+			},
+			{
+				"name": "start_converted",
+				"type": "DateTime"
+			},
+			{
+				"name": "stop_converted",
+				"type": "DateTime"
+			},
+			{
+				"name": "user_firstName",
+				"type": "String"
+			},
+			{
+				"name": "user_lastName",
+				"type": "String"
+			},
+			{
+				"name": "user_email",
+				"type": "String"
+			},
+			{
+				"name": "user_gender",
+				"type": "String"
+			},
+			{
+				"name": "user_phone",
+				"type": "String"
+			},
+			{
+				"name": "user_birthDate",
+				"type": "String"
+			},
+			{
+				"name": "user_country",
+				"type": "String"
+			},
+			{
+				"name": "user_zipCode",
+				"type": "String"
+			},
+			{
+				"name": "user_wifiArea",
+				"type": "String"
+			}
+		]
 	}
 }
