@@ -76,6 +76,16 @@
 											"value": "'@{pipeline().parameters.reservationCode}'",
 											"type": "Expression"
 										}
+									},
+									"datasetParameters": {
+										"SourceProcessed": {
+											"folderPath": "@pipeline().parameters.processedFolderPath",
+											"fileName": "@pipeline().parameters.processedFileName"
+										},
+										"SinkSummary": {
+											"folderPath": "@pipeline().parameters.targetFolderPath",
+											"fileName": "@pipeline().parameters.targetFileName"
+										}
 									}
 								},
 								"compute": {
@@ -110,13 +120,17 @@
 										}
 									},
 									"datasetParameters": {
+										"SourceNewRecord": {
+											"folderPath": "@pipeline().parameters.processedFolderPath",
+											"fileName": "@pipeline().parameters.processedFileName"
+										},
 										"SourceExistingContent": {
-											"folderPath": "Mida2/Bookings/Summary/2025/01",
-											"fileName": "VFD_Mida_BookingsVisitDateSummary_20250101.parquet"
+											"folderPath": "@pipeline().parameters.targetFolderPath",
+											"fileName": "@pipeline().parameters.targetFileName.parquet"
 										},
 										"SinkTemp": {
-											"folderPath": "Mida2/Bookings/Temp",
-											"fileName": "temp_operation.parquet"
+											"folderPath": "@pipeline().parameters.tempFolderPath",
+											"fileName": "@pipeline().parameters.tempFileName"
 										}
 									}
 								},
