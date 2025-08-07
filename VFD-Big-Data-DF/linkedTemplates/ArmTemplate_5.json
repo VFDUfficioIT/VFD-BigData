@@ -996,7 +996,7 @@
 						"typeProperties": {
 							"variableName": "testReservationCode",
 							"value": {
-								"value": "@concat('TEST_', formatDateTime(utcnow(), 'yyyyMMddHHmmss'))",
+								"value": "RVFD2XNDRPZ3XPQX",
 								"type": "Expression"
 							}
 						}
