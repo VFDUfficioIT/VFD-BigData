@@ -1290,7 +1290,7 @@
 									"type": "Expression"
 								},
 								"targetFileName": {
-									"value": "@concat('VFD_Mida_Test_Complete_', variables('testFileDate'), '.parquet')",
+									"value": "@concat('booking_complete','.parquet')",
 									"type": "Expression"
 								},
 								"tempFolderPath": "Mida/Bookings/Temp",
