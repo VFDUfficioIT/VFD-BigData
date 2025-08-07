@@ -88,6 +88,20 @@
 											"value": "'@{pipeline().parameters.reservationCode}'",
 											"type": "Expression"
 										}
+									},
+									"datasetParameters": {
+										"SourceNewRecord": {
+											"folderPath": "@pipeline().parameters.processedFolderPath",
+											"fileName": "@pipeline().parameters.processedFileName"
+										},
+										"SourceExistingContent": {
+											"folderPath": "@pipeline().parameters.targetFolderPath",
+											"fileName": "@pipeline().parameters.targetFileName"
+										},
+										"SinkTemp": {
+											"folderPath": "@pipeline().parameters.tempFolderPath",
+											"fileName": "@pipeline().parameters.tempFileName"
+										}
 									}
 								},
 								"compute": {
