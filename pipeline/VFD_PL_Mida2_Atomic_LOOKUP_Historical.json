@@ -92,6 +92,16 @@
 											"value": "'@{pipeline().parameters.reservationCodeToLookup}'",
 											"type": "Expression"
 										}
+									},
+									"datasetParameters": {
+										"SourceHistorical": {
+											"folderPath": "@pipeline().parameters.historicalFolderPath",
+											"fileName": "@pipeline().parameters.historicalFileName"
+										},
+										"SinkTemp": {
+											"folderPath": "@pipeline().parameters.tempFolderPath",
+											"fileName": "@pipeline().parameters.tempFileName"
+										}
 									}
 								},
 								"compute": {
