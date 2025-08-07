@@ -534,6 +534,8 @@
 						"          customerId,",
 						"          sessionTime_minutes,",
 						"          traffic_MB,",
+						"          processing_date,",
+						"          data_source,",
 						"          start_converted,",
 						"          stop_converted,",
 						"          user_cid = cid,",
