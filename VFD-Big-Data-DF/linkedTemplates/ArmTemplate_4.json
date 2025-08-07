@@ -4334,7 +4334,10 @@
 									"dependsOn": [],
 									"userProperties": [],
 									"typeProperties": {
-										"message": "UPDATE_COMPLETE_FILE_NOT_FOUND: Cannot update booking in non-existing file",
+										"message": {
+											"value": "@concat('BOOKING FILE NOT FOUND. Folder:', pipeline().parameters.targetFolderPath,' File:',pipeline().parameters.targetFileName)",
+											"type": "Expression"
+										},
 										"errorCode": "UPDATE_COMPLETE_FILE_NOT_FOUND"
 									}
 								}
