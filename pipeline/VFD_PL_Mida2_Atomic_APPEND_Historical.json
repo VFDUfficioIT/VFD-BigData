@@ -80,6 +80,16 @@
 											"value": "'@{pipeline().parameters.operationType}'",
 											"type": "Expression"
 										}
+									},
+									"datasetParameters": {
+										"SourceProcessed": {
+											"folderPath": "@pipeline().parameters.processedFolderPath",
+											"fileName": "@pipeline().parameters.processedFileName"
+										},
+										"SinkHistorical": {
+											"folderPath": "@pipeline().parameters.targetFolderPath",
+											"fileName": "@pipeline().parameters.targetFileName"
+										}
 									}
 								},
 								"compute": {
@@ -115,6 +125,20 @@
 										"operationType": {
 											"value": "'@{pipeline().parameters.operationType}'",
 											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"SourceNewRecord": {
+											"folderPath": "@pipeline().parameters.processedFolderPath",
+											"fileName": "@pipeline().parameters.processedFileName"
+										},
+										"SourceExistingHistorical": {
+											"folderPath": "@pipeline().parameters.targetFolderPath",
+											"fileName": "@pipeline().parameters.targetFileName"
+										},
+										"SinkTemp": {
+											"folderPath": "@pipeline().parameters.tempFolderPath",
+											"fileName": "@pipeline().parameters.tempFileName"
 										}
 									}
 								},
