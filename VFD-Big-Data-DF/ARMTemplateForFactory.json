@@ -9719,22 +9719,6 @@
 						"type": "Double"
 					},
 					{
-						"name": "processing_date",
-						"type": "DateTime"
-					},
-					{
-						"name": "data_source",
-						"type": "String"
-					},
-					{
-						"name": "start_converted",
-						"type": "DateTime"
-					},
-					{
-						"name": "stop_converted",
-						"type": "DateTime"
-					},
-					{
 						"name": "user_firstName",
 						"type": "String"
 					},
@@ -11361,22 +11345,6 @@
 					{
 						"name": "traffic_MB",
 						"type": "Double"
-					},
-					{
-						"name": "processing_date",
-						"type": "DateTime"
-					},
-					{
-						"name": "data_source",
-						"type": "String"
-					},
-					{
-						"name": "start_converted",
-						"type": "DateTime"
-					},
-					{
-						"name": "stop_converted",
-						"type": "DateTime"
 					}
 				]
 			},
@@ -13633,11 +13601,7 @@
 						"          locationId as string,",
 						"          customerId as string,",
 						"          sessionTime_minutes as double,",
-						"          traffic_MB as double,",
-						"          processing_date as any,",
-						"          data_source as string,",
-						"          start_converted as any,",
-						"          stop_converted as any",
+						"          traffic_MB as double",
 						"     ),",
 						"     format: 'parquet',",
 						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet'],",
@@ -13712,11 +13676,7 @@
 						"          locationId as string,",
 						"          customerId as string,",
 						"          sessionTime_minutes as double,",
-						"          traffic_MB as double,",
-						"          processing_date as timestamp,",
-						"          data_source as string,",
-						"          start_converted as timestamp,",
-						"          stop_converted as timestamp",
+						"          traffic_MB as double",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
@@ -13787,10 +13747,6 @@
 						"          customerId as string,",
 						"          sessionTime_minutes as double,",
 						"          traffic_MB as double,",
-						"          processing_date as any,",
-						"          data_source as string,",
-						"          start_converted as any,",
-						"          stop_converted as any,",
 						"          user_firstName as string,",
 						"          user_lastName as string,",
 						"          user_email as string,",

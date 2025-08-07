@@ -590,22 +590,6 @@
 					{
 						"name": "traffic_MB",
 						"type": "Double"
-					},
-					{
-						"name": "processing_date",
-						"type": "DateTime"
-					},
-					{
-						"name": "data_source",
-						"type": "String"
-					},
-					{
-						"name": "start_converted",
-						"type": "DateTime"
-					},
-					{
-						"name": "stop_converted",
-						"type": "DateTime"
 					}
 				]
 			},
