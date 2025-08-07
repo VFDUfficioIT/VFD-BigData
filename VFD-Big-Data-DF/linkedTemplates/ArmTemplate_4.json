@@ -2270,8 +2270,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceProcessed": {},
-												"SinkHistorical": {}
+												"SourceProcessed": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SinkHistorical": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -2311,9 +2317,18 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
-												"SourceExistingHistorical": {},
-												"SinkTemp": {}
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SourceExistingHistorical": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -2611,8 +2626,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceExistingContent": {},
-												"SinkTemp": {}
+												"SourceExistingContent": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3041,8 +3062,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceExistingContent": {},
-												"SinkTemp": {}
+												"SourceExistingContent": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3413,8 +3440,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceProcessed": {},
-												"SinkComplete": {}
+												"SourceProcessed": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SinkComplete": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3450,14 +3483,17 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
 												"SourceExistingContent": {
-													"folderPath": "Mida2/Bookings/Complete/2025/01",
-													"fileName": "VFD_Mida_Bookings_20250101.parquet"
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
 												},
 												"SinkTemp": {
-													"folderPath": "Mida2/Bookings/Temp",
-													"fileName": "temp_operation.parquet"
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
 												}
 											}
 										},
@@ -3705,8 +3741,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceProcessed": {},
-												"SinkSummary": {}
+												"SourceProcessed": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SinkSummary": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3742,14 +3784,17 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
 												"SourceExistingContent": {
-													"folderPath": "Mida2/Bookings/Summary/2025/01",
-													"fileName": "VFD_Mida_BookingsVisitDateSummary_20250101.parquet"
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName.parquet"
 												},
 												"SinkTemp": {
-													"folderPath": "Mida2/Bookings/Temp",
-													"fileName": "temp_operation.parquet"
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
 												}
 											}
 										},
@@ -4002,8 +4047,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceHistorical": {},
-												"SinkTemp": {}
+												"SourceHistorical": {
+													"folderPath": "@pipeline().parameters.historicalFolderPath",
+													"fileName": "@pipeline().parameters.historicalFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -4156,8 +4207,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceSummaryFile": {},
-												"SinkTemp": {}
+												"SourceSummaryFile": {
+													"folderPath": "@pipeline().parameters.summaryFolderPath",
+													"fileName": "@pipeline().parameters.summaryFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -4306,14 +4363,17 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
 												"SourceExistingContent": {
-													"folderPath": "Mida2/Bookings/Complete/2025/01",
-													"fileName": "VFD_Mida_Bookings_20250101.parquet"
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
 												},
 												"SinkTemp": {
-													"folderPath": "Mida2/Bookings/Temp",
-													"fileName": "temp_operation.parquet"
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
 												}
 											}
 										},
@@ -4570,9 +4630,18 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
-												"SourceExistingContent": {},
-												"SinkTemp": {}
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SourceExistingContent": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},

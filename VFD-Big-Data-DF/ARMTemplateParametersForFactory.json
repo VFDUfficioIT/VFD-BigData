@@ -34,12 +34,6 @@
 		},
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
 			"value": "Milano"
-		},
-		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart": {
-			"value": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
-		},
-		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop": {
-			"value": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
 		}
 	}
 }

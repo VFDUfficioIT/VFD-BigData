@@ -7,14 +7,6 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
-		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart": {
-			"type": "string",
-			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
-		},
-		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop": {
-			"type": "string",
-			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
-		},
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
 			"type": "string",
 			"defaultValue": "Milano"
@@ -2961,41 +2953,81 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_TRG_WiFi_Daily')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
+				"description": "Pipeline wrapper per esecuzione giornaliera automatica - usa SEMPRE la data di ieri",
+				"activities": [
 					{
-						"pipelineReference": {
-							"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
-							"type": "PipelineReference"
+						"name": "Set_Yesterday_Date",
+						"description": "Imposta la data di ieri per entrambi i parametri",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
 						},
-						"parameters": {
-							"p_dateStart": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart')]",
-							"p_dateStop": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop')]"
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "yesterday_date",
+							"value": {
+								"value": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Execute_WiFi_Extract_Transform",
+						"description": "Esegue la pipeline principale con la data di ieri",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Set_Yesterday_Date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"p_dateStart": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								},
+								"p_dateStop": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								}
+							}
 						}
 					}
 				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Day",
-						"interval": 1,
-						"startTime": "2025-07-11T16:00:00",
-						"timeZone": "W. Europe Standard Time",
-						"schedule": {
-							"minutes": [
-								0
-							],
-							"hours": [
-								4
-							]
-						}
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"yesterday_date": {
+						"type": "String"
 					}
-				}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": [
+					"Daily Execution",
+					"Wrapper Pipeline",
+					"No Parameters"
+				]
 			},
 			"dependsOn": []
 		},
@@ -3029,6 +3061,44 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_API_Daily')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_WiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_DuomoWiFi_Daily",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-11T16:00:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								4
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Daily')]"
 			]
 		}
 	]

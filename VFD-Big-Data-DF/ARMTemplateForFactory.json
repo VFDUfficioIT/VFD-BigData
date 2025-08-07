@@ -46,14 +46,6 @@
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
 			"type": "string",
 			"defaultValue": "Milano"
-		},
-		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart": {
-			"type": "string",
-			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
-		},
-		"VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop": {
-			"type": "string",
-			"defaultValue": "formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
 		}
 	},
 	"variables": {
@@ -2233,8 +2225,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceProcessed": {},
-												"SinkHistorical": {}
+												"SourceProcessed": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SinkHistorical": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -2274,9 +2272,18 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
-												"SourceExistingHistorical": {},
-												"SinkTemp": {}
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SourceExistingHistorical": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -2579,8 +2586,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceExistingContent": {},
-												"SinkTemp": {}
+												"SourceExistingContent": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3013,8 +3026,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceExistingContent": {},
-												"SinkTemp": {}
+												"SourceExistingContent": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3389,8 +3408,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceProcessed": {},
-												"SinkComplete": {}
+												"SourceProcessed": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SinkComplete": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3426,14 +3451,17 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
 												"SourceExistingContent": {
-													"folderPath": "Mida2/Bookings/Complete/2025/01",
-													"fileName": "VFD_Mida_Bookings_20250101.parquet"
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
 												},
 												"SinkTemp": {
-													"folderPath": "Mida2/Bookings/Temp",
-													"fileName": "temp_operation.parquet"
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
 												}
 											}
 										},
@@ -3686,8 +3714,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceProcessed": {},
-												"SinkSummary": {}
+												"SourceProcessed": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SinkSummary": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -3723,14 +3757,17 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
 												"SourceExistingContent": {
-													"folderPath": "Mida2/Bookings/Summary/2025/01",
-													"fileName": "VFD_Mida_BookingsVisitDateSummary_20250101.parquet"
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName.parquet"
 												},
 												"SinkTemp": {
-													"folderPath": "Mida2/Bookings/Temp",
-													"fileName": "temp_operation.parquet"
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
 												}
 											}
 										},
@@ -3988,8 +4025,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceHistorical": {},
-												"SinkTemp": {}
+												"SourceHistorical": {
+													"folderPath": "@pipeline().parameters.historicalFolderPath",
+													"fileName": "@pipeline().parameters.historicalFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -4145,8 +4188,14 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceSummaryFile": {},
-												"SinkTemp": {}
+												"SourceSummaryFile": {
+													"folderPath": "@pipeline().parameters.summaryFolderPath",
+													"fileName": "@pipeline().parameters.summaryFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -4298,14 +4347,17 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
 												"SourceExistingContent": {
-													"folderPath": "Mida2/Bookings/Complete/2025/01",
-													"fileName": "VFD_Mida_Bookings_20250101.parquet"
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
 												},
 												"SinkTemp": {
-													"folderPath": "Mida2/Bookings/Temp",
-													"fileName": "temp_operation.parquet"
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
 												}
 											}
 										},
@@ -4566,9 +4618,18 @@
 												}
 											},
 											"datasetParameters": {
-												"SourceNewRecord": {},
-												"SourceExistingContent": {},
-												"SinkTemp": {}
+												"SourceNewRecord": {
+													"folderPath": "@pipeline().parameters.processedFolderPath",
+													"fileName": "@pipeline().parameters.processedFileName"
+												},
+												"SourceExistingContent": {
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
+												},
+												"SinkTemp": {
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
+												}
 											}
 										},
 										"staging": {},
@@ -12731,13 +12792,10 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+							"referenceName": "VFD_PL_DuomoWiFi_Daily",
 							"type": "PipelineReference"
 						},
-						"parameters": {
-							"p_dateStart": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStart')]",
-							"p_dateStop": "[parameters('VFD_TRG_WiFi_Daily_properties_VFD_PL_DuomoWiFi_Extract_Transform_parameters_p_dateStop')]"
-						}
+						"parameters": {}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -12759,7 +12817,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Daily')]"
 			]
 		},
 		{
@@ -12773,7 +12831,7 @@
 						"location": "AutoResolve",
 						"dataFlowProperties": {
 							"computeType": "General",
-							"coreCount": 48,
+							"coreCount": 8,
 							"timeToLive": 10,
 							"cleanup": false,
 							"customProperties": []
@@ -16587,6 +16645,87 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline wrapper per esecuzione giornaliera automatica - usa SEMPRE la data di ieri",
+				"activities": [
+					{
+						"name": "Set_Yesterday_Date",
+						"description": "Imposta la data di ieri per entrambi i parametri",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "yesterday_date",
+							"value": {
+								"value": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Execute_WiFi_Extract_Transform",
+						"description": "Esegue la pipeline principale con la data di ieri",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Set_Yesterday_Date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"p_dateStart": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								},
+								"p_dateStop": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"yesterday_date": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": [
+					"Daily Execution",
+					"Wrapper Pipeline",
+					"No Parameters"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Extract_Transform')]"
 			]
 		}
 	]
