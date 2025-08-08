@@ -175,7 +175,7 @@
 				"FilterLatestOnly sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     partitionFileNames:['temp_update_summary.parquet'],",
+				"     partitionFileNames:['temp_test_update_summary.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
