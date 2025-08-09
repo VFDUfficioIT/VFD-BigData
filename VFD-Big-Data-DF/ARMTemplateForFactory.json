@@ -3504,9 +3504,9 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Fine"
 									}
@@ -3551,9 +3551,9 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Fine"
 									}
@@ -3713,6 +3713,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida2_Atomic_CREATE_Booking_Complete')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/TestIR')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida2_Atomic_APPEND_Booking_Complete')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Temp_Parquet')]"
 			]

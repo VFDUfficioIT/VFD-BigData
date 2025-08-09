@@ -3454,9 +3454,9 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Fine"
 									}
@@ -3501,9 +3501,9 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Fine"
 									}
