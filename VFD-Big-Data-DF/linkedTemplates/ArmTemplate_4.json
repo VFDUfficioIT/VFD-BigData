@@ -2281,9 +2281,9 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Fine"
 									}
@@ -2332,11 +2332,11 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
-										"traceLevel": "Fine"
+										"traceLevel": "Coarse"
 									}
 								},
 								{
@@ -2365,6 +2365,9 @@
 												"type": "AzureBlobFSReadSettings",
 												"recursive": false,
 												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
 											}
 										},
 										"sink": {

@@ -2317,9 +2317,9 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Fine"
 									}
@@ -2368,11 +2368,11 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "TestIR",
+											"type": "IntegrationRuntimeReference"
 										},
-										"traceLevel": "Fine"
+										"traceLevel": "Coarse"
 									}
 								},
 								{
@@ -2401,6 +2401,9 @@
 												"type": "AzureBlobFSReadSettings",
 												"recursive": false,
 												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
 											}
 										},
 										"sink": {
@@ -2523,6 +2526,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Historical_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida2_Atomic_CREATE_Historical')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/TestIR')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida2_Atomic_APPEND_Historical')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Temp_Parquet')]"
 			]
@@ -5225,7 +5229,7 @@
 									"type": "Expression"
 								},
 								"targetFileName": {
-									"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+									"value": "@concat('booking_summary','.parquet')",
 									"type": "Expression"
 								},
 								"tempFolderPath": "Mida/Bookings/Temp",
@@ -5260,14 +5264,8 @@
 									"type": "Expression"
 								},
 								"operationType": "UPDATE",
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments2025072604.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
 									"type": "Expression"
@@ -16092,7 +16090,7 @@
 						"FilterLatestOnly sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
-						"     partitionFileNames:['temp_update_summary.parquet'],",
+						"     partitionFileNames:['temp_test_update_summary.parquet'],",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",

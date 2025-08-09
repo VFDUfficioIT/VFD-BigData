@@ -1331,7 +1331,7 @@
 									"type": "Expression"
 								},
 								"targetFileName": {
-									"value": "@concat('VFD_Mida_Test_Summary_', variables('testFileDate'), '.parquet')",
+									"value": "@concat('booking_summary','.parquet')",
 									"type": "Expression"
 								},
 								"tempFolderPath": "Mida/Bookings/Temp",
@@ -1366,14 +1366,8 @@
 									"type": "Expression"
 								},
 								"operationType": "UPDATE",
-								"processedFolderPath": {
-									"value": "@concat('Mida/Bookings/Processed/Test/', variables('testDatePath'))",
-									"type": "Expression"
-								},
-								"processedFileName": {
-									"value": "@concat('VFD_Mida_Test_Processed_Updated_', variables('testFileDate'), '.parquet')",
-									"type": "Expression"
-								},
+								"processedFolderPath": "Mida/Bookings/2025/07",
+								"processedFileName": "export_vw_summary_reservationPayments2025072604.parquet",
 								"targetFolderPath": {
 									"value": "@concat('Mida/Bookings/Historical/Test/', variables('testDatePath'))",
 									"type": "Expression"
