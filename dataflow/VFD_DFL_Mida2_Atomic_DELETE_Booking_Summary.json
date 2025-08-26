@@ -26,29 +26,19 @@
 			],
 			"transformations": [
 				{
-					"name": "FilterExcludeRecord"
+					"name": "FilterOutDeletedRecord"
 				}
 			],
 			"scriptLines": [
 				"parameters{",
-				"     reservationCode as string",
+				"     row_id as string",
 				"}",
-				"source(output(",
-				"          reservation_code as string,",
-				"          priceList as string,",
-				"          channel_label as string,",
-				"          pax_quantity as integer,",
-				"          insertTimestamp as date,",
-				"          updateTimestamp as date,",
-				"          reservation_amount as decimal(10,2),",
-				"          visitDate as date",
-				"     ),",
-				"     allowSchemaDrift: true,",
+				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet') ~> SourceExistingContent",
-				"SourceExistingContent filter(reservation_code != $reservationCode) ~> FilterExcludeRecord",
-				"FilterExcludeRecord sink(allowSchemaDrift: true,",
+				"SourceExistingContent filter(row_id != $row_id) ~> FilterOutDeletedRecord",
+				"FilterOutDeletedRecord sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
 				"     partitionFileNames:['temp_delete_summary.parquet'],",
