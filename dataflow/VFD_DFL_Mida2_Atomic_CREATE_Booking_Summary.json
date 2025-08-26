@@ -83,6 +83,7 @@
 				"SelectSummaryFields sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
+				"          row_id as string,",
 				"          reservation_code as string,",
 				"          priceList as string,",
 				"          channel_label as string,",

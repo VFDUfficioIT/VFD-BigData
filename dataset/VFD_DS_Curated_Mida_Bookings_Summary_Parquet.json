@@ -19,7 +19,8 @@
 			"name": "Mida2/Bookings"
 		},
 		"annotations": [
-			"File summary prenotazioni - subset campi per analytics - partizionato per data visita"
+			"File summary prenotazioni - subset campi per analytics - partizionato per data visita",
+			"Include row_id come chiave primaria per operazioni atomiche"
 		],
 		"type": "Parquet",
 		"typeProperties": {
@@ -38,6 +39,10 @@
 			"compressionCodec": "snappy"
 		},
 		"schema": [
+			{
+				"name": "row_id",
+				"type": "UTF8"
+			},
 			{
 				"name": "reservation_code",
 				"type": "UTF8"

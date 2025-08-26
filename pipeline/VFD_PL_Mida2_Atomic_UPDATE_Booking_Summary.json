@@ -4,8 +4,8 @@
 		"description": "Pipeline atomica per aggiornamento di una prenotazione nel file summary",
 		"activities": [
 			{
-				"name": "Check Summary File Exists",
-				"type": "GetMetadata",
+				"name": "Update Summary Record",
+				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -16,229 +16,231 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-						"type": "DatasetReference",
+					"dataflow": {
+						"referenceName": "VFD_DFL_Mida2_Atomic_UPDATE_Booking_Summary",
+						"type": "DataFlowReference",
 						"parameters": {
-							"folderPath": "@pipeline().parameters.targetFolderPath",
-							"fileName": "@pipeline().parameters.targetFileName"
+							"row_id": {
+								"value": "'@{pipeline().parameters.row_id}'",
+								"type": "Expression"
+							},
+							"reservation_code": {
+								"value": "'@{pipeline().parameters.reservation_code}'",
+								"type": "Expression"
+							},
+							"priceList": {
+								"value": "'@{pipeline().parameters.priceList}'",
+								"type": "Expression"
+							},
+							"channel_label": {
+								"value": "'@{pipeline().parameters.channel_label}'",
+								"type": "Expression"
+							},
+							"pax_quantity": {
+								"value": "@pipeline().parameters.pax_quantity",
+								"type": "Expression"
+							},
+							"insertTimestamp": {
+								"value": "@pipeline().parameters.insertTimestamp",
+								"type": "Expression"
+							},
+							"updateTimestamp": {
+								"value": "@pipeline().parameters.updateTimestamp",
+								"type": "Expression"
+							},
+							"reservation_amount": {
+								"value": "@pipeline().parameters.reservation_amount",
+								"type": "Expression"
+							},
+							"visitDate": {
+								"value": "@pipeline().parameters.visitDate",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"SourceExistingContent": {
+								"folderPath": {
+									"value": "@pipeline().parameters.targetFolderPath",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@pipeline().parameters.targetFileName",
+									"type": "Expression"
+								}
+							},
+							"SinkTemp": {
+								"folderPath": {
+									"value": "@pipeline().parameters.tempFolderPath",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@pipeline().parameters.tempFileName",
+									"type": "Expression"
+								}
+							}
 						}
 					},
-					"fieldList": [
-						"exists"
-					],
-					"storeSettings": {
-						"type": "AzureBlobFSReadSettings",
-						"recursive": true,
-						"enablePartitionDiscovery": false
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
 					},
-					"formatSettings": {
-						"type": "ParquetReadSettings"
-					}
+					"traceLevel": "Fine"
 				}
 			},
 			{
-				"name": "If Summary Exists Then Update",
-				"type": "IfCondition",
+				"name": "Copy Temp To Final",
+				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Check Summary File Exists",
+						"activity": "Update Summary Record",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					}
 				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
-					"expression": {
-						"value": "@activity('Check Summary File Exists').output.exists",
-						"type": "Expression"
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"enablePartitionDiscovery": false
+						}
 					},
-					"ifFalseActivities": [
-						{
-							"name": "Fail - Summary File Not Found",
-							"type": "Fail",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"message": "UPDATE_SUMMARY_FILE_NOT_FOUND: Cannot update booking in non-existing summary file",
-								"errorCode": "UPDATE_SUMMARY_FILE_NOT_FOUND"
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@pipeline().parameters.tempFolderPath",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@pipeline().parameters.tempFileName",
+								"type": "Expression"
 							}
 						}
-					],
-					"ifTrueActivities": [
-						{
-							"name": "Update Record In Summary",
-							"type": "ExecuteDataFlow",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@pipeline().parameters.targetFolderPath",
+								"type": "Expression"
 							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataflow": {
-									"referenceName": "VFD_DFL_Mida2_Atomic_UPDATE_Booking_Summary",
-									"type": "DataFlowReference",
-									"parameters": {
-										"reservationCode": {
-											"value": "'@{pipeline().parameters.reservationCode}'",
-											"type": "Expression"
-										}
-									},
-									"datasetParameters": {
-										"SourceNewRecord": {
-											"folderPath": "@pipeline().parameters.processedFolderPath",
-											"fileName": "@pipeline().parameters.processedFileName"
-										},
-										"SourceExistingContent": {
-											"folderPath": "@pipeline().parameters.targetFolderPath",
-											"fileName": "@pipeline().parameters.targetFileName"
-										},
-										"SinkTemp": {
-											"folderPath": "@pipeline().parameters.tempFolderPath",
-											"fileName": "@pipeline().parameters.tempFileName"
-										}
-									}
-								},
-								"compute": {
-									"coreCount": 8,
-									"computeType": "General"
-								},
-								"traceLevel": "Fine"
-							}
-						},
-						{
-							"name": "Copy Updated Summary To Final",
-							"type": "Copy",
-							"dependsOn": [
-								{
-									"activity": "Update Record In Summary",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "ParquetSource",
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": false,
-										"enablePartitionDiscovery": false
-									}
-								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false
-							},
-							"inputs": [
-								{
-									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "@pipeline().parameters.tempFileName"
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@pipeline().parameters.targetFolderPath",
-										"fileName": "@pipeline().parameters.targetFileName"
-									}
-								}
-							]
-						},
-						{
-							"name": "Delete Update Summary Temp",
-							"type": "Delete",
-							"dependsOn": [
-								{
-									"activity": "Copy Updated Summary To Final",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataset": {
-									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "@pipeline().parameters.tempFileName"
-									}
-								},
-								"enableLogging": false,
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
-									"enablePartitionDiscovery": false
-								}
+							"fileName": {
+								"value": "@pipeline().parameters.targetFileName",
+								"type": "Expression"
 							}
 						}
-					]
+					}
+				]
+			},
+			{
+				"name": "Delete Temp File",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Copy Temp To Final",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@pipeline().parameters.tempFolderPath",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@pipeline().parameters.tempFileName",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": false,
+						"enablePartitionDiscovery": false
+					}
 				}
 			}
 		],
 		"parameters": {
-			"reservationCode": {
-				"type": "String",
-				"defaultValue": "RVFDTEST001"
+			"row_id": {
+				"type": "string"
 			},
-			"processedFolderPath": {
-				"type": "String",
-				"defaultValue": "Mida/Bookings/Processed/2025/01"
+			"reservation_code": {
+				"type": "string"
 			},
-			"processedFileName": {
-				"type": "String",
-				"defaultValue": "VFD_Mida_Processed_20250101.parquet"
+			"priceList": {
+				"type": "string"
+			},
+			"channel_label": {
+				"type": "string"
+			},
+			"pax_quantity": {
+				"type": "int"
+			},
+			"insertTimestamp": {
+				"type": "string"
+			},
+			"updateTimestamp": {
+				"type": "string"
+			},
+			"reservation_amount": {
+				"type": "float"
+			},
+			"visitDate": {
+				"type": "string"
 			},
 			"targetFolderPath": {
-				"type": "String",
-				"defaultValue": "Mida/Bookings/VisitDateSummary/2025/01"
+				"type": "string"
 			},
 			"targetFileName": {
-				"type": "String",
-				"defaultValue": "VFD_Mida_BookingsVisitDateSummary_20250101.parquet"
+				"type": "string"
 			},
 			"tempFolderPath": {
-				"type": "String",
-				"defaultValue": "Mida/Bookings/Temp"
+				"type": "string"
 			},
 			"tempFileName": {
-				"type": "String",
-				"defaultValue": "temp_update_summary.parquet"
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -246,7 +248,7 @@
 		},
 		"annotations": [
 			"Pipeline atomica per aggiornamento prenotazioni summary",
-			"Fallisce se il file target non esiste"
+			"Riceve solo i 9 campi del summary"
 		]
 	}
 }

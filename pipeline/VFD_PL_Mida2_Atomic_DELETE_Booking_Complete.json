@@ -1,11 +1,11 @@
 {
 	"name": "VFD_PL_Mida2_Atomic_DELETE_Booking_Complete",
 	"properties": {
-		"description": "Pipeline atomica per rimozione di una prenotazione dal file completo",
+		"description": "Pipeline atomica per rimozione di una prenotazione dal file completo - riceve solo row_id",
 		"activities": [
 			{
-				"name": "Check Complete File Exists",
-				"type": "GetMetadata",
+				"name": "Delete Record From Complete",
+				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -16,341 +16,123 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
-						"type": "DatasetReference",
+					"dataflow": {
+						"referenceName": "VFD_DFL_Mida2_Atomic_DELETE_Booking_Complete",
+						"type": "DataFlowReference",
 						"parameters": {
-							"folderPath": "@pipeline().parameters.targetFolderPath",
-							"fileName": "@pipeline().parameters.targetFileName"
-						}
-					},
-					"fieldList": [
-						"exists"
-					],
-					"storeSettings": {
-						"type": "AzureBlobFSReadSettings",
-						"recursive": true,
-						"enablePartitionDiscovery": false
-					},
-					"formatSettings": {
-						"type": "ParquetReadSettings"
-					}
-				}
-			},
-			{
-				"name": "If File Exists Then Process Else Log",
-				"type": "IfCondition",
-				"dependsOn": [
-					{
-						"activity": "Check Complete File Exists",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"expression": {
-						"value": "@activity('Check Complete File Exists').output.exists",
-						"type": "Expression"
-					},
-					"ifFalseActivities": [
-						{
-							"name": "Set File Exists False",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "fileExists",
-								"value": "false"
+							"row_id": {
+								"value": "'@{pipeline().parameters.row_id}'",
+								"type": "Expression"
 							}
 						},
-						{
-							"name": "Log - Complete File Not Found",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Set File Exists False",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "warningMessage",
-								"value": "DELETE_COMPLETE_FILE_NOT_FOUND: Cannot delete from non-existing file"
-							}
-						}
-					],
-					"ifTrueActivities": [
-						{
-							"name": "Set File Exists True",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "fileExists",
-								"value": "true"
-							}
-						},
-						{
-							"name": "Delete Record From File",
-							"type": "ExecuteDataFlow",
-							"dependsOn": [
-								{
-									"activity": "Set File Exists True",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataflow": {
-									"referenceName": "VFD_DFL_Mida2_Atomic_DELETE_Booking_Complete",
-									"type": "DataFlowReference",
-									"parameters": {
-										"reservationCode": {
-											"value": "'@{pipeline().parameters.reservationCode}'",
-											"type": "Expression"
-										}
-									},
-									"datasetParameters": {
-										"SourceExistingContent": {
-											"folderPath": "@pipeline().parameters.targetFolderPath",
-											"fileName": "@pipeline().parameters.targetFileName"
-										},
-										"SinkTemp": {
-											"folderPath": "@pipeline().parameters.tempFolderPath",
-											"fileName": "@pipeline().parameters.tempFileName"
-										}
-									}
+						"datasetParameters": {
+							"SourceExistingContent": {
+								"folderPath": {
+									"value": "@pipeline().parameters.targetFolderPath",
+									"type": "Expression"
 								},
-								"compute": {
-									"coreCount": 8,
-									"computeType": "General"
-								},
-								"traceLevel": "Fine"
-							}
-						},
-						{
-							"name": "Get Temp File Size",
-							"type": "GetMetadata",
-							"dependsOn": [
-								{
-									"activity": "Delete Record From File",
-									"dependencyConditions": [
-										"Succeeded"
-									]
+								"fileName": {
+									"value": "@pipeline().parameters.targetFileName",
+									"type": "Expression"
 								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
 							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataset": {
-									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "@pipeline().parameters.tempFileName"
-									}
+							"SinkTemp": {
+								"folderPath": {
+									"value": "@pipeline().parameters.tempFolderPath",
+									"type": "Expression"
 								},
-								"fieldList": [
-									"size"
-								],
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							}
-						},
-						{
-							"name": "Set Temp File Size",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Get Temp File Size",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "tempFileSize",
-								"value": {
-									"value": "@string(activity('Get Temp File Size').output.size)",
+								"fileName": {
+									"value": "@pipeline().parameters.tempFileName",
 									"type": "Expression"
 								}
 							}
 						}
-					]
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
 				}
 			},
 			{
-				"name": "If Temp File Not Empty Replace File",
-				"type": "IfCondition",
+				"name": "Copy Temp To Final",
+				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "If File Exists Then Process Else Log",
+						"activity": "Delete Record From Complete",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					}
 				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
-					"expression": {
-						"value": "@and(greater(int(variables('tempFileSize')), 1000), equals(variables('fileExists'), 'true'))",
-						"type": "Expression"
-					},
-					"ifTrueActivities": [
-						{
-							"name": "Replace Complete File",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "ParquetSource",
-									"storeSettings": {
-										"type": "AzureBlobFSReadSettings",
-										"recursive": false,
-										"enablePartitionDiscovery": false
-									}
-								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false
-							},
-							"inputs": [
-								{
-									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "@pipeline().parameters.tempFileName"
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@pipeline().parameters.targetFolderPath",
-										"fileName": "@pipeline().parameters.targetFileName"
-									}
-								}
-							]
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"enablePartitionDiscovery": false
 						}
-					]
-				}
-			},
-			{
-				"name": "If Temp File Empty Delete Original",
-				"type": "IfCondition",
-				"dependsOn": [
-					{
-						"activity": "If Temp File Not Empty Replace File",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"expression": {
-						"value": "@and(lessOrEqual(int(variables('tempFileSize')), 1000), equals(variables('fileExists'), 'true'))",
-						"type": "Expression"
 					},
-					"ifTrueActivities": [
-						{
-							"name": "Delete Empty Complete File",
-							"type": "Delete",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@pipeline().parameters.tempFolderPath",
+								"type": "Expression"
 							},
-							"userProperties": [],
-							"typeProperties": {
-								"dataset": {
-									"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"folderPath": "@pipeline().parameters.targetFolderPath",
-										"fileName": "@pipeline().parameters.targetFileName"
-									}
-								},
-								"enableLogging": false,
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
-									"enablePartitionDiscovery": false
-								}
+							"fileName": {
+								"value": "@pipeline().parameters.tempFileName",
+								"type": "Expression"
 							}
 						}
-					]
-				}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": {
+								"value": "@pipeline().parameters.targetFolderPath",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@pipeline().parameters.targetFileName",
+								"type": "Expression"
+							}
+						}
+					}
+				]
 			},
 			{
-				"name": "Delete Temp File Cleanup",
+				"name": "Delete Temp File",
 				"type": "Delete",
 				"dependsOn": [
 					{
-						"activity": "If Temp File Empty Delete Original",
+						"activity": "Copy Temp To Final",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -369,8 +151,14 @@
 						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": "@pipeline().parameters.tempFolderPath",
-							"fileName": "@pipeline().parameters.tempFileName"
+							"folderPath": {
+								"value": "@pipeline().parameters.tempFolderPath",
+								"type": "Expression"
+							},
+							"fileName": {
+								"value": "@pipeline().parameters.tempFileName",
+								"type": "Expression"
+							}
 						}
 					},
 					"enableLogging": false,
@@ -383,38 +171,20 @@
 			}
 		],
 		"parameters": {
-			"reservationCode": {
-				"type": "String",
-				"defaultValue": "RVFDTEST001"
+			"row_id": {
+				"type": "string"
 			},
 			"targetFolderPath": {
-				"type": "String",
-				"defaultValue": "Mida/Bookings/Complete/2025/01"
+				"type": "string"
 			},
 			"targetFileName": {
-				"type": "String",
-				"defaultValue": "VFD_Mida_Bookings_20250101.parquet"
+				"type": "string"
 			},
 			"tempFolderPath": {
-				"type": "String",
-				"defaultValue": "Mida/Bookings/Temp"
+				"type": "string"
 			},
 			"tempFileName": {
-				"type": "String",
-				"defaultValue": "temp_delete_complete.parquet"
-			}
-		},
-		"variables": {
-			"fileExists": {
-				"type": "String",
-				"defaultValue": "false"
-			},
-			"tempFileSize": {
-				"type": "String",
-				"defaultValue": "0"
-			},
-			"warningMessage": {
-				"type": "String"
+				"type": "string"
 			}
 		},
 		"folder": {
@@ -422,8 +192,8 @@
 		},
 		"annotations": [
 			"Pipeline atomica per rimozione prenotazioni complete",
-			"Usa logica appiattita per evitare If Condition annidate",
-			"Gestisce automaticamente file vuoti dopo cancellazione"
+			"Riceve solo row_id come parametro",
+			"Filtra via il record e ricrea il file"
 		]
 	}
 }
