@@ -94,7 +94,7 @@
 											"type": "Expression"
 										},
 										"visitDate": {
-											"value": "'@pipeline().parameters.visitDate'",
+											"value": "@pipeline().parameters.visitDate",
 											"type": "Expression"
 										},
 										"reservationPayment_guid": {
@@ -166,11 +166,11 @@
 											"type": "Expression"
 										},
 										"paymentLimitDate": {
-											"value": "'@pipeline().parameters.paymentLimitDate'",
+											"value": "@pipeline().parameters.paymentLimitDate",
 											"type": "Expression"
 										},
 										"paymentDate": {
-											"value": "'@pipeline().parameters.paymentDate'",
+											"value": "@pipeline().parameters.paymentDate",
 											"type": "Expression"
 										},
 										"refund": {
