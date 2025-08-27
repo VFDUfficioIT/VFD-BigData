@@ -190,11 +190,11 @@
 											"type": "Expression"
 										},
 										"insertTimestamp": {
-											"value": "'@pipeline().parameters.insertTimestamp'",
+											"value": "@pipeline().parameters.insertTimestamp",
 											"type": "Expression"
 										},
 										"updateTimestamp": {
-											"value": "'@pipeline().parameters.updateTimestamp'",
+											"value": "@pipeline().parameters.updateTimestamp",
 											"type": "Expression"
 										},
 										"owner": {
@@ -390,7 +390,7 @@
 											"type": "Expression"
 										},
 										"olapUpdateTimestamp": {
-											"value": "'@pipeline().parameters.olapUpdateTimestamp'",
+											"value": "@pipeline().parameters.olapUpdateTimestamp",
 											"type": "Expression"
 										},
 										"row_id": {
