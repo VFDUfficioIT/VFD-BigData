@@ -1000,10 +1000,10 @@
 				"type": "string"
 			},
 			"bankAccount_guid": {
-				"type": "float"
+				"type": "string"
 			},
 			"bankAccount_label": {
-				"type": "float"
+				"type": "string"
 			},
 			"channel_guid": {
 				"type": "string"
@@ -1018,7 +1018,7 @@
 				"type": "string"
 			},
 			"extra_guid": {
-				"type": "float"
+				"type": "string"
 			},
 			"priceList": {
 				"type": "string"
