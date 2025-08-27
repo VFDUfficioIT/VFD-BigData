@@ -3931,11 +3931,11 @@
 											"type": "DataFlowReference",
 											"parameters": {
 												"guid_pk": {
-													"value": "'@pipeline().parameters.guid_pk'",
+													"value": "@pipeline().parameters.guid_pk",
 													"type": "Expression"
 												},
 												"reservation_progressiveCode": {
-													"value": "'@pipeline().parameters.reservation_progressiveCode'",
+													"value": "@pipeline().parameters.reservation_progressiveCode",
 													"type": "Expression"
 												},
 												"reservation_code": {
