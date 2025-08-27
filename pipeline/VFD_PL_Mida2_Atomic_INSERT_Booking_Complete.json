@@ -232,6 +232,14 @@
 											"folderPath": "@pipeline().parameters.targetFolderPath",
 											"fileName": "@pipeline().parameters.targetFileName"
 										}
+									},
+									"linkedServiceParameters": {
+										"SinkComplete": {
+											"schemaLinkedService": {
+												"folderPath": "Mida2/Bookings/Complete/2025/01",
+												"fileName": "VFD_Mida_Bookings_20250101.parquet"
+											}
+										}
 									}
 								},
 								"compute": {
