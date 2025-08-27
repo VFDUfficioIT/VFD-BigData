@@ -5018,7 +5018,8 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida2_Atomic_CREATE_Booking_Complete')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Mida2_Atomic_APPEND_Booking_Complete')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Temp_Parquet')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Temp_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
 			]
 		},
 		{
@@ -11889,430 +11890,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "string",
-						"defaultValue": "Mida2/Bookings/Complete/2025/01"
-					},
-					"fileName": {
-						"type": "string",
-						"defaultValue": "VFD_Mida_Bookings_20250101.parquet"
-					}
-				},
-				"folder": {
-					"name": "Mida2/Bookings"
-				},
-				"annotations": [
-					"File completo prenotazioni - tutti i campi - partizionato per data inserimento"
-				],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "guid_pk",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_progressiveCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_code",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_status",
-						"type": "INT32"
-					},
-					{
-						"name": "invoiceRequired",
-						"type": "UTF8"
-					},
-					{
-						"name": "customer",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "visitDate",
-						"type": "DATE"
-					},
-					{
-						"name": "reservationPayment_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "parentPayment_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "sliced",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_email",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentCondition",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "reservation_amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "reservation_amountTax",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "status",
-						"type": "INT32"
-					},
-					{
-						"name": "status_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "stamp",
-						"type": "UTF8"
-					},
-					{
-						"name": "notes",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "transactionType",
-						"type": "UTF8"
-					},
-					{
-						"name": "transactionType_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentLimitDate",
-						"type": "DATE"
-					},
-					{
-						"name": "paymentDate",
-						"type": "DATE"
-					},
-					{
-						"name": "refund",
-						"type": "UTF8"
-					},
-					{
-						"name": "refunded",
-						"type": "UTF8"
-					},
-					{
-						"name": "convention_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "receiptCode",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "insertTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "updateTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "owner",
-						"type": "UTF8"
-					},
-					{
-						"name": "owner_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "sessionId",
-						"type": "UTF8"
-					},
-					{
-						"name": "terminal_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "terminalGroup_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "gateway_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "gateway_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "transactionID",
-						"type": "UTF8"
-					},
-					{
-						"name": "bankAccount_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "bankAccount_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "channel_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "channel_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "channelType",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "extra_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "priceList",
-						"type": "UTF8"
-					},
-					{
-						"name": "event",
-						"type": "UTF8"
-					},
-					{
-						"name": "detailType",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_count",
-						"type": "INT32"
-					},
-					{
-						"name": "paymentDetail_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_payingPartecipants",
-						"type": "INT32"
-					},
-					{
-						"name": "detail_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "tickets_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "pax_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "costCenter_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "costCenter_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_receipt",
-						"type": "INT32"
-					},
-					{
-						"name": "object_taxCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_taxNotes",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "object_taxPercentage",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountNet",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPresale",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountSold",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPayed",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPending",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountCanceled",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "externalId",
-						"type": "UTF8"
-					},
-					{
-						"name": "amountRefunded",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "invoiceSummary",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "eventCalendar_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "passDetail_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "paymentCostCenter_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "organization_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "venue_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "olapUpdateTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "row_id",
-						"type": "UTF8"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Bookings_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -13569,428 +13146,6 @@
 					{
 						"name": "wifiArea",
 						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Bookings_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "String",
-						"defaultValue": "Mida/Bookings/Processed/2025/01"
-					},
-					"fileName": {
-						"type": "String",
-						"defaultValue": "VFD_Mida_Processed_20250101.parquet\""
-					}
-				},
-				"folder": {
-					"name": "Mida/Bookings"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "guid_pk",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_progressiveCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_code",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_status",
-						"type": "INT32"
-					},
-					{
-						"name": "invoiceRequired",
-						"type": "UTF8"
-					},
-					{
-						"name": "customer",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "visitDate",
-						"type": "DATE"
-					},
-					{
-						"name": "reservationPayment_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "parentPayment_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "sliced",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_email",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentCondition",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "reservation_amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "reservation_amountTax",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "status",
-						"type": "INT32"
-					},
-					{
-						"name": "status_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "stamp",
-						"type": "UTF8"
-					},
-					{
-						"name": "notes",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "transactionType",
-						"type": "UTF8"
-					},
-					{
-						"name": "transactionType_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentLimitDate",
-						"type": "DATE"
-					},
-					{
-						"name": "paymentDate",
-						"type": "DATE"
-					},
-					{
-						"name": "refund",
-						"type": "UTF8"
-					},
-					{
-						"name": "refunded",
-						"type": "UTF8"
-					},
-					{
-						"name": "convention_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "receiptCode",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "insertTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "updateTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "owner",
-						"type": "UTF8"
-					},
-					{
-						"name": "owner_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "sessionId",
-						"type": "UTF8"
-					},
-					{
-						"name": "terminal_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "terminalGroup_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "gateway_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "gateway_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "transactionID",
-						"type": "UTF8"
-					},
-					{
-						"name": "bankAccount_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "bankAccount_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "channel_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "channel_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "channelType",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "extra_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "priceList",
-						"type": "UTF8"
-					},
-					{
-						"name": "event",
-						"type": "UTF8"
-					},
-					{
-						"name": "detailType",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_count",
-						"type": "INT32"
-					},
-					{
-						"name": "paymentDetail_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_payingPartecipants",
-						"type": "INT32"
-					},
-					{
-						"name": "detail_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "tickets_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "pax_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "costCenter_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "costCenter_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_receipt",
-						"type": "INT32"
-					},
-					{
-						"name": "object_taxCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_taxNotes",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "object_taxPercentage",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountNet",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPresale",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountSold",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPayed",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPending",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountCanceled",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "externalId",
-						"type": "UTF8"
-					},
-					{
-						"name": "amountRefunded",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "invoiceSummary",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "eventCalendar_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "passDetail_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "paymentCostCenter_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "organization_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "venue_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "olapUpdateTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "row_id",
-						"type": "UTF8"
 					}
 				]
 			},
@@ -16802,411 +15957,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida2_Atomic_CREATE_Booking_Complete')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "Mida2/Bookings/Atomic"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"linkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							},
-							"name": "DummySource"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkComplete"
-						}
-					],
-					"transformations": [
-						{
-							"name": "CreateRecordFromParameters"
-						},
-						{
-							"name": "SelectFinalColumns"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     guid_pk as string,",
-						"     reservation_progressiveCode as string,",
-						"     reservation_code as string,",
-						"     reservation_status as integer,",
-						"     invoiceRequired as string,",
-						"     customer as decimal(10,2),",
-						"     visitDate as date,",
-						"     reservationPayment_guid as string,",
-						"     parentPayment_guid as string,",
-						"     sliced as string,",
-						"     reservation_guid as string,",
-						"     group_guid as string,",
-						"     group_label as string,",
-						"     group_email as string,",
-						"     paymentCode as string,",
-						"     paymentCondition as decimal(10,2),",
-						"     reservation_amount as decimal(10,2),",
-						"     reservation_amountTax as decimal(10,2),",
-						"     status as integer,",
-						"     status_text as string,",
-						"     stamp as string,",
-						"     notes as string,",
-						"     transactionType as string,",
-						"     transactionType_text as string,",
-						"     paymentLimitDate as timestamp,",
-						"     paymentDate as timestamp,",
-						"     refund as string,",
-						"     refunded as string,",
-						"     convention_label as string,",
-						"     receiptCode as string,",
-						"     insertTimestamp as timestamp,",
-						"     updateTimestamp as timestamp,",
-						"     owner as string,",
-						"     owner_text as string,",
-						"     sessionId as string,",
-						"     terminal_label as string,",
-						"     terminalGroup_label as string,",
-						"     gateway_guid as string,",
-						"     gateway_label as string,",
-						"     transactionID as string,",
-						"     bankAccount_guid as decimal(10,2),",
-						"     bankAccount_label as decimal(10,2),",
-						"     channel_guid as string,",
-						"     channel_label as string,",
-						"     channelType as string,",
-						"     detail_guid as string,",
-						"     extra_guid as decimal(10,2),",
-						"     priceList as string,",
-						"     event as string,",
-						"     detailType as string,",
-						"     detail_text as string,",
-						"     detail_label as string,",
-						"     detail_count as integer,",
-						"     paymentDetail_guid as string,",
-						"     detail_payingPartecipants as integer,",
-						"     detail_quantity as integer,",
-						"     tickets_quantity as integer,",
-						"     pax_quantity as integer,",
-						"     costCenter_guid as string,",
-						"     costCenter_label as string,",
-						"     object_receipt as integer,",
-						"     object_taxCode as string,",
-						"     object_taxNotes as string,",
-						"     object_amount as decimal(10,2),",
-						"     object_taxPercentage as decimal(10,2),",
-						"     amount as decimal(10,2),",
-						"     amountNet as decimal(10,2),",
-						"     amountPresale as decimal(10,2),",
-						"     amountSold as decimal(10,2),",
-						"     amountPayed as decimal(10,2),",
-						"     amountPending as decimal(10,2),",
-						"     amountCanceled as decimal(10,2),",
-						"     externalId as string,",
-						"     amountRefunded as decimal(10,2),",
-						"     invoiceSummary as string,",
-						"     eventCalendar_guid as string,",
-						"     passDetail_guid as string,",
-						"     paymentCostCenter_guid as string,",
-						"     organization_guid as string,",
-						"     venue_guid as string,",
-						"     olapUpdateTimestamp as timestamp,",
-						"     row_id as string",
-						"}",
-						"source(output(",
-						"          dummy as integer",
-						"     ),",
-						"     useSchema: false,",
-						"     allowSchemaDrift: false,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'delimited',",
-						"     fileSystem: 'dummy',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: true,",
-						"     data: 'dummy\\n1') ~> DummySource",
-						"DummySource derive(guid_pk = $guid_pk,",
-						"          reservation_progressiveCode = $reservation_progressiveCode,",
-						"          reservation_code = $reservation_code,",
-						"          reservation_status = $reservation_status,",
-						"          invoiceRequired = $invoiceRequired,",
-						"          customer = $customer,",
-						"          visitDate = $visitDate,",
-						"          reservationPayment_guid = $reservationPayment_guid,",
-						"          parentPayment_guid = $parentPayment_guid,",
-						"          sliced = $sliced,",
-						"          reservation_guid = $reservation_guid,",
-						"          group_guid = $group_guid,",
-						"          group_label = $group_label,",
-						"          group_email = $group_email,",
-						"          paymentCode = $paymentCode,",
-						"          paymentCondition = $paymentCondition,",
-						"          reservation_amount = $reservation_amount,",
-						"          reservation_amountTax = $reservation_amountTax,",
-						"          status = $status,",
-						"          status_text = $status_text,",
-						"          stamp = $stamp,",
-						"          notes = $notes,",
-						"          transactionType = $transactionType,",
-						"          transactionType_text = $transactionType_text,",
-						"          paymentLimitDate = $paymentLimitDate,",
-						"          paymentDate = $paymentDate,",
-						"          refund = $refund,",
-						"          refunded = $refunded,",
-						"          convention_label = $convention_label,",
-						"          receiptCode = $receiptCode,",
-						"          insertTimestamp = $insertTimestamp,",
-						"          updateTimestamp = $updateTimestamp,",
-						"          owner = $owner,",
-						"          owner_text = $owner_text,",
-						"          sessionId = $sessionId,",
-						"          terminal_label = $terminal_label,",
-						"          terminalGroup_label = $terminalGroup_label,",
-						"          gateway_guid = $gateway_guid,",
-						"          gateway_label = $gateway_label,",
-						"          transactionID = $transactionID,",
-						"          bankAccount_guid = $bankAccount_guid,",
-						"          bankAccount_label = $bankAccount_label,",
-						"          channel_guid = $channel_guid,",
-						"          channel_label = $channel_label,",
-						"          channelType = $channelType,",
-						"          detail_guid = $detail_guid,",
-						"          extra_guid = $extra_guid,",
-						"          priceList = $priceList,",
-						"          event = $event,",
-						"          detailType = $detailType,",
-						"          detail_text = $detail_text,",
-						"          detail_label = $detail_label,",
-						"          detail_count = $detail_count,",
-						"          paymentDetail_guid = $paymentDetail_guid,",
-						"          detail_payingPartecipants = $detail_payingPartecipants,",
-						"          detail_quantity = $detail_quantity,",
-						"          tickets_quantity = $tickets_quantity,",
-						"          pax_quantity = $pax_quantity,",
-						"          costCenter_guid = $costCenter_guid,",
-						"          costCenter_label = $costCenter_label,",
-						"          object_receipt = $object_receipt,",
-						"          object_taxCode = $object_taxCode,",
-						"          object_taxNotes = $object_taxNotes,",
-						"          object_amount = $object_amount,",
-						"          object_taxPercentage = $object_taxPercentage,",
-						"          amount = $amount,",
-						"          amountNet = $amountNet,",
-						"          amountPresale = $amountPresale,",
-						"          amountSold = $amountSold,",
-						"          amountPayed = $amountPayed,",
-						"          amountPending = $amountPending,",
-						"          amountCanceled = $amountCanceled,",
-						"          externalId = $externalId,",
-						"          amountRefunded = $amountRefunded,",
-						"          invoiceSummary = $invoiceSummary,",
-						"          eventCalendar_guid = $eventCalendar_guid,",
-						"          passDetail_guid = $passDetail_guid,",
-						"          paymentCostCenter_guid = $paymentCostCenter_guid,",
-						"          organization_guid = $organization_guid,",
-						"          venue_guid = $venue_guid,",
-						"          olapUpdateTimestamp = $olapUpdateTimestamp,",
-						"          row_id = $row_id) ~> CreateRecordFromParameters",
-						"CreateRecordFromParameters select(mapColumn(",
-						"          guid_pk,",
-						"          reservation_progressiveCode,",
-						"          reservation_code,",
-						"          reservation_status,",
-						"          invoiceRequired,",
-						"          customer,",
-						"          visitDate,",
-						"          reservationPayment_guid,",
-						"          parentPayment_guid,",
-						"          sliced,",
-						"          reservation_guid,",
-						"          group_guid,",
-						"          group_label,",
-						"          group_email,",
-						"          paymentCode,",
-						"          paymentCondition,",
-						"          reservation_amount,",
-						"          reservation_amountTax,",
-						"          status,",
-						"          status_text,",
-						"          stamp,",
-						"          notes,",
-						"          transactionType,",
-						"          transactionType_text,",
-						"          paymentLimitDate,",
-						"          paymentDate,",
-						"          refund,",
-						"          refunded,",
-						"          convention_label,",
-						"          receiptCode,",
-						"          insertTimestamp,",
-						"          updateTimestamp,",
-						"          owner,",
-						"          owner_text,",
-						"          sessionId,",
-						"          terminal_label,",
-						"          terminalGroup_label,",
-						"          gateway_guid,",
-						"          gateway_label,",
-						"          transactionID,",
-						"          bankAccount_guid,",
-						"          bankAccount_label,",
-						"          channel_guid,",
-						"          channel_label,",
-						"          channelType,",
-						"          detail_guid,",
-						"          extra_guid,",
-						"          priceList,",
-						"          event,",
-						"          detailType,",
-						"          detail_text,",
-						"          detail_label,",
-						"          detail_count,",
-						"          paymentDetail_guid,",
-						"          detail_payingPartecipants,",
-						"          detail_quantity,",
-						"          tickets_quantity,",
-						"          pax_quantity,",
-						"          costCenter_guid,",
-						"          costCenter_label,",
-						"          object_receipt,",
-						"          object_taxCode,",
-						"          object_taxNotes,",
-						"          object_amount,",
-						"          object_taxPercentage,",
-						"          amount,",
-						"          amountNet,",
-						"          amountPresale,",
-						"          amountSold,",
-						"          amountPayed,",
-						"          amountPending,",
-						"          amountCanceled,",
-						"          externalId,",
-						"          amountRefunded,",
-						"          invoiceSummary,",
-						"          eventCalendar_guid,",
-						"          passDetail_guid,",
-						"          paymentCostCenter_guid,",
-						"          organization_guid,",
-						"          venue_guid,",
-						"          olapUpdateTimestamp,",
-						"          row_id",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> SelectFinalColumns",
-						"SelectFinalColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          guid_pk as string,",
-						"          reservation_progressiveCode as string,",
-						"          reservation_code as string,",
-						"          reservation_status as integer,",
-						"          invoiceRequired as string,",
-						"          customer as decimal(10,2),",
-						"          visitDate as date,",
-						"          reservationPayment_guid as string,",
-						"          parentPayment_guid as string,",
-						"          sliced as string,",
-						"          reservation_guid as string,",
-						"          group_guid as string,",
-						"          group_label as string,",
-						"          group_email as string,",
-						"          paymentCode as string,",
-						"          paymentCondition as decimal(10,2),",
-						"          reservation_amount as decimal(10,2),",
-						"          reservation_amountTax as decimal(10,2),",
-						"          status as integer,",
-						"          status_text as string,",
-						"          stamp as string,",
-						"          notes as decimal(10,2),",
-						"          transactionType as string,",
-						"          transactionType_text as string,",
-						"          paymentLimitDate as date,",
-						"          paymentDate as date,",
-						"          refund as string,",
-						"          refunded as string,",
-						"          convention_label as string,",
-						"          receiptCode as decimal(10,2),",
-						"          insertTimestamp as date,",
-						"          updateTimestamp as date,",
-						"          owner as string,",
-						"          owner_text as string,",
-						"          sessionId as string,",
-						"          terminal_label as decimal(10,2),",
-						"          terminalGroup_label as decimal(10,2),",
-						"          gateway_guid as string,",
-						"          gateway_label as string,",
-						"          transactionID as string,",
-						"          bankAccount_guid as decimal(10,2),",
-						"          bankAccount_label as decimal(10,2),",
-						"          channel_guid as string,",
-						"          channel_label as string,",
-						"          channelType as string,",
-						"          detail_guid as string,",
-						"          extra_guid as decimal(10,2),",
-						"          priceList as string,",
-						"          event as string,",
-						"          detailType as string,",
-						"          detail_text as string,",
-						"          detail_label as string,",
-						"          detail_count as integer,",
-						"          paymentDetail_guid as string,",
-						"          detail_payingPartecipants as integer,",
-						"          detail_quantity as integer,",
-						"          tickets_quantity as integer,",
-						"          pax_quantity as integer,",
-						"          costCenter_guid as string,",
-						"          costCenter_label as string,",
-						"          object_receipt as integer,",
-						"          object_taxCode as string,",
-						"          object_taxNotes as string,",
-						"          object_amount as decimal(10,2),",
-						"          object_taxPercentage as decimal(10,2),",
-						"          amount as decimal(10,2),",
-						"          amountNet as decimal(10,2),",
-						"          amountPresale as decimal(10,2),",
-						"          amountSold as decimal(10,2),",
-						"          amountPayed as decimal(10,2),",
-						"          amountPending as decimal(10,2),",
-						"          amountCanceled as decimal(10,2),",
-						"          externalId as string,",
-						"          amountRefunded as decimal(10,2),",
-						"          invoiceSummary as decimal(10,2),",
-						"          eventCalendar_guid as string,",
-						"          passDetail_guid as decimal(10,2),",
-						"          paymentCostCenter_guid as decimal(10,2),",
-						"          organization_guid as string,",
-						"          venue_guid as string,",
-						"          olapUpdateTimestamp as date,",
-						"          row_id as string",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['booking_complete.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1)) ~> SinkComplete"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida2_Atomic_CREATE_Booking_Summary')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -19827,6 +18577,1237 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "string",
+						"defaultValue": "Mida2/Bookings/Complete/2025/01"
+					},
+					"fileName": {
+						"type": "string",
+						"defaultValue": "VFD_Mida_Bookings_20250101.parquet"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Bookings"
+				},
+				"annotations": [
+					"File completo prenotazioni - tutti i campi - partizionato per data inserimento"
+				],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "guid_pk",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_progressiveCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_code",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_status",
+						"type": "INT32"
+					},
+					{
+						"name": "invoiceRequired",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "visitDate",
+						"type": "DATE"
+					},
+					{
+						"name": "reservationPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "parentPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "sliced",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_email",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCondition",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amountTax",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "status",
+						"type": "INT32"
+					},
+					{
+						"name": "status_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "stamp",
+						"type": "UTF8"
+					},
+					{
+						"name": "notes",
+						"type": "UTF8"
+					},
+					{
+						"name": "transactionType",
+						"type": "UTF8"
+					},
+					{
+						"name": "transactionType_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentLimitDate",
+						"type": "DATE"
+					},
+					{
+						"name": "paymentDate",
+						"type": "DATE"
+					},
+					{
+						"name": "refund",
+						"type": "UTF8"
+					},
+					{
+						"name": "refunded",
+						"type": "UTF8"
+					},
+					{
+						"name": "convention_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "receiptCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "insertTimestamp",
+						"type": "DATE"
+					},
+					{
+						"name": "updateTimestamp",
+						"type": "DATE"
+					},
+					{
+						"name": "owner",
+						"type": "UTF8"
+					},
+					{
+						"name": "owner_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "sessionId",
+						"type": "UTF8"
+					},
+					{
+						"name": "terminal_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "terminalGroup_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "gateway_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "gateway_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "transactionID",
+						"type": "UTF8"
+					},
+					{
+						"name": "bankAccount_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "bankAccount_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "channel_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "channel_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "channelType",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "extra_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "priceList",
+						"type": "UTF8"
+					},
+					{
+						"name": "event",
+						"type": "UTF8"
+					},
+					{
+						"name": "detailType",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_count",
+						"type": "INT32"
+					},
+					{
+						"name": "paymentDetail_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_payingPartecipants",
+						"type": "INT32"
+					},
+					{
+						"name": "detail_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "tickets_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "costCenter_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "costCenter_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "object_receipt",
+						"type": "INT32"
+					},
+					{
+						"name": "object_taxCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "object_taxNotes",
+						"type": "UTF8"
+					},
+					{
+						"name": "object_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "object_taxPercentage",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountNet",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountPresale",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountSold",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountPayed",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountPending",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountCanceled",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "externalId",
+						"type": "UTF8"
+					},
+					{
+						"name": "amountRefunded",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "invoiceSummary",
+						"type": "UTF8"
+					},
+					{
+						"name": "eventCalendar_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "passDetail_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCostCenter_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "organization_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "venue_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "olapUpdateTimestamp",
+						"type": "DATE"
+					},
+					{
+						"name": "row_id",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Bookings_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String",
+						"defaultValue": "Mida/Bookings/Processed/2025/01"
+					},
+					"fileName": {
+						"type": "String",
+						"defaultValue": "VFD_Mida_Processed_20250101.parquet\""
+					}
+				},
+				"folder": {
+					"name": "Mida/Bookings"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "guid_pk",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_progressiveCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_code",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_status",
+						"type": "INT32"
+					},
+					{
+						"name": "invoiceRequired",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "visitDate",
+						"type": "DATE"
+					},
+					{
+						"name": "reservationPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "parentPayment_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "sliced",
+						"type": "UTF8"
+					},
+					{
+						"name": "reservation_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "group_email",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentCondition",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "reservation_amountTax",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "status",
+						"type": "INT32"
+					},
+					{
+						"name": "status_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "stamp",
+						"type": "UTF8"
+					},
+					{
+						"name": "notes",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "transactionType",
+						"type": "UTF8"
+					},
+					{
+						"name": "transactionType_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "paymentLimitDate",
+						"type": "DATE"
+					},
+					{
+						"name": "paymentDate",
+						"type": "DATE"
+					},
+					{
+						"name": "refund",
+						"type": "UTF8"
+					},
+					{
+						"name": "refunded",
+						"type": "UTF8"
+					},
+					{
+						"name": "convention_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "receiptCode",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "insertTimestamp",
+						"type": "DATE"
+					},
+					{
+						"name": "updateTimestamp",
+						"type": "DATE"
+					},
+					{
+						"name": "owner",
+						"type": "UTF8"
+					},
+					{
+						"name": "owner_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "sessionId",
+						"type": "UTF8"
+					},
+					{
+						"name": "terminal_label",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "terminalGroup_label",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "gateway_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "gateway_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "transactionID",
+						"type": "UTF8"
+					},
+					{
+						"name": "bankAccount_guid",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "bankAccount_label",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "channel_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "channel_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "channelType",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "extra_guid",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "priceList",
+						"type": "UTF8"
+					},
+					{
+						"name": "event",
+						"type": "UTF8"
+					},
+					{
+						"name": "detailType",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_text",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_count",
+						"type": "INT32"
+					},
+					{
+						"name": "paymentDetail_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "detail_payingPartecipants",
+						"type": "INT32"
+					},
+					{
+						"name": "detail_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "tickets_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "pax_quantity",
+						"type": "INT32"
+					},
+					{
+						"name": "costCenter_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "costCenter_label",
+						"type": "UTF8"
+					},
+					{
+						"name": "object_receipt",
+						"type": "INT32"
+					},
+					{
+						"name": "object_taxCode",
+						"type": "UTF8"
+					},
+					{
+						"name": "object_taxNotes",
+						"type": "UTF8"
+					},
+					{
+						"name": "object_amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "object_taxPercentage",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amount",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountNet",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountPresale",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountSold",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountPayed",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountPending",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "amountCanceled",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "externalId",
+						"type": "UTF8"
+					},
+					{
+						"name": "amountRefunded",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "invoiceSummary",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "eventCalendar_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "passDetail_guid",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "paymentCostCenter_guid",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "organization_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "venue_guid",
+						"type": "UTF8"
+					},
+					{
+						"name": "olapUpdateTimestamp",
+						"type": "DATE"
+					},
+					{
+						"name": "row_id",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida2_Atomic_CREATE_Booking_Complete')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Mida2/Bookings/Atomic"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "VFD_Big_Data_DL",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DummySource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkComplete"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CreateRecordFromParameters"
+						},
+						{
+							"name": "SelectFinalColumns"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     guid_pk as string,",
+						"     reservation_progressiveCode as string,",
+						"     reservation_code as string,",
+						"     reservation_status as integer,",
+						"     invoiceRequired as string,",
+						"     customer as decimal(10,2),",
+						"     visitDate as date,",
+						"     reservationPayment_guid as string,",
+						"     parentPayment_guid as string,",
+						"     sliced as string,",
+						"     reservation_guid as string,",
+						"     group_guid as string,",
+						"     group_label as string,",
+						"     group_email as string,",
+						"     paymentCode as string,",
+						"     paymentCondition as decimal(10,2),",
+						"     reservation_amount as decimal(10,2),",
+						"     reservation_amountTax as decimal(10,2),",
+						"     status as integer,",
+						"     status_text as string,",
+						"     stamp as string,",
+						"     notes as string,",
+						"     transactionType as string,",
+						"     transactionType_text as string,",
+						"     paymentLimitDate as timestamp,",
+						"     paymentDate as timestamp,",
+						"     refund as string,",
+						"     refunded as string,",
+						"     convention_label as string,",
+						"     receiptCode as string,",
+						"     insertTimestamp as timestamp,",
+						"     updateTimestamp as timestamp,",
+						"     owner as string,",
+						"     owner_text as string,",
+						"     sessionId as string,",
+						"     terminal_label as string,",
+						"     terminalGroup_label as string,",
+						"     gateway_guid as string,",
+						"     gateway_label as string,",
+						"     transactionID as string,",
+						"     bankAccount_guid as string,",
+						"     bankAccount_label as string,",
+						"     channel_guid as string,",
+						"     channel_label as string,",
+						"     channelType as string,",
+						"     detail_guid as string,",
+						"     extra_guid as string,",
+						"     priceList as string,",
+						"     event as string,",
+						"     detailType as string,",
+						"     detail_text as string,",
+						"     detail_label as string,",
+						"     detail_count as integer,",
+						"     paymentDetail_guid as string,",
+						"     detail_payingPartecipants as integer,",
+						"     detail_quantity as integer,",
+						"     tickets_quantity as integer,",
+						"     pax_quantity as integer,",
+						"     costCenter_guid as string,",
+						"     costCenter_label as string,",
+						"     object_receipt as integer,",
+						"     object_taxCode as string,",
+						"     object_taxNotes as string,",
+						"     object_amount as decimal(10,2),",
+						"     object_taxPercentage as decimal(10,2),",
+						"     amount as decimal(10,2),",
+						"     amountNet as decimal(10,2),",
+						"     amountPresale as decimal(10,2),",
+						"     amountSold as decimal(10,2),",
+						"     amountPayed as decimal(10,2),",
+						"     amountPending as decimal(10,2),",
+						"     amountCanceled as decimal(10,2),",
+						"     externalId as string,",
+						"     amountRefunded as decimal(10,2),",
+						"     invoiceSummary as string,",
+						"     eventCalendar_guid as string,",
+						"     passDetail_guid as string,",
+						"     paymentCostCenter_guid as string,",
+						"     organization_guid as string,",
+						"     venue_guid as string,",
+						"     olapUpdateTimestamp as timestamp,",
+						"     row_id as string",
+						"}",
+						"source(output(",
+						"          dummy as integer",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'dummy',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     data: 'dummy\\n1') ~> DummySource",
+						"DummySource derive(guid_pk = $guid_pk,",
+						"          reservation_progressiveCode = $reservation_progressiveCode,",
+						"          reservation_code = $reservation_code,",
+						"          reservation_status = $reservation_status,",
+						"          invoiceRequired = $invoiceRequired,",
+						"          customer = $customer,",
+						"          visitDate = $visitDate,",
+						"          reservationPayment_guid = $reservationPayment_guid,",
+						"          parentPayment_guid = $parentPayment_guid,",
+						"          sliced = $sliced,",
+						"          reservation_guid = $reservation_guid,",
+						"          group_guid = $group_guid,",
+						"          group_label = $group_label,",
+						"          group_email = $group_email,",
+						"          paymentCode = $paymentCode,",
+						"          paymentCondition = $paymentCondition,",
+						"          reservation_amount = $reservation_amount,",
+						"          reservation_amountTax = $reservation_amountTax,",
+						"          status = $status,",
+						"          status_text = $status_text,",
+						"          stamp = $stamp,",
+						"          notes = $notes,",
+						"          transactionType = $transactionType,",
+						"          transactionType_text = $transactionType_text,",
+						"          paymentLimitDate = $paymentLimitDate,",
+						"          paymentDate = $paymentDate,",
+						"          refund = $refund,",
+						"          refunded = $refunded,",
+						"          convention_label = $convention_label,",
+						"          receiptCode = $receiptCode,",
+						"          insertTimestamp = $insertTimestamp,",
+						"          updateTimestamp = $updateTimestamp,",
+						"          owner = $owner,",
+						"          owner_text = $owner_text,",
+						"          sessionId = $sessionId,",
+						"          terminal_label = $terminal_label,",
+						"          terminalGroup_label = $terminalGroup_label,",
+						"          gateway_guid = $gateway_guid,",
+						"          gateway_label = $gateway_label,",
+						"          transactionID = $transactionID,",
+						"          bankAccount_guid = $bankAccount_guid,",
+						"          bankAccount_label = $bankAccount_label,",
+						"          channel_guid = $channel_guid,",
+						"          channel_label = $channel_label,",
+						"          channelType = $channelType,",
+						"          detail_guid = $detail_guid,",
+						"          extra_guid = $extra_guid,",
+						"          priceList = $priceList,",
+						"          event = $event,",
+						"          detailType = $detailType,",
+						"          detail_text = $detail_text,",
+						"          detail_label = $detail_label,",
+						"          detail_count = $detail_count,",
+						"          paymentDetail_guid = $paymentDetail_guid,",
+						"          detail_payingPartecipants = $detail_payingPartecipants,",
+						"          detail_quantity = $detail_quantity,",
+						"          tickets_quantity = $tickets_quantity,",
+						"          pax_quantity = $pax_quantity,",
+						"          costCenter_guid = $costCenter_guid,",
+						"          costCenter_label = $costCenter_label,",
+						"          object_receipt = $object_receipt,",
+						"          object_taxCode = $object_taxCode,",
+						"          object_taxNotes = $object_taxNotes,",
+						"          object_amount = $object_amount,",
+						"          object_taxPercentage = $object_taxPercentage,",
+						"          amount = $amount,",
+						"          amountNet = $amountNet,",
+						"          amountPresale = $amountPresale,",
+						"          amountSold = $amountSold,",
+						"          amountPayed = $amountPayed,",
+						"          amountPending = $amountPending,",
+						"          amountCanceled = $amountCanceled,",
+						"          externalId = $externalId,",
+						"          amountRefunded = $amountRefunded,",
+						"          invoiceSummary = $invoiceSummary,",
+						"          eventCalendar_guid = $eventCalendar_guid,",
+						"          passDetail_guid = $passDetail_guid,",
+						"          paymentCostCenter_guid = $paymentCostCenter_guid,",
+						"          organization_guid = $organization_guid,",
+						"          venue_guid = $venue_guid,",
+						"          olapUpdateTimestamp = $olapUpdateTimestamp,",
+						"          row_id = $row_id) ~> CreateRecordFromParameters",
+						"CreateRecordFromParameters select(mapColumn(",
+						"          guid_pk,",
+						"          reservation_progressiveCode,",
+						"          reservation_code,",
+						"          reservation_status,",
+						"          invoiceRequired,",
+						"          customer,",
+						"          visitDate,",
+						"          reservationPayment_guid,",
+						"          parentPayment_guid,",
+						"          sliced,",
+						"          reservation_guid,",
+						"          group_guid,",
+						"          group_label,",
+						"          group_email,",
+						"          paymentCode,",
+						"          paymentCondition,",
+						"          reservation_amount,",
+						"          reservation_amountTax,",
+						"          status,",
+						"          status_text,",
+						"          stamp,",
+						"          notes,",
+						"          transactionType,",
+						"          transactionType_text,",
+						"          paymentLimitDate,",
+						"          paymentDate,",
+						"          refund,",
+						"          refunded,",
+						"          convention_label,",
+						"          receiptCode,",
+						"          insertTimestamp,",
+						"          updateTimestamp,",
+						"          owner,",
+						"          owner_text,",
+						"          sessionId,",
+						"          terminal_label,",
+						"          terminalGroup_label,",
+						"          gateway_guid,",
+						"          gateway_label,",
+						"          transactionID,",
+						"          bankAccount_guid,",
+						"          bankAccount_label,",
+						"          channel_guid,",
+						"          channel_label,",
+						"          channelType,",
+						"          detail_guid,",
+						"          extra_guid,",
+						"          priceList,",
+						"          event,",
+						"          detailType,",
+						"          detail_text,",
+						"          detail_label,",
+						"          detail_count,",
+						"          paymentDetail_guid,",
+						"          detail_payingPartecipants,",
+						"          detail_quantity,",
+						"          tickets_quantity,",
+						"          pax_quantity,",
+						"          costCenter_guid,",
+						"          costCenter_label,",
+						"          object_receipt,",
+						"          object_taxCode,",
+						"          object_taxNotes,",
+						"          object_amount,",
+						"          object_taxPercentage,",
+						"          amount,",
+						"          amountNet,",
+						"          amountPresale,",
+						"          amountSold,",
+						"          amountPayed,",
+						"          amountPending,",
+						"          amountCanceled,",
+						"          externalId,",
+						"          amountRefunded,",
+						"          invoiceSummary,",
+						"          eventCalendar_guid,",
+						"          passDetail_guid,",
+						"          paymentCostCenter_guid,",
+						"          organization_guid,",
+						"          venue_guid,",
+						"          olapUpdateTimestamp,",
+						"          row_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectFinalColumns",
+						"SelectFinalColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as string,",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          refund as string,",
+						"          refunded as string,",
+						"          convention_label as string,",
+						"          receiptCode as string,",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          owner as string,",
+						"          owner_text as string,",
+						"          sessionId as string,",
+						"          terminal_label as string,",
+						"          terminalGroup_label as string,",
+						"          gateway_guid as string,",
+						"          gateway_label as string,",
+						"          transactionID as string,",
+						"          bankAccount_guid as string,",
+						"          bankAccount_label as string,",
+						"          channel_guid as string,",
+						"          channel_label as string,",
+						"          channelType as string,",
+						"          detail_guid as string,",
+						"          extra_guid as string,",
+						"          priceList as string,",
+						"          event as string,",
+						"          detailType as string,",
+						"          detail_text as string,",
+						"          detail_label as string,",
+						"          detail_count as integer,",
+						"          paymentDetail_guid as string,",
+						"          detail_payingPartecipants as integer,",
+						"          detail_quantity as integer,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          costCenter_guid as string,",
+						"          costCenter_label as string,",
+						"          object_receipt as integer,",
+						"          object_taxCode as string,",
+						"          object_taxNotes as string,",
+						"          object_amount as decimal(10,2),",
+						"          object_taxPercentage as decimal(10,2),",
+						"          amount as decimal(10,2),",
+						"          amountNet as decimal(10,2),",
+						"          amountPresale as decimal(10,2),",
+						"          amountSold as decimal(10,2),",
+						"          amountPayed as decimal(10,2),",
+						"          amountPending as decimal(10,2),",
+						"          amountCanceled as decimal(10,2),",
+						"          externalId as string,",
+						"          amountRefunded as decimal(10,2),",
+						"          invoiceSummary as string,",
+						"          eventCalendar_guid as string,",
+						"          passDetail_guid as string,",
+						"          paymentCostCenter_guid as string,",
+						"          organization_guid as string,",
+						"          venue_guid as string,",
+						"          olapUpdateTimestamp as date,",
+						"          row_id as string",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['booking_complete.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SinkComplete"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
 			]
 		}
 	]
