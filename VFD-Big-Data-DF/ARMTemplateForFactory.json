@@ -3881,14 +3881,8 @@
 								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": {
-										"value": "@pipeline().parameters.targetFolderPath",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@pipeline().parameters.targetFileName",
-										"type": "Expression"
-									}
+									"folderPath": "@pipeline().parameters.targetFolderPath",
+									"fileName": "@pipeline().parameters.targetFileName"
 								}
 							},
 							"fieldList": [
@@ -3937,15 +3931,15 @@
 											"type": "DataFlowReference",
 											"parameters": {
 												"guid_pk": {
-													"value": "@pipeline().parameters.guid_pk",
+													"value": "'@pipeline().parameters.guid_pk'",
 													"type": "Expression"
 												},
 												"reservation_progressiveCode": {
-													"value": "@pipeline().parameters.reservation_progressiveCode",
+													"value": "'@pipeline().parameters.reservation_progressiveCode'",
 													"type": "Expression"
 												},
 												"reservation_code": {
-													"value": "@pipeline().parameters.reservation_code",
+													"value": "'@pipeline().parameters.reservation_code'",
 													"type": "Expression"
 												},
 												"reservation_status": {
@@ -3953,7 +3947,7 @@
 													"type": "Expression"
 												},
 												"invoiceRequired": {
-													"value": "@pipeline().parameters.invoiceRequired",
+													"value": "'@pipeline().parameters.invoiceRequired'",
 													"type": "Expression"
 												},
 												"customer": {
@@ -3961,39 +3955,39 @@
 													"type": "Expression"
 												},
 												"visitDate": {
-													"value": "@pipeline().parameters.visitDate",
+													"value": "'@pipeline().parameters.visitDate'",
 													"type": "Expression"
 												},
 												"reservationPayment_guid": {
-													"value": "@pipeline().parameters.reservationPayment_guid",
+													"value": "'@pipeline().parameters.reservationPayment_guid'",
 													"type": "Expression"
 												},
 												"parentPayment_guid": {
-													"value": "@pipeline().parameters.parentPayment_guid",
+													"value": "'@pipeline().parameters.parentPayment_guid'",
 													"type": "Expression"
 												},
 												"sliced": {
-													"value": "@pipeline().parameters.sliced",
+													"value": "'@pipeline().parameters.sliced'",
 													"type": "Expression"
 												},
 												"reservation_guid": {
-													"value": "@pipeline().parameters.reservation_guid",
+													"value": "'@pipeline().parameters.reservation_guid'",
 													"type": "Expression"
 												},
 												"group_guid": {
-													"value": "@pipeline().parameters.group_guid",
+													"value": "'@pipeline().parameters.group_guid'",
 													"type": "Expression"
 												},
 												"group_label": {
-													"value": "@pipeline().parameters.group_label",
+													"value": "'@pipeline().parameters.group_label'",
 													"type": "Expression"
 												},
 												"group_email": {
-													"value": "@pipeline().parameters.group_email",
+													"value": "'@pipeline().parameters.group_email'",
 													"type": "Expression"
 												},
 												"paymentCode": {
-													"value": "@pipeline().parameters.paymentCode",
+													"value": "'@pipeline().parameters.paymentCode'",
 													"type": "Expression"
 												},
 												"paymentCondition": {
@@ -4013,87 +4007,87 @@
 													"type": "Expression"
 												},
 												"status_text": {
-													"value": "@pipeline().parameters.status_text",
+													"value": "'@pipeline().parameters.status_text'",
 													"type": "Expression"
 												},
 												"stamp": {
-													"value": "@pipeline().parameters.stamp",
+													"value": "'@pipeline().parameters.stamp'",
 													"type": "Expression"
 												},
 												"notes": {
-													"value": "@pipeline().parameters.notes",
+													"value": "'@pipeline().parameters.notes'",
 													"type": "Expression"
 												},
 												"transactionType": {
-													"value": "@pipeline().parameters.transactionType",
+													"value": "'@pipeline().parameters.transactionType'",
 													"type": "Expression"
 												},
 												"transactionType_text": {
-													"value": "@pipeline().parameters.transactionType_text",
+													"value": "'@pipeline().parameters.transactionType_text'",
 													"type": "Expression"
 												},
 												"paymentLimitDate": {
-													"value": "@pipeline().parameters.paymentLimitDate",
+													"value": "'@pipeline().parameters.paymentLimitDate'",
 													"type": "Expression"
 												},
 												"paymentDate": {
-													"value": "@pipeline().parameters.paymentDate",
+													"value": "'@pipeline().parameters.paymentDate'",
 													"type": "Expression"
 												},
 												"refund": {
-													"value": "@pipeline().parameters.refund",
+													"value": "'@pipeline().parameters.refund'",
 													"type": "Expression"
 												},
 												"refunded": {
-													"value": "@pipeline().parameters.refunded",
+													"value": "'@pipeline().parameters.refunded'",
 													"type": "Expression"
 												},
 												"convention_label": {
-													"value": "@pipeline().parameters.convention_label",
+													"value": "'@pipeline().parameters.convention_label'",
 													"type": "Expression"
 												},
 												"receiptCode": {
-													"value": "@pipeline().parameters.receiptCode",
+													"value": "'@pipeline().parameters.receiptCode'",
 													"type": "Expression"
 												},
 												"insertTimestamp": {
-													"value": "@pipeline().parameters.insertTimestamp",
+													"value": "'@pipeline().parameters.insertTimestamp'",
 													"type": "Expression"
 												},
 												"updateTimestamp": {
-													"value": "@pipeline().parameters.updateTimestamp",
+													"value": "'@pipeline().parameters.updateTimestamp'",
 													"type": "Expression"
 												},
 												"owner": {
-													"value": "@pipeline().parameters.owner",
+													"value": "'@pipeline().parameters.owner'",
 													"type": "Expression"
 												},
 												"owner_text": {
-													"value": "@pipeline().parameters.owner_text",
+													"value": "'@pipeline().parameters.owner_text'",
 													"type": "Expression"
 												},
 												"sessionId": {
-													"value": "@pipeline().parameters.sessionId",
+													"value": "'@pipeline().parameters.sessionId'",
 													"type": "Expression"
 												},
 												"terminal_label": {
-													"value": "@pipeline().parameters.terminal_label",
+													"value": "'@pipeline().parameters.terminal_label'",
 													"type": "Expression"
 												},
 												"terminalGroup_label": {
-													"value": "@pipeline().parameters.terminalGroup_label",
+													"value": "'@pipeline().parameters.terminalGroup_label'",
 													"type": "Expression"
 												},
 												"gateway_guid": {
-													"value": "@pipeline().parameters.gateway_guid",
+													"value": "'@pipeline().parameters.gateway_guid'",
 													"type": "Expression"
 												},
 												"gateway_label": {
-													"value": "@pipeline().parameters.gateway_label",
+													"value": "'@pipeline().parameters.gateway_label'",
 													"type": "Expression"
 												},
 												"transactionID": {
-													"value": "@pipeline().parameters.transactionID",
+													"value": "'@pipeline().parameters.transactionID'",
 													"type": "Expression"
 												},
 												"bankAccount_guid": {
@@ -4105,19 +4099,19 @@
 													"type": "Expression"
 												},
 												"channel_guid": {
-													"value": "@pipeline().parameters.channel_guid",
+													"value": "'@pipeline().parameters.channel_guid'",
 													"type": "Expression"
 												},
 												"channel_label": {
-													"value": "@pipeline().parameters.channel_label",
+													"value": "'@pipeline().parameters.channel_label'",
 													"type": "Expression"
 												},
 												"channelType": {
-													"value": "@pipeline().parameters.channelType",
+													"value": "'@pipeline().parameters.channelType'",
 													"type": "Expression"
 												},
 												"detail_guid": {
-													"value": "@pipeline().parameters.detail_guid",
+													"value": "'@pipeline().parameters.detail_guid'",
 													"type": "Expression"
 												},
 												"extra_guid": {
@@ -4125,23 +4119,23 @@
 													"type": "Expression"
 												},
 												"priceList": {
-													"value": "@pipeline().parameters.priceList",
+													"value": "'@pipeline().parameters.priceList'",
 													"type": "Expression"
 												},
 												"event": {
-													"value": "@pipeline().parameters.event",
+													"value": "'@pipeline().parameters.event'",
 													"type": "Expression"
 												},
 												"detailType": {
-													"value": "@pipeline().parameters.detailType",
+													"value": "'@pipeline().parameters.detailType'",
 													"type": "Expression"
 												},
 												"detail_text": {
-													"value": "@pipeline().parameters.detail_text",
+													"value": "'@pipeline().parameters.detail_text'",
 													"type": "Expression"
 												},
 												"detail_label": {
-													"value": "@pipeline().parameters.detail_label",
+													"value": "'@pipeline().parameters.detail_label'",
 													"type": "Expression"
 												},
 												"detail_count": {
@@ -4149,7 +4143,7 @@
 													"type": "Expression"
 												},
 												"paymentDetail_guid": {
-													"value": "@pipeline().parameters.paymentDetail_guid",
+													"value": "'@pipeline().parameters.paymentDetail_guid'",
 													"type": "Expression"
 												},
 												"detail_payingPartecipants": {
@@ -4169,11 +4163,11 @@
 													"type": "Expression"
 												},
 												"costCenter_guid": {
-													"value": "@pipeline().parameters.costCenter_guid",
+													"value": "'@pipeline().parameters.costCenter_guid'",
 													"type": "Expression"
 												},
 												"costCenter_label": {
-													"value": "@pipeline().parameters.costCenter_label",
+													"value": "'@pipeline().parameters.costCenter_label'",
 													"type": "Expression"
 												},
 												"object_receipt": {
@@ -4181,11 +4175,11 @@
 													"type": "Expression"
 												},
 												"object_taxCode": {
-													"value": "@pipeline().parameters.object_taxCode",
+													"value": "'@pipeline().parameters.object_taxCode'",
 													"type": "Expression"
 												},
 												"object_taxNotes": {
-													"value": "@pipeline().parameters.object_taxNotes",
+													"value": "'@pipeline().parameters.object_taxNotes'",
 													"type": "Expression"
 												},
 												"object_amount": {
@@ -4225,7 +4219,7 @@
 													"type": "Expression"
 												},
 												"externalId": {
-													"value": "@pipeline().parameters.externalId",
+													"value": "'@pipeline().parameters.externalId'",
 													"type": "Expression"
 												},
 												"amountRefunded": {
@@ -4233,49 +4227,43 @@
 													"type": "Expression"
 												},
 												"invoiceSummary": {
-													"value": "@pipeline().parameters.invoiceSummary",
+													"value": "'@pipeline().parameters.invoiceSummary'",
 													"type": "Expression"
 												},
 												"eventCalendar_guid": {
-													"value": "@pipeline().parameters.eventCalendar_guid",
+													"value": "'@pipeline().parameters.eventCalendar_guid'",
 													"type": "Expression"
 												},
 												"passDetail_guid": {
-													"value": "@pipeline().parameters.passDetail_guid",
+													"value": "'@pipeline().parameters.passDetail_guid'",
 													"type": "Expression"
 												},
 												"paymentCostCenter_guid": {
-													"value": "@pipeline().parameters.paymentCostCenter_guid",
+													"value": "'@pipeline().parameters.paymentCostCenter_guid'",
 													"type": "Expression"
 												},
 												"organization_guid": {
-													"value": "@pipeline().parameters.organization_guid",
+													"value": "'@pipeline().parameters.organization_guid'",
 													"type": "Expression"
 												},
 												"venue_guid": {
-													"value": "@pipeline().parameters.venue_guid",
+													"value": "'@pipeline().parameters.venue_guid'",
 													"type": "Expression"
 												},
 												"olapUpdateTimestamp": {
-													"value": "@pipeline().parameters.olapUpdateTimestamp",
+													"value": "'@pipeline().parameters.olapUpdateTimestamp'",
 													"type": "Expression"
 												},
 												"row_id": {
-													"value": "@pipeline().parameters.row_id",
+													"value": "'@pipeline().parameters.row_id'",
 													"type": "Expression"
 												}
 											},
 											"datasetParameters": {
 												"DummySource": {},
 												"SinkComplete": {
-													"folderPath": {
-														"value": "@pipeline().parameters.targetFolderPath",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@pipeline().parameters.targetFileName",
-														"type": "Expression"
-													}
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
 												}
 											}
 										},
@@ -4307,15 +4295,15 @@
 											"type": "DataFlowReference",
 											"parameters": {
 												"guid_pk": {
-													"value": "'@{pipeline().parameters.guid_pk}'",
+													"value": "'@pipeline().parameters.guid_pk'",
 													"type": "Expression"
 												},
 												"reservation_progressiveCode": {
-													"value": "'@{pipeline().parameters.reservation_progressiveCode}'",
+													"value": "'@pipeline().parameters.reservation_progressiveCode'",
 													"type": "Expression"
 												},
 												"reservation_code": {
-													"value": "'@{pipeline().parameters.reservation_code}'",
+													"value": "'@pipeline().parameters.reservation_code'",
 													"type": "Expression"
 												},
 												"reservation_status": {
@@ -4323,7 +4311,7 @@
 													"type": "Expression"
 												},
 												"invoiceRequired": {
-													"value": "'@{pipeline().parameters.invoiceRequired}'",
+													"value": "'@pipeline().parameters.invoiceRequired'",
 													"type": "Expression"
 												},
 												"customer": {
@@ -4331,39 +4319,39 @@
 													"type": "Expression"
 												},
 												"visitDate": {
-													"value": "@pipeline().parameters.visitDate",
+													"value": "'@pipeline().parameters.visitDate'",
 													"type": "Expression"
 												},
 												"reservationPayment_guid": {
-													"value": "'@{pipeline().parameters.reservationPayment_guid}'",
+													"value": "'@pipeline().parameters.reservationPayment_guid'",
 													"type": "Expression"
 												},
 												"parentPayment_guid": {
-													"value": "'@{pipeline().parameters.parentPayment_guid}'",
+													"value": "'@pipeline().parameters.parentPayment_guid'",
 													"type": "Expression"
 												},
 												"sliced": {
-													"value": "'@{pipeline().parameters.sliced}'",
+													"value": "'@pipeline().parameters.sliced'",
 													"type": "Expression"
 												},
 												"reservation_guid": {
-													"value": "'@{pipeline().parameters.reservation_guid}'",
+													"value": "'@pipeline().parameters.reservation_guid'",
 													"type": "Expression"
 												},
 												"group_guid": {
-													"value": "'@{pipeline().parameters.group_guid}'",
+													"value": "'@pipeline().parameters.group_guid'",
 													"type": "Expression"
 												},
 												"group_label": {
-													"value": "'@{pipeline().parameters.group_label}'",
+													"value": "'@pipeline().parameters.group_label'",
 													"type": "Expression"
 												},
 												"group_email": {
-													"value": "'@{pipeline().parameters.group_email}'",
+													"value": "'@pipeline().parameters.group_email'",
 													"type": "Expression"
 												},
 												"paymentCode": {
-													"value": "'@{pipeline().parameters.paymentCode}'",
+													"value": "'@pipeline().parameters.paymentCode'",
 													"type": "Expression"
 												},
 												"paymentCondition": {
@@ -4383,87 +4371,87 @@
 													"type": "Expression"
 												},
 												"status_text": {
-													"value": "'@{pipeline().parameters.status_text}'",
+													"value": "'@pipeline().parameters.status_text'",
 													"type": "Expression"
 												},
 												"stamp": {
-													"value": "'@{pipeline().parameters.stamp}'",
+													"value": "'@pipeline().parameters.stamp'",
 													"type": "Expression"
 												},
 												"notes": {
-													"value": "'@{pipeline().parameters.notes}'",
+													"value": "'@pipeline().parameters.notes'",
 													"type": "Expression"
 												},
 												"transactionType": {
-													"value": "'@{pipeline().parameters.transactionType}'",
+													"value": "'@pipeline().parameters.transactionType'",
 													"type": "Expression"
 												},
 												"transactionType_text": {
-													"value": "'@{pipeline().parameters.transactionType_text}'",
+													"value": "'@pipeline().parameters.transactionType_text'",
 													"type": "Expression"
 												},
 												"paymentLimitDate": {
-													"value": "@pipeline().parameters.paymentLimitDate",
+													"value": "'@pipeline().parameters.paymentLimitDate'",
 													"type": "Expression"
 												},
 												"paymentDate": {
-													"value": "@pipeline().parameters.paymentDate",
+													"value": "'@pipeline().parameters.paymentDate'",
 													"type": "Expression"
 												},
 												"refund": {
-													"value": "'@{pipeline().parameters.refund}'",
+													"value": "'@pipeline().parameters.refund'",
 													"type": "Expression"
 												},
 												"refunded": {
-													"value": "'@{pipeline().parameters.refunded}'",
+													"value": "'@pipeline().parameters.refunded'",
 													"type": "Expression"
 												},
 												"convention_label": {
-													"value": "'@{pipeline().parameters.convention_label}'",
+													"value": "'@pipeline().parameters.convention_label'",
 													"type": "Expression"
 												},
 												"receiptCode": {
-													"value": "'@{pipeline().parameters.receiptCode}'",
+													"value": "'@pipeline().parameters.receiptCode'",
 													"type": "Expression"
 												},
 												"insertTimestamp": {
-													"value": "@pipeline().parameters.insertTimestamp",
+													"value": "'@pipeline().parameters.insertTimestamp'",
 													"type": "Expression"
 												},
 												"updateTimestamp": {
-													"value": "@pipeline().parameters.updateTimestamp",
+													"value": "'@pipeline().parameters.updateTimestamp'",
 													"type": "Expression"
 												},
 												"owner": {
-													"value": "'@{pipeline().parameters.owner}'",
+													"value": "'@pipeline().parameters.owner'",
 													"type": "Expression"
 												},
 												"owner_text": {
-													"value": "'@{pipeline().parameters.owner_text}'",
+													"value": "'@pipeline().parameters.owner_text'",
 													"type": "Expression"
 												},
 												"sessionId": {
-													"value": "'@{pipeline().parameters.sessionId}'",
+													"value": "'@pipeline().parameters.sessionId'",
 													"type": "Expression"
 												},
 												"terminal_label": {
-													"value": "'@{pipeline().parameters.terminal_label}'",
+													"value": "'@pipeline().parameters.terminal_label'",
 													"type": "Expression"
 												},
 												"terminalGroup_label": {
-													"value": "'@{pipeline().parameters.terminalGroup_label}'",
+													"value": "'@pipeline().parameters.terminalGroup_label'",
 													"type": "Expression"
 												},
 												"gateway_guid": {
-													"value": "'@{pipeline().parameters.gateway_guid}'",
+													"value": "'@pipeline().parameters.gateway_guid'",
 													"type": "Expression"
 												},
 												"gateway_label": {
-													"value": "'@{pipeline().parameters.gateway_label}'",
+													"value": "'@pipeline().parameters.gateway_label'",
 													"type": "Expression"
 												},
 												"transactionID": {
-													"value": "'@{pipeline().parameters.transactionID}'",
+													"value": "'@pipeline().parameters.transactionID'",
 													"type": "Expression"
 												},
 												"bankAccount_guid": {
@@ -4475,19 +4463,19 @@
 													"type": "Expression"
 												},
 												"channel_guid": {
-													"value": "'@{pipeline().parameters.channel_guid}'",
+													"value": "'@pipeline().parameters.channel_guid'",
 													"type": "Expression"
 												},
 												"channel_label": {
-													"value": "'@{pipeline().parameters.channel_label}'",
+													"value": "'@pipeline().parameters.channel_label'",
 													"type": "Expression"
 												},
 												"channelType": {
-													"value": "'@{pipeline().parameters.channelType}'",
+													"value": "'@pipeline().parameters.channelType'",
 													"type": "Expression"
 												},
 												"detail_guid": {
-													"value": "'@{pipeline().parameters.detail_guid}'",
+													"value": "'@pipeline().parameters.detail_guid'",
 													"type": "Expression"
 												},
 												"extra_guid": {
@@ -4495,23 +4483,23 @@
 													"type": "Expression"
 												},
 												"priceList": {
-													"value": "'@{pipeline().parameters.priceList}'",
+													"value": "'@pipeline().parameters.priceList'",
 													"type": "Expression"
 												},
 												"event": {
-													"value": "'@{pipeline().parameters.event}'",
+													"value": "'@pipeline().parameters.event'",
 													"type": "Expression"
 												},
 												"detailType": {
-													"value": "'@{pipeline().parameters.detailType}'",
+													"value": "'@pipeline().parameters.detailType'",
 													"type": "Expression"
 												},
 												"detail_text": {
-													"value": "'@{pipeline().parameters.detail_text}'",
+													"value": "'@pipeline().parameters.detail_text'",
 													"type": "Expression"
 												},
 												"detail_label": {
-													"value": "'@{pipeline().parameters.detail_label}'",
+													"value": "'@pipeline().parameters.detail_label'",
 													"type": "Expression"
 												},
 												"detail_count": {
@@ -4519,7 +4507,7 @@
 													"type": "Expression"
 												},
 												"paymentDetail_guid": {
-													"value": "'@{pipeline().parameters.paymentDetail_guid}'",
+													"value": "'@pipeline().parameters.paymentDetail_guid'",
 													"type": "Expression"
 												},
 												"detail_payingPartecipants": {
@@ -4539,11 +4527,11 @@
 													"type": "Expression"
 												},
 												"costCenter_guid": {
-													"value": "'@{pipeline().parameters.costCenter_guid}'",
+													"value": "'@pipeline().parameters.costCenter_guid'",
 													"type": "Expression"
 												},
 												"costCenter_label": {
-													"value": "'@{pipeline().parameters.costCenter_label}'",
+													"value": "'@pipeline().parameters.costCenter_label'",
 													"type": "Expression"
 												},
 												"object_receipt": {
@@ -4551,11 +4539,11 @@
 													"type": "Expression"
 												},
 												"object_taxCode": {
-													"value": "'@{pipeline().parameters.object_taxCode}'",
+													"value": "'@pipeline().parameters.object_taxCode'",
 													"type": "Expression"
 												},
 												"object_taxNotes": {
-													"value": "'@{pipeline().parameters.object_taxNotes}'",
+													"value": "'@pipeline().parameters.object_taxNotes'",
 													"type": "Expression"
 												},
 												"object_amount": {
@@ -4595,7 +4583,7 @@
 													"type": "Expression"
 												},
 												"externalId": {
-													"value": "'@{pipeline().parameters.externalId}'",
+													"value": "'@pipeline().parameters.externalId'",
 													"type": "Expression"
 												},
 												"amountRefunded": {
@@ -4603,59 +4591,47 @@
 													"type": "Expression"
 												},
 												"invoiceSummary": {
-													"value": "'@{pipeline().parameters.invoiceSummary}'",
+													"value": "'@pipeline().parameters.invoiceSummary'",
 													"type": "Expression"
 												},
 												"eventCalendar_guid": {
-													"value": "'@{pipeline().parameters.eventCalendar_guid}'",
+													"value": "'@pipeline().parameters.eventCalendar_guid'",
 													"type": "Expression"
 												},
 												"passDetail_guid": {
-													"value": "'@{pipeline().parameters.passDetail_guid}'",
+													"value": "'@pipeline().parameters.passDetail_guid'",
 													"type": "Expression"
 												},
 												"paymentCostCenter_guid": {
-													"value": "'@{pipeline().parameters.paymentCostCenter_guid}'",
+													"value": "'@pipeline().parameters.paymentCostCenter_guid'",
 													"type": "Expression"
 												},
 												"organization_guid": {
-													"value": "'@{pipeline().parameters.organization_guid}'",
+													"value": "'@pipeline().parameters.organization_guid'",
 													"type": "Expression"
 												},
 												"venue_guid": {
-													"value": "'@{pipeline().parameters.venue_guid}'",
+													"value": "'@pipeline().parameters.venue_guid'",
 													"type": "Expression"
 												},
 												"olapUpdateTimestamp": {
-													"value": "@pipeline().parameters.olapUpdateTimestamp",
+													"value": "'@pipeline().parameters.olapUpdateTimestamp'",
 													"type": "Expression"
 												},
 												"row_id": {
-													"value": "'@{pipeline().parameters.row_id}'",
+													"value": "'@pipeline().parameters.row_id'",
 													"type": "Expression"
 												}
 											},
 											"datasetParameters": {
 												"DummySource": {},
 												"SourceExistingContent": {
-													"folderPath": {
-														"value": "@pipeline().parameters.targetFolderPath",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@pipeline().parameters.targetFileName",
-														"type": "Expression"
-													}
+													"folderPath": "@pipeline().parameters.targetFolderPath",
+													"fileName": "@pipeline().parameters.targetFileName"
 												},
 												"SinkTemp": {
-													"folderPath": {
-														"value": "@pipeline().parameters.tempFolderPath",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@pipeline().parameters.tempFileName",
-														"type": "Expression"
-													}
+													"folderPath": "@pipeline().parameters.tempFolderPath",
+													"fileName": "@pipeline().parameters.tempFileName"
 												}
 											}
 										},
@@ -4711,14 +4687,8 @@
 											"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": {
-													"value": "@pipeline().parameters.tempFolderPath",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@pipeline().parameters.tempFileName",
-													"type": "Expression"
-												}
+												"folderPath": "@pipeline().parameters.tempFolderPath",
+												"fileName": "@pipeline().parameters.tempFileName"
 											}
 										}
 									],
@@ -4727,14 +4697,8 @@
 											"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": {
-													"value": "@pipeline().parameters.targetFolderPath",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@pipeline().parameters.targetFileName",
-													"type": "Expression"
-												}
+												"folderPath": "@pipeline().parameters.targetFolderPath",
+												"fileName": "@pipeline().parameters.targetFileName"
 											}
 										}
 									]
@@ -4763,14 +4727,8 @@
 											"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 											"type": "DatasetReference",
 											"parameters": {
-												"folderPath": {
-													"value": "@pipeline().parameters.tempFolderPath",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@pipeline().parameters.tempFileName",
-													"type": "Expression"
-												}
+												"folderPath": "@pipeline().parameters.tempFolderPath",
+												"fileName": "@pipeline().parameters.tempFileName"
 											}
 										},
 										"enableLogging": false,
@@ -5053,8 +5011,7 @@
 				},
 				"annotations": [
 					"Pipeline atomica per inserimento prenotazioni complete",
-					"Riceve tutti gli 82 campi come parametri",
-					"TUTTI i parametri usano Expression type"
+					"Tutti i parametri con wrapper Expression, stringhe con virgolette singole"
 				]
 			},
 			"dependsOn": [
