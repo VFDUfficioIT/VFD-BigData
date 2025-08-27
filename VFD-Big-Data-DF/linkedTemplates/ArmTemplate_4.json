@@ -4046,7 +4046,7 @@
 													"type": "Expression"
 												},
 												"visitDate": {
-													"value": "'@pipeline().parameters.visitDate'",
+													"value": "@pipeline().parameters.visitDate",
 													"type": "Expression"
 												},
 												"reservationPayment_guid": {
@@ -4118,11 +4118,11 @@
 													"type": "Expression"
 												},
 												"paymentLimitDate": {
-													"value": "'@pipeline().parameters.paymentLimitDate'",
+													"value": "@pipeline().parameters.paymentLimitDate",
 													"type": "Expression"
 												},
 												"paymentDate": {
-													"value": "'@pipeline().parameters.paymentDate'",
+													"value": "@pipeline().parameters.paymentDate",
 													"type": "Expression"
 												},
 												"refund": {
@@ -4142,11 +4142,11 @@
 													"type": "Expression"
 												},
 												"insertTimestamp": {
-													"value": "'@pipeline().parameters.insertTimestamp'",
+													"value": "@pipeline().parameters.insertTimestamp",
 													"type": "Expression"
 												},
 												"updateTimestamp": {
-													"value": "'@pipeline().parameters.updateTimestamp'",
+													"value": "@pipeline().parameters.updateTimestamp",
 													"type": "Expression"
 												},
 												"owner": {
@@ -4342,7 +4342,7 @@
 													"type": "Expression"
 												},
 												"olapUpdateTimestamp": {
-													"value": "'@pipeline().parameters.olapUpdateTimestamp'",
+													"value": "@pipeline().parameters.olapUpdateTimestamp",
 													"type": "Expression"
 												},
 												"row_id": {
