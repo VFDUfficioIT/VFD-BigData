@@ -1,0 +1,57 @@
+{
+	"name": "VFD_PL_test",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "CFD_DFL_Mida2_test2",
+						"type": "DataFlowReference",
+						"parameters": {
+							"refcode": {
+								"value": "@pipeline().parameters.pipeparam",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"source1": {
+								"folderPath": "Mida2/Bookings/Complete/2025/01",
+								"fileName": "VFD_Mida_Bookings_20250101.parquet"
+							},
+							"sink1": {
+								"folderPath": "Mida2/Bookings/Complete/2025/01",
+								"fileName": "VFD_Mida_Bookings_20250101.parquet"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"pipeparam": {
+				"type": "string",
+				"defaultValue": "RVFD89P57PG5ZNDQ"
+			}
+		},
+		"folder": {
+			"name": "Mida2/Test"
+		},
+		"annotations": []
+	}
+}
