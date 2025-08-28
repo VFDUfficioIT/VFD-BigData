@@ -1882,7 +1882,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"refcode": {
-										"value": "'@pipeline().parameters.pipeparam'",
+										"value": "@pipeline().parameters.pipeparam",
 										"type": "Expression"
 									},
 									"refnumber": {
