@@ -20,7 +20,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"refcode": {
-								"value": "@pipeline().parameters.pipeparam",
+								"value": "'@pipeline().parameters.pipeparam'",
 								"type": "Expression"
 							}
 						},
@@ -47,6 +47,10 @@
 			"pipeparam": {
 				"type": "string",
 				"defaultValue": "RVFD89P57PG5ZNDQ"
+			},
+			"pipparamint": {
+				"type": "int",
+				"defaultValue": 12
 			}
 		},
 		"folder": {
