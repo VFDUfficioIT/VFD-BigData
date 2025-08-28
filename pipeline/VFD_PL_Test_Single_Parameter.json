@@ -26,6 +26,10 @@
 							}
 						},
 						"datasetParameters": {
+							"SourceProcessed": {
+								"folderPath": "Mida/Bookings/Processed/2025/01",
+								"fileName": "VFD_Mida_Processed_20250101.parquet\""
+							},
 							"SinkTest": {
 								"folderPath": "Test",
 								"fileName": "test_single_param_output.parquet"
@@ -47,7 +51,7 @@
 			}
 		},
 		"folder": {
-			"name": "Test"
+			"name": "Mida2/Test"
 		},
 		"annotations": [
 			"Test per verificare passaggio parametri da pipeline a dataflow"

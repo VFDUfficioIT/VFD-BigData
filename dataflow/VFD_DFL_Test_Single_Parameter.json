@@ -8,11 +8,11 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"linkedService": {
-						"referenceName": "VFD_Big_Data_DL",
-						"type": "LinkedServiceReference"
+					"dataset": {
+						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
+						"type": "DatasetReference"
 					},
-					"name": "DummySource"
+					"name": "SourceProcessed"
 				}
 			],
 			"sinks": [
@@ -26,29 +26,19 @@
 			],
 			"transformations": [
 				{
-					"name": "CreateTestRecord"
+					"name": "FilterByParam"
 				}
 			],
 			"scriptLines": [
 				"parameters{",
 				"     test_param as string",
 				"}",
-				"source(output(",
-				"          dummy as integer",
-				"     ),",
-				"     useSchema: false,",
-				"     allowSchemaDrift: false,",
+				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     format: 'delimited',",
-				"     fileSystem: 'curated',",
-				"     columnDelimiter: ',',",
-				"     escapeChar: '\\\\',",
-				"     quoteChar: '\\\"',",
-				"     columnNamesAsHeader: true,",
-				"     data: 'dummy\\n1') ~> DummySource",
-				"DummySource derive(test_column = $test_param) ~> CreateTestRecord",
-				"CreateTestRecord sink(allowSchemaDrift: true,",
+				"     format: 'parquet') ~> SourceProcessed",
+				"SourceProcessed filter(reservation_code == $test_param) ~> FilterByParam",
+				"FilterByParam sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
 				"     partitionFileNames:['test_output.parquet'],",
