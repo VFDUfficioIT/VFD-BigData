@@ -1647,7 +1647,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     format: 'delimited',",
-						"     fileSystem: 'dummy',",
+						"     fileSystem: 'curated',",
 						"     columnDelimiter: ',',",
 						"     escapeChar: '\\\\',",
 						"     quoteChar: '\\\"',",
