@@ -11374,6 +11374,72 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "CFD_DFL_Mida2_test2",
+								"type": "DataFlowReference",
+								"parameters": {
+									"refcode": {
+										"value": "@pipeline().parameters.pipeparam",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"source1": {
+										"folderPath": "Mida2/Bookings/Complete/2025/01",
+										"fileName": "VFD_Mida_Bookings_20250101.parquet"
+									},
+									"sink1": {
+										"folderPath": "Mida2/Bookings/Complete/2025/01",
+										"fileName": "VFD_Mida_Bookings_20250101.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pipeparam": {
+						"type": "string",
+						"defaultValue": "RVFD89P57PG5ZNDQ"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Test"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/CFD_DFL_Mida2_test2')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Validations_Raw_Processed')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -15312,6 +15378,233 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CFD_DFL_Mida2_test2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "filter1"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     refcode as string",
+						"}",
+						"source(output(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as string,",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          refund as string,",
+						"          refunded as string,",
+						"          convention_label as string,",
+						"          receiptCode as string,",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          owner as string,",
+						"          owner_text as string,",
+						"          sessionId as string,",
+						"          terminal_label as string,",
+						"          terminalGroup_label as string,",
+						"          gateway_guid as string,",
+						"          gateway_label as string,",
+						"          transactionID as string,",
+						"          bankAccount_guid as string,",
+						"          bankAccount_label as string,",
+						"          channel_guid as string,",
+						"          channel_label as string,",
+						"          channelType as string,",
+						"          detail_guid as string,",
+						"          extra_guid as string,",
+						"          priceList as string,",
+						"          event as string,",
+						"          detailType as string,",
+						"          detail_text as string,",
+						"          detail_label as string,",
+						"          detail_count as integer,",
+						"          paymentDetail_guid as string,",
+						"          detail_payingPartecipants as integer,",
+						"          detail_quantity as integer,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          costCenter_guid as string,",
+						"          costCenter_label as string,",
+						"          object_receipt as integer,",
+						"          object_taxCode as string,",
+						"          object_taxNotes as string,",
+						"          object_amount as decimal(10,2),",
+						"          object_taxPercentage as decimal(10,2),",
+						"          amount as decimal(10,2),",
+						"          amountNet as decimal(10,2),",
+						"          amountPresale as decimal(10,2),",
+						"          amountSold as decimal(10,2),",
+						"          amountPayed as decimal(10,2),",
+						"          amountPending as decimal(10,2),",
+						"          amountCanceled as decimal(10,2),",
+						"          externalId as string,",
+						"          amountRefunded as decimal(10,2),",
+						"          invoiceSummary as string,",
+						"          eventCalendar_guid as string,",
+						"          passDetail_guid as string,",
+						"          paymentCostCenter_guid as string,",
+						"          organization_guid as string,",
+						"          venue_guid as string,",
+						"          olapUpdateTimestamp as date,",
+						"          row_id as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     wildcardPaths:['*.parquet']) ~> source1",
+						"source1 filter(reservation_code == $refcode) ~> filter1",
+						"filter1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          guid_pk as string,",
+						"          reservation_progressiveCode as string,",
+						"          reservation_code as string,",
+						"          reservation_status as integer,",
+						"          invoiceRequired as string,",
+						"          customer as decimal(10,2),",
+						"          visitDate as date,",
+						"          reservationPayment_guid as string,",
+						"          parentPayment_guid as string,",
+						"          sliced as string,",
+						"          reservation_guid as string,",
+						"          group_guid as string,",
+						"          group_label as string,",
+						"          group_email as string,",
+						"          paymentCode as string,",
+						"          paymentCondition as decimal(10,2),",
+						"          reservation_amount as decimal(10,2),",
+						"          reservation_amountTax as decimal(10,2),",
+						"          status as integer,",
+						"          status_text as string,",
+						"          stamp as string,",
+						"          notes as string,",
+						"          transactionType as string,",
+						"          transactionType_text as string,",
+						"          paymentLimitDate as date,",
+						"          paymentDate as date,",
+						"          refund as string,",
+						"          refunded as string,",
+						"          convention_label as string,",
+						"          receiptCode as string,",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          owner as string,",
+						"          owner_text as string,",
+						"          sessionId as string,",
+						"          terminal_label as string,",
+						"          terminalGroup_label as string,",
+						"          gateway_guid as string,",
+						"          gateway_label as string,",
+						"          transactionID as string,",
+						"          bankAccount_guid as string,",
+						"          bankAccount_label as string,",
+						"          channel_guid as string,",
+						"          channel_label as string,",
+						"          channelType as string,",
+						"          detail_guid as string,",
+						"          extra_guid as string,",
+						"          priceList as string,",
+						"          event as string,",
+						"          detailType as string,",
+						"          detail_text as string,",
+						"          detail_label as string,",
+						"          detail_count as integer,",
+						"          paymentDetail_guid as string,",
+						"          detail_payingPartecipants as integer,",
+						"          detail_quantity as integer,",
+						"          tickets_quantity as integer,",
+						"          pax_quantity as integer,",
+						"          costCenter_guid as string,",
+						"          costCenter_label as string,",
+						"          object_receipt as integer,",
+						"          object_taxCode as string,",
+						"          object_taxNotes as string,",
+						"          object_amount as decimal(10,2),",
+						"          object_taxPercentage as decimal(10,2),",
+						"          amount as decimal(10,2),",
+						"          amountNet as decimal(10,2),",
+						"          amountPresale as decimal(10,2),",
+						"          amountSold as decimal(10,2),",
+						"          amountPayed as decimal(10,2),",
+						"          amountPending as decimal(10,2),",
+						"          amountCanceled as decimal(10,2),",
+						"          externalId as string,",
+						"          amountRefunded as decimal(10,2),",
+						"          invoiceSummary as string,",
+						"          eventCalendar_guid as string,",
+						"          passDetail_guid as string,",
+						"          paymentCostCenter_guid as string,",
+						"          organization_guid as string,",
+						"          venue_guid as string,",
+						"          olapUpdateTimestamp as date,",
+						"          row_id as string",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['test.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_Daily_to_Curated')]",
