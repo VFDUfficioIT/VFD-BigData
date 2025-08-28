@@ -16903,7 +16903,7 @@
 						"     row_id as string",
 						"}",
 						"source(output(",
-						"          dummy as integer",
+						"          dummy as integer '000'",
 						"     ),",
 						"     useSchema: false,",
 						"     allowSchemaDrift: false,",
