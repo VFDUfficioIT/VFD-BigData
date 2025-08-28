@@ -30,12 +30,12 @@
 						},
 						"datasetParameters": {
 							"source1": {
-								"folderPath": "Mida2/Bookings/Complete/2025/01",
-								"fileName": "VFD_Mida_Bookings_20250101.parquet"
+								"folderPath": "Mida/Bookings/Temp",
+								"fileName": "temp_update.parquet"
 							},
 							"sink1": {
-								"folderPath": "Mida2/Bookings/Complete/2025/01",
-								"fileName": "VFD_Mida_Bookings_20250101.parquet"
+								"folderPath": "Mida/Bookings/Temp",
+								"fileName": "temp_update2.parquet"
 							}
 						}
 					},
@@ -50,7 +50,7 @@
 		"parameters": {
 			"pipeparam": {
 				"type": "string",
-				"defaultValue": "RVFD89P57PG5ZNDQ"
+				"defaultValue": "RVFD2XNDRPZ3XpqX"
 			},
 			"pipeparamint": {
 				"type": "int",
