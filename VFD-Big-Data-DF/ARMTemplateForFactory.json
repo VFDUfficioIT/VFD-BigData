@@ -15505,7 +15505,7 @@
 						"     ignoreNoFilesFound: false,",
 						"     format: 'parquet',",
 						"     wildcardPaths:['*.parquet']) ~> source1",
-						"source1 filter(reservation_code == $refcode) ~> filter1",
+						"source1 filter(reservation_code == \"$refcode\") ~> filter1",
 						"filter1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
