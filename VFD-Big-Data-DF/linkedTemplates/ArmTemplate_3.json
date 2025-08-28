@@ -43,6 +43,9 @@
 					"transformations": [
 						{
 							"name": "filter1"
+						},
+						{
+							"name": "derivedColumn1"
 						}
 					],
 					"scriptLines": [
@@ -139,8 +142,10 @@
 						"     ignoreNoFilesFound: true,",
 						"     format: 'parquet',",
 						"     wildcardPaths:['*.parquet']) ~> source1",
-						"source1 filter(reservation_code == \"$refcode\" && status == $refnumber) ~> filter1",
-						"filter1 sink(allowSchemaDrift: true,",
+						"source1 filter(reservation_code == \"$refcode\") ~> filter1",
+						"filter1 derive(reservation_code = \"$refcode\",",
+						"          reservation_status = $refnumber) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          guid_pk as string,",

@@ -11407,12 +11407,12 @@
 								},
 								"datasetParameters": {
 									"source1": {
-										"folderPath": "Mida2/Bookings/Complete/2025/01",
-										"fileName": "VFD_Mida_Bookings_20250101.parquet"
+										"folderPath": "Mida/Bookings/Temp",
+										"fileName": "temp_update.parquet"
 									},
 									"sink1": {
-										"folderPath": "Mida2/Bookings/Complete/2025/01",
-										"fileName": "VFD_Mida_Bookings_20250101.parquet"
+										"folderPath": "Mida/Bookings/Temp",
+										"fileName": "temp_update2.parquet"
 									}
 								}
 							},
@@ -11431,7 +11431,7 @@
 				"parameters": {
 					"pipeparam": {
 						"type": "string",
-						"defaultValue": "RVFD89P57PG5ZNDQ"
+						"defaultValue": "RVFD2XNDRPZ3XpqX"
 					},
 					"pipeparamint": {
 						"type": "int",
@@ -15418,6 +15418,9 @@
 					"transformations": [
 						{
 							"name": "filter1"
+						},
+						{
+							"name": "derivedColumn1"
 						}
 					],
 					"scriptLines": [
@@ -15514,8 +15517,10 @@
 						"     ignoreNoFilesFound: true,",
 						"     format: 'parquet',",
 						"     wildcardPaths:['*.parquet']) ~> source1",
-						"source1 filter(reservation_code == \"$refcode\" && status == $refnumber) ~> filter1",
-						"filter1 sink(allowSchemaDrift: true,",
+						"source1 filter(reservation_code == \"$refcode\") ~> filter1",
+						"filter1 derive(reservation_code = \"$refcode\",",
+						"          reservation_status = $refnumber) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          guid_pk as string,",
