@@ -1,0 +1,56 @@
+{
+	"name": "VFD_PL_Test_Single_Parameter",
+	"properties": {
+		"description": "Pipeline di test con un solo parametro per verificare il passaggio al dataflow",
+		"activities": [
+			{
+				"name": "Test Dataflow Single Param",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "VFD_DFL_Test_Single_Parameter",
+						"type": "DataFlowReference",
+						"parameters": {
+							"test_param": {
+								"value": "@pipeline().parameters.test_input",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"SinkTest": {
+								"folderPath": "Test",
+								"fileName": "test_single_param_output.parquet"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"test_input": {
+				"type": "string",
+				"defaultValue": "TEST_VALUE_123"
+			}
+		},
+		"folder": {
+			"name": "Test"
+		},
+		"annotations": [
+			"Test per verificare passaggio parametri da pipeline a dataflow"
+		]
+	}
+}

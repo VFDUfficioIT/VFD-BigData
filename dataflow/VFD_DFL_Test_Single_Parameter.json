@@ -1,0 +1,64 @@
+{
+	"name": "VFD_DFL_Test_Single_Parameter",
+	"properties": {
+		"folder": {
+			"name": "Test"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "VFD_Big_Data_DL",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DummySource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "SinkTest"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CreateTestRecord"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     test_param as string",
+				"}",
+				"source(output(",
+				"          dummy as integer",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'curated',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true,",
+				"     data: 'dummy\\n1') ~> DummySource",
+				"DummySource derive(test_column = $test_param) ~> CreateTestRecord",
+				"CreateTestRecord sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     partitionFileNames:['test_output.parquet'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> SinkTest"
+			]
+		}
+	}
+}
