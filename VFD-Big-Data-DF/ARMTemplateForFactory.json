@@ -11431,7 +11431,7 @@
 				"parameters": {
 					"pipeparam": {
 						"type": "string",
-						"defaultValue": "RVFD2XNDRPZ3XpqX"
+						"defaultValue": "RVFD2XNDRPZ3XPQX"
 					},
 					"pipeparamint": {
 						"type": "int",
@@ -15511,9 +15511,8 @@
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     format: 'parquet',",
-						"     wildcardPaths:['*.parquet']) ~> source1",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
 						"source1 derive(reservation_code = \"$refcode\",",
 						"          reservation_status = $refnumber) ~> derivedColumn1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
