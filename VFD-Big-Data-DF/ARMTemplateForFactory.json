@@ -10090,6 +10090,72 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Test_Single_Parameter')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline di test con un solo parametro per verificare il passaggio al dataflow",
+				"activities": [
+					{
+						"name": "Test Dataflow Single Param",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Test_Single_Parameter",
+								"type": "DataFlowReference",
+								"parameters": {
+									"test_param": {
+										"value": "@pipeline().parameters.test_input",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"DummySource": {},
+									"SinkTest": {
+										"folderPath": "Test",
+										"fileName": "test_single_param_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"test_input": {
+						"type": "string",
+						"defaultValue": "TEST_VALUE_123"
+					}
+				},
+				"folder": {
+					"name": "Test"
+				},
+				"annotations": [
+					"Test per verificare passaggio parametri da pipeline a dataflow"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Test_Single_Parameter')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_AccessAreas_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -19588,6 +19654,76 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Mida_Validations_Parquet')]",
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Test_Single_Parameter')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "VFD_Big_Data_DL",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DummySource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkTest"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CreateTestRecord"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     test_param as string",
+						"}",
+						"source(output(",
+						"          dummy as integer",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'curated',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true,",
+						"     data: 'dummy\\n1') ~> DummySource",
+						"DummySource derive(test_column = $test_param) ~> CreateTestRecord",
+						"CreateTestRecord sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['test_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SinkTest"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Temp_Parquet')]"
 			]
 		},
 		{
