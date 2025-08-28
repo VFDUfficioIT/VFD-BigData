@@ -1882,7 +1882,11 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"refcode": {
-										"value": "@pipeline().parameters.pipeparam",
+										"value": "'@pipeline().parameters.pipeparam'",
+										"type": "Expression"
+									},
+									"refnumber": {
+										"value": "@pipeline().parameters.pipeparamint",
 										"type": "Expression"
 									}
 								},
@@ -1913,6 +1917,10 @@
 					"pipeparam": {
 						"type": "string",
 						"defaultValue": "RVFD89P57PG5ZNDQ"
+					},
+					"pipeparamint": {
+						"type": "int",
+						"defaultValue": 12
 					}
 				},
 				"folder": {

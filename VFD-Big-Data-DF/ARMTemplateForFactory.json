@@ -11397,7 +11397,11 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"refcode": {
-										"value": "@pipeline().parameters.pipeparam",
+										"value": "'@pipeline().parameters.pipeparam'",
+										"type": "Expression"
+									},
+									"refnumber": {
+										"value": "@pipeline().parameters.pipeparamint",
 										"type": "Expression"
 									}
 								},
@@ -11428,6 +11432,10 @@
 					"pipeparam": {
 						"type": "string",
 						"defaultValue": "RVFD89P57PG5ZNDQ"
+					},
+					"pipeparamint": {
+						"type": "int",
+						"defaultValue": 12
 					}
 				},
 				"folder": {
@@ -15414,7 +15422,8 @@
 					],
 					"scriptLines": [
 						"parameters{",
-						"     refcode as string",
+						"     refcode as string,",
+						"     refnumber as integer",
 						"}",
 						"source(output(",
 						"          guid_pk as string,",
@@ -15505,7 +15514,7 @@
 						"     ignoreNoFilesFound: true,",
 						"     format: 'parquet',",
 						"     wildcardPaths:['*.parquet']) ~> source1",
-						"source1 filter(reservation_code == \"$refcode\") ~> filter1",
+						"source1 filter(reservation_code == $refcode && status == $refnumber) ~> filter1",
 						"filter1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
