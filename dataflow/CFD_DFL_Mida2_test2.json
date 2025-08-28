@@ -31,7 +31,8 @@
 			],
 			"scriptLines": [
 				"parameters{",
-				"     refcode as string",
+				"     refcode as string,",
+				"     refnumber as integer",
 				"}",
 				"source(output(",
 				"          guid_pk as string,",
