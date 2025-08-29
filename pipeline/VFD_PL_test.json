@@ -20,7 +20,7 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"refcode": {
-								"value": "@pipeline().parameters.pipeparam",
+								"value": "@concat('''', pipeline().parameters.pipeparam, '''')",
 								"type": "Expression"
 							},
 							"refnumber": {
