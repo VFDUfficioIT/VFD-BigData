@@ -11397,7 +11397,7 @@
 								"type": "DataFlowReference",
 								"parameters": {
 									"refcode": {
-										"value": "'@pipeline().parameters.pipeparam'",
+										"value": "@pipeline().parameters.pipeparam",
 										"type": "Expression"
 									},
 									"refnumber": {
@@ -15513,7 +15513,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     format: 'parquet') ~> source1",
-						"source1 derive(reservation_code = $refcode,",
+						"source1 derive(reservation_code = toString($refcode),",
 						"          reservation_status = $refnumber) ~> derivedColumn1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
