@@ -1891,11 +1891,11 @@
 										"type": "Expression"
 									},
 									"param_date": {
-										"value": "@pipeline().parameters.pipeparam_date",
+										"value": "@concat('''', pipeline().parameters.pipeparam_date, '''')",
 										"type": "Expression"
 									},
 									"param_timestamp": {
-										"value": "@pipeline().parameters.pipeparam_timestamp",
+										"value": "@concat('''', pipeline().parameters.pipeparam_timestamp, '''')",
 										"type": "Expression"
 									}
 								},
