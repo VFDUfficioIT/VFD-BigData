@@ -11408,10 +11408,6 @@
 									"param_date": {
 										"value": "@formatDateTime(pipeline().parameters.pipeparam_date, 'yyyy-MM-dd')",
 										"type": "Expression"
-									},
-									"param_timestamp": {
-										"value": "@formatDateTime(pipeline().parameters.pipeparam_timestamp, 'yyyy-MM-ddTHH:mm:ss.fffZ')",
-										"type": "Expression"
 									}
 								},
 								"datasetParameters": {
@@ -15443,8 +15439,7 @@
 						"parameters{",
 						"     param_string as string,",
 						"     param_int as integer,",
-						"     param_date as date,",
-						"     param_timestamp as timestamp",
+						"     param_date as date",
 						"}",
 						"source(output(",
 						"          guid_pk as string,",
@@ -15536,8 +15531,7 @@
 						"     format: 'parquet') ~> source1",
 						"source1 derive(reservation_code = \"{$param_string}\",",
 						"          reservation_status = $param_int,",
-						"          visitDate = $param_date,",
-						"          insertTimestamp = $param_timestamp) ~> derivedColumn1",
+						"          visitDate = $param_date) ~> derivedColumn1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
