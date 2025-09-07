@@ -121,7 +121,7 @@
 				"     ),",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: true,",
-				"     ignoreNoFilesFound: false,",
+				"     ignoreNoFilesFound: true,",
 				"     format: 'parquet') ~> source1",
 				"source1 derive(reservation_code = $param_string,",
 				"          reservation_status = $param_int,",
