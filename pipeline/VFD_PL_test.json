@@ -31,10 +31,6 @@
 							"param_date": {
 								"value": "@formatDateTime(pipeline().parameters.pipeparam_date, 'yyyy-MM-dd')",
 								"type": "Expression"
-							},
-							"param_timestamp": {
-								"value": "@formatDateTime(pipeline().parameters.pipeparam_timestamp, 'yyyy-MM-ddTHH:mm:ss.fffZ')",
-								"type": "Expression"
 							}
 						},
 						"datasetParameters": {
