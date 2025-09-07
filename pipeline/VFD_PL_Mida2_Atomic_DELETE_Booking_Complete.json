@@ -21,30 +21,18 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"row_id": {
-								"value": "'@{pipeline().parameters.row_id}'",
+								"value": "@concat('''', pipeline().parameters.row_id, '''')",
 								"type": "Expression"
 							}
 						},
 						"datasetParameters": {
 							"SourceExistingContent": {
-								"folderPath": {
-									"value": "@pipeline().parameters.targetFolderPath",
-									"type": "Expression"
-								},
-								"fileName": {
-									"value": "@pipeline().parameters.targetFileName",
-									"type": "Expression"
-								}
+								"folderPath": "@pipeline().parameters.targetFolderPath",
+								"fileName": "@pipeline().parameters.targetFileName"
 							},
 							"SinkTemp": {
-								"folderPath": {
-									"value": "@pipeline().parameters.tempFolderPath",
-									"type": "Expression"
-								},
-								"fileName": {
-									"value": "@pipeline().parameters.tempFileName",
-									"type": "Expression"
-								}
+								"folderPath": "@pipeline().parameters.tempFolderPath",
+								"fileName": "@pipeline().parameters.tempFileName"
 							}
 						}
 					},
@@ -99,14 +87,8 @@
 						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": {
-								"value": "@pipeline().parameters.tempFolderPath",
-								"type": "Expression"
-							},
-							"fileName": {
-								"value": "@pipeline().parameters.tempFileName",
-								"type": "Expression"
-							}
+							"folderPath": "@pipeline().parameters.tempFolderPath",
+							"fileName": "@pipeline().parameters.tempFileName"
 						}
 					}
 				],
@@ -115,14 +97,8 @@
 						"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": {
-								"value": "@pipeline().parameters.targetFolderPath",
-								"type": "Expression"
-							},
-							"fileName": {
-								"value": "@pipeline().parameters.targetFileName",
-								"type": "Expression"
-							}
+							"folderPath": "@pipeline().parameters.targetFolderPath",
+							"fileName": "@pipeline().parameters.targetFileName"
 						}
 					}
 				]
@@ -151,14 +127,8 @@
 						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": {
-								"value": "@pipeline().parameters.tempFolderPath",
-								"type": "Expression"
-							},
-							"fileName": {
-								"value": "@pipeline().parameters.tempFileName",
-								"type": "Expression"
-							}
+							"folderPath": "@pipeline().parameters.tempFolderPath",
+							"fileName": "@pipeline().parameters.tempFileName"
 						}
 					},
 					"enableLogging": false,
@@ -193,7 +163,7 @@
 		"annotations": [
 			"Pipeline atomica per rimozione prenotazioni complete",
 			"Riceve solo row_id come parametro",
-			"Filtra via il record e ricrea il file"
+			"Sintassi corretta per parametri e dataset"
 		]
 	}
 }

@@ -21,30 +21,18 @@
 						"type": "DataFlowReference",
 						"parameters": {
 							"row_id": {
-								"value": "'@{pipeline().parameters.row_id}'",
+								"value": "@concat('''', pipeline().parameters.row_id, '''')",
 								"type": "Expression"
 							}
 						},
 						"datasetParameters": {
 							"SourceHistorical": {
-								"folderPath": {
-									"value": "@pipeline().parameters.sourceFolderPath",
-									"type": "Expression"
-								},
-								"fileName": {
-									"value": "@pipeline().parameters.sourceFileName",
-									"type": "Expression"
-								}
+								"folderPath": "@pipeline().parameters.sourceFolderPath",
+								"fileName": "@pipeline().parameters.sourceFileName"
 							},
 							"SinkTemp": {
-								"folderPath": {
-									"value": "@pipeline().parameters.outputFolderPath",
-									"type": "Expression"
-								},
-								"fileName": {
-									"value": "@pipeline().parameters.outputFileName",
-									"type": "Expression"
-								}
+								"folderPath": "@pipeline().parameters.outputFolderPath",
+								"fileName": "@pipeline().parameters.outputFileName"
 							}
 						}
 					},
@@ -79,14 +67,8 @@
 						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": {
-								"value": "@pipeline().parameters.outputFolderPath",
-								"type": "Expression"
-							},
-							"fileName": {
-								"value": "@pipeline().parameters.outputFileName",
-								"type": "Expression"
-							}
+							"folderPath": "@pipeline().parameters.outputFolderPath",
+							"fileName": "@pipeline().parameters.outputFileName"
 						}
 					},
 					"fieldList": [
@@ -154,7 +136,7 @@
 		"annotations": [
 			"Pipeline per lookup in historical",
 			"Cerca record per row_id e salva risultato in file temp",
-			"Ritorna variabile recordFound = true/false"
+			"Sintassi corretta per parametri dataflow"
 		]
 	}
 }

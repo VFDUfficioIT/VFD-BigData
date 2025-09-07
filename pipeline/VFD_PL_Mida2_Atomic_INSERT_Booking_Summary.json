@@ -20,14 +20,8 @@
 						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
 						"type": "DatasetReference",
 						"parameters": {
-							"folderPath": {
-								"value": "@pipeline().parameters.targetFolderPath",
-								"type": "Expression"
-							},
-							"fileName": {
-								"value": "@pipeline().parameters.targetFileName",
-								"type": "Expression"
-							}
+							"folderPath": "@pipeline().parameters.targetFolderPath",
+							"fileName": "@pipeline().parameters.targetFileName"
 						}
 					},
 					"fieldList": [
@@ -76,52 +70,46 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"row_id": {
-											"value": "'@{pipeline().parameters.row_id}'",
+											"value": "@concat('''', pipeline().parameters.row_id, '''')",
 											"type": "Expression"
 										},
 										"reservation_code": {
-											"value": "'@{pipeline().parameters.reservation_code}'",
+											"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
 											"type": "Expression"
 										},
 										"priceList": {
-											"value": "'@{pipeline().parameters.priceList}'",
+											"value": "@concat('''', pipeline().parameters.priceList, '''')",
 											"type": "Expression"
 										},
 										"channel_label": {
-											"value": "'@{pipeline().parameters.channel_label}'",
+											"value": "@concat('''', pipeline().parameters.channel_label, '''')",
 											"type": "Expression"
 										},
 										"pax_quantity": {
-											"value": "@pipeline().parameters.pax_quantity",
+											"value": "pipeline().parameters.pax_quantity",
 											"type": "Expression"
 										},
 										"insertTimestamp": {
-											"value": "@pipeline().parameters.insertTimestamp",
+											"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
 											"type": "Expression"
 										},
 										"updateTimestamp": {
-											"value": "@pipeline().parameters.updateTimestamp",
+											"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
 											"type": "Expression"
 										},
 										"reservation_amount": {
-											"value": "@pipeline().parameters.reservation_amount",
+											"value": "pipeline().parameters.reservation_amount",
 											"type": "Expression"
 										},
 										"visitDate": {
-											"value": "@pipeline().parameters.visitDate",
+											"value": "@concat('''', pipeline().parameters.visitDate, '''')",
 											"type": "Expression"
 										}
 									},
 									"datasetParameters": {
 										"SinkSummary": {
-											"folderPath": {
-												"value": "@pipeline().parameters.targetFolderPath",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@pipeline().parameters.targetFileName",
-												"type": "Expression"
-											}
+											"folderPath": "@pipeline().parameters.targetFolderPath",
+											"fileName": "@pipeline().parameters.targetFileName"
 										}
 									}
 								},
@@ -152,62 +140,50 @@
 									"type": "DataFlowReference",
 									"parameters": {
 										"row_id": {
-											"value": "'@{pipeline().parameters.row_id}'",
+											"value": "@concat('''', pipeline().parameters.row_id, '''')",
 											"type": "Expression"
 										},
 										"reservation_code": {
-											"value": "'@{pipeline().parameters.reservation_code}'",
+											"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
 											"type": "Expression"
 										},
 										"priceList": {
-											"value": "'@{pipeline().parameters.priceList}'",
+											"value": "@concat('''', pipeline().parameters.priceList, '''')",
 											"type": "Expression"
 										},
 										"channel_label": {
-											"value": "'@{pipeline().parameters.channel_label}'",
+											"value": "@concat('''', pipeline().parameters.channel_label, '''')",
 											"type": "Expression"
 										},
 										"pax_quantity": {
-											"value": "@pipeline().parameters.pax_quantity",
+											"value": "pipeline().parameters.pax_quantity",
 											"type": "Expression"
 										},
 										"insertTimestamp": {
-											"value": "@pipeline().parameters.insertTimestamp",
+											"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
 											"type": "Expression"
 										},
 										"updateTimestamp": {
-											"value": "@pipeline().parameters.updateTimestamp",
+											"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
 											"type": "Expression"
 										},
 										"reservation_amount": {
-											"value": "@pipeline().parameters.reservation_amount",
+											"value": "pipeline().parameters.reservation_amount",
 											"type": "Expression"
 										},
 										"visitDate": {
-											"value": "@pipeline().parameters.visitDate",
+											"value": "@concat('''', pipeline().parameters.visitDate, '''')",
 											"type": "Expression"
 										}
 									},
 									"datasetParameters": {
 										"SourceExistingContent": {
-											"folderPath": {
-												"value": "@pipeline().parameters.targetFolderPath",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@pipeline().parameters.targetFileName",
-												"type": "Expression"
-											}
+											"folderPath": "@pipeline().parameters.targetFolderPath",
+											"fileName": "@pipeline().parameters.targetFileName"
 										},
 										"SinkTemp": {
-											"folderPath": {
-												"value": "@pipeline().parameters.tempFolderPath",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@pipeline().parameters.tempFileName",
-												"type": "Expression"
-											}
+											"folderPath": "@pipeline().parameters.tempFolderPath",
+											"fileName": "@pipeline().parameters.tempFileName"
 										}
 									}
 								},
@@ -262,14 +238,8 @@
 									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"folderPath": {
-											"value": "@pipeline().parameters.tempFolderPath",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@pipeline().parameters.tempFileName",
-											"type": "Expression"
-										}
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
 									}
 								}
 							],
@@ -278,14 +248,8 @@
 									"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"folderPath": {
-											"value": "@pipeline().parameters.targetFolderPath",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@pipeline().parameters.targetFileName",
-											"type": "Expression"
-										}
+										"folderPath": "@pipeline().parameters.targetFolderPath",
+										"fileName": "@pipeline().parameters.targetFileName"
 									}
 								}
 							]
@@ -314,14 +278,8 @@
 									"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"folderPath": {
-											"value": "@pipeline().parameters.tempFolderPath",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@pipeline().parameters.tempFileName",
-											"type": "Expression"
-										}
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "@pipeline().parameters.tempFileName"
 									}
 								},
 								"enableLogging": false,
@@ -383,7 +341,7 @@
 		"annotations": [
 			"Pipeline atomica per inserimento prenotazioni summary",
 			"Riceve solo i 9 campi del summary",
-			"TUTTI i parametri usano Expression type"
+			"Sintassi corretta uniforme per CREATE e APPEND"
 		]
 	}
 }
