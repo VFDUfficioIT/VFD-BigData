@@ -11406,7 +11406,7 @@
 										"type": "Expression"
 									},
 									"param_date": {
-										"value": "@pipeline().parameters.pipeparam_date",
+										"value": "@concat('''', pipeline().parameters.pipeparam_date, '''')",
 										"type": "Expression"
 									}
 								},
@@ -15439,7 +15439,7 @@
 						"parameters{",
 						"     param_string as string,",
 						"     param_int as integer,",
-						"     param_date as date",
+						"     param_date as string",
 						"}",
 						"source(output(",
 						"          guid_pk as string,",
@@ -15529,9 +15529,9 @@
 						"     validateSchema: true,",
 						"     ignoreNoFilesFound: false,",
 						"     format: 'parquet') ~> source1",
-						"source1 derive(reservation_code = \"{$param_string}\",",
+						"source1 derive(reservation_code = $param_string,",
 						"          reservation_status = $param_int,",
-						"          visitDate = $param_date) ~> derivedColumn1",
+						"          visitDate = toDate($param_date)) ~> derivedColumn1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
