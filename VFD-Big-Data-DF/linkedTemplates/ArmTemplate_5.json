@@ -1863,6 +1863,7 @@
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"description": "Pipeline di test per verificare passaggio parametri da pipeline a dataflow",
 				"activities": [
 					{
 						"name": "Data flow1",
@@ -1881,12 +1882,20 @@
 								"referenceName": "CFD_DFL_Mida2_test2",
 								"type": "DataFlowReference",
 								"parameters": {
-									"refcode": {
-										"value": "@pipeline().parameters.pipeparam",
+									"param_string": {
+										"value": "concat('''', pipeline().parameters.pipeparam_string, '''')",
 										"type": "Expression"
 									},
-									"refnumber": {
-										"value": "@pipeline().parameters.pipeparamint",
+									"param_int": {
+										"value": "@pipeline().parameters.pipeparam_int",
+										"type": "Expression"
+									},
+									"param_date": {
+										"value": "@pipeline().parameters.pipeparam_date",
+										"type": "Expression"
+									},
+									"param_timestamp": {
+										"value": "@pipeline().parameters.pipeparam_timestamp",
 										"type": "Expression"
 									}
 								},
@@ -1914,19 +1923,29 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"pipeparam": {
+					"pipeparam_string": {
 						"type": "string",
 						"defaultValue": "RVFD2XNDRPZ3XPQX"
 					},
-					"pipeparamint": {
+					"pipeparam_int": {
 						"type": "int",
 						"defaultValue": 12
+					},
+					"pipeparam_date": {
+						"type": "string",
+						"defaultValue": "2025-07-25"
+					},
+					"pipeparam_timestamp": {
+						"type": "string",
+						"defaultValue": "2025-07-25T10:18:56.146Z"
 					}
 				},
 				"folder": {
 					"name": "Mida2/Test"
 				},
-				"annotations": []
+				"annotations": [
+					"Test per verificare passaggio parametri da pipeline a dataflow"
+				]
 			},
 			"dependsOn": []
 		},
