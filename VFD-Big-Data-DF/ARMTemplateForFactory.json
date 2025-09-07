@@ -15472,7 +15472,7 @@
 						"          refunded as string,",
 						"          convention_label as string,",
 						"          receiptCode as string,",
-						"          insertTimestamp as any,",
+						"          insertTimestamp as date,",
 						"          updateTimestamp as date,",
 						"          owner as string,",
 						"          owner_text as string,",
