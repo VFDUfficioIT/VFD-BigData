@@ -29,7 +29,7 @@
 								"type": "Expression"
 							},
 							"param_date": {
-								"value": "@formatDateTime(pipeline().parameters.pipeparam_date, 'yyyy-MM-dd')",
+								"value": "@pipeline().parameters.pipeparam_date",
 								"type": "Expression"
 							}
 						},
