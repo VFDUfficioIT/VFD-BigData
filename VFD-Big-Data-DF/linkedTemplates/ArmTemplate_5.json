@@ -17,18 +17,18 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_DELETE_Booking_Complete')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Seals_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline atomica per rimozione di una prenotazione dal file completo - riceve solo row_id",
+				"description": "Pipeline per convertire file Excel Seals in formato Parquet usando Data Flow",
 				"activities": [
 					{
-						"name": "Delete Record From Complete",
+						"name": "Raw to Processed Transformation",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
-							"timeout": "0.12:00:00",
+							"timeout": "7.00:00:00",
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
 							"secureOutput": false,
@@ -37,22 +37,17 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "VFD_DFL_Mida2_Atomic_DELETE_Booking_Complete",
+								"referenceName": "VFD_DFL_Mida_Seals_Raw_Processed",
 								"type": "DataFlowReference",
-								"parameters": {
-									"row_id": {
-										"value": "@concat('''', pipeline().parameters.row_id, '''')",
-										"type": "Expression"
-									}
-								},
+								"parameters": {},
 								"datasetParameters": {
-									"SourceExistingContent": {
-										"folderPath": "@pipeline().parameters.targetFolderPath",
-										"fileName": "@pipeline().parameters.targetFileName"
+									"SourceExcel": {
+										"folderPath": "@pipeline().parameters.folderPath",
+										"fileName": "@pipeline().parameters.fileName"
 									},
-									"SinkTemp": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "@pipeline().parameters.tempFileName"
+									"SinkParquet": {
+										"folderPath": "@pipeline().parameters.folderPath",
+										"fileName": "@replace(pipeline().parameters.fileName, '.xlsx', '.parquet')"
 									}
 								}
 							},
@@ -65,11 +60,11 @@
 						}
 					},
 					{
-						"name": "Copy Temp To Final",
+						"name": "Copy Data from Temporary File",
 						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "Delete Record From Complete",
+								"activity": "Raw to Processed Transformation",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -88,8 +83,11 @@
 								"type": "ParquetSource",
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
+									"recursive": true,
 									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							},
 							"sink": {
@@ -101,35 +99,52 @@
 									"type": "ParquetWriteSettings"
 								}
 							},
-							"enableStaging": false
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
 						},
 						"inputs": [
 							{
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"referenceName": "VFD_DS_Processed_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.tempFolderPath",
-									"fileName": "@pipeline().parameters.tempFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Seals_Raw_Processed_output.parquet"
 								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"referenceName": "VFD_DS_Processed_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.targetFolderPath",
-									"fileName": "@pipeline().parameters.targetFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')",
+										"type": "Expression"
+									}
 								}
 							}
 						]
 					},
 					{
-						"name": "Delete Temp File",
+						"name": "Delete Temporary File",
 						"type": "Delete",
 						"dependsOn": [
 							{
-								"activity": "Copy Temp To Final",
+								"activity": "Copy Data from Temporary File",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -145,84 +160,17 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"referenceName": "VFD_DS_Processed_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.tempFolderPath",
-									"fileName": "@pipeline().parameters.tempFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Seals_Raw_Processed_output.parquet"
 								}
 							},
 							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"row_id": {
-						"type": "string"
-					},
-					"targetFolderPath": {
-						"type": "string"
-					},
-					"targetFileName": {
-						"type": "string"
-					},
-					"tempFolderPath": {
-						"type": "string"
-					},
-					"tempFileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida2/Bookings/Atomic"
-				},
-				"annotations": [
-					"Pipeline atomica per rimozione prenotazioni complete",
-					"Riceve solo row_id come parametro",
-					"Sintassi corretta per parametri e dataset"
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_INSERT_Booking_Summary')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline atomica per inserimento di una prenotazione nel file summary - riceve solo i 9 campi summary",
-				"activities": [
-					{
-						"name": "Check Summary File Exists",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": "@pipeline().parameters.targetFolderPath",
-									"fileName": "@pipeline().parameters.targetFileName"
-								}
-							},
-							"fieldList": [
-								"exists"
-							],
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
@@ -231,335 +179,16 @@
 						}
 					},
 					{
-						"name": "If File Exists",
-						"type": "IfCondition",
+						"name": "Processed to Curated Transformation",
+						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "Check Summary File Exists",
+								"activity": "Delete Temporary File",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							}
 						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@activity('Check Summary File Exists').output.exists",
-								"type": "Expression"
-							},
-							"ifFalseActivities": [
-								{
-									"name": "Create New Summary File",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "VFD_DFL_Mida2_Atomic_CREATE_Booking_Summary",
-											"type": "DataFlowReference",
-											"parameters": {
-												"row_id": {
-													"value": "@concat('''', pipeline().parameters.row_id, '''')",
-													"type": "Expression"
-												},
-												"reservation_code": {
-													"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
-													"type": "Expression"
-												},
-												"priceList": {
-													"value": "@concat('''', pipeline().parameters.priceList, '''')",
-													"type": "Expression"
-												},
-												"channel_label": {
-													"value": "@concat('''', pipeline().parameters.channel_label, '''')",
-													"type": "Expression"
-												},
-												"pax_quantity": {
-													"value": "pipeline().parameters.pax_quantity",
-													"type": "Expression"
-												},
-												"insertTimestamp": {
-													"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
-													"type": "Expression"
-												},
-												"updateTimestamp": {
-													"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
-													"type": "Expression"
-												},
-												"reservation_amount": {
-													"value": "pipeline().parameters.reservation_amount",
-													"type": "Expression"
-												},
-												"visitDate": {
-													"value": "@concat('''', pipeline().parameters.visitDate, '''')",
-													"type": "Expression"
-												}
-											},
-											"datasetParameters": {
-												"DummySource": {},
-												"SinkSummary": {
-													"folderPath": "@pipeline().parameters.targetFolderPath",
-													"fileName": "@pipeline().parameters.targetFileName"
-												}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								}
-							],
-							"ifTrueActivities": [
-								{
-									"name": "Append To Existing File",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "VFD_DFL_Mida2_Atomic_APPEND_Booking_Summary",
-											"type": "DataFlowReference",
-											"parameters": {
-												"row_id": {
-													"value": "@concat('''', pipeline().parameters.row_id, '''')",
-													"type": "Expression"
-												},
-												"reservation_code": {
-													"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
-													"type": "Expression"
-												},
-												"priceList": {
-													"value": "@concat('''', pipeline().parameters.priceList, '''')",
-													"type": "Expression"
-												},
-												"channel_label": {
-													"value": "@concat('''', pipeline().parameters.channel_label, '''')",
-													"type": "Expression"
-												},
-												"pax_quantity": {
-													"value": "pipeline().parameters.pax_quantity",
-													"type": "Expression"
-												},
-												"insertTimestamp": {
-													"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
-													"type": "Expression"
-												},
-												"updateTimestamp": {
-													"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
-													"type": "Expression"
-												},
-												"reservation_amount": {
-													"value": "pipeline().parameters.reservation_amount",
-													"type": "Expression"
-												},
-												"visitDate": {
-													"value": "@concat('''', pipeline().parameters.visitDate, '''')",
-													"type": "Expression"
-												}
-											},
-											"datasetParameters": {
-												"DummySource": {},
-												"SourceExistingContent": {
-													"folderPath": "@pipeline().parameters.targetFolderPath",
-													"fileName": "@pipeline().parameters.targetFileName"
-												},
-												"SinkTemp": {
-													"folderPath": "@pipeline().parameters.tempFolderPath",
-													"fileName": "@pipeline().parameters.tempFileName"
-												}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								},
-								{
-									"name": "Copy Temp To Final",
-									"type": "Copy",
-									"dependsOn": [
-										{
-											"activity": "Append To Existing File",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "ParquetSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": false,
-												"enablePartitionDiscovery": false
-											}
-										},
-										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@pipeline().parameters.tempFolderPath",
-												"fileName": "@pipeline().parameters.tempFileName"
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@pipeline().parameters.targetFolderPath",
-												"fileName": "@pipeline().parameters.targetFileName"
-											}
-										}
-									]
-								},
-								{
-									"name": "Delete Temp File",
-									"type": "Delete",
-									"dependsOn": [
-										{
-											"activity": "Copy Temp To Final",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@pipeline().parameters.tempFolderPath",
-												"fileName": "@pipeline().parameters.tempFileName"
-											}
-										},
-										"enableLogging": false,
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": false,
-											"enablePartitionDiscovery": false
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"row_id": {
-						"type": "string"
-					},
-					"reservation_code": {
-						"type": "string"
-					},
-					"priceList": {
-						"type": "string"
-					},
-					"channel_label": {
-						"type": "string"
-					},
-					"pax_quantity": {
-						"type": "int"
-					},
-					"insertTimestamp": {
-						"type": "string"
-					},
-					"updateTimestamp": {
-						"type": "string"
-					},
-					"reservation_amount": {
-						"type": "float"
-					},
-					"visitDate": {
-						"type": "string"
-					},
-					"targetFolderPath": {
-						"type": "string"
-					},
-					"targetFileName": {
-						"type": "string"
-					},
-					"tempFolderPath": {
-						"type": "string"
-					},
-					"tempFileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida2/Bookings/Atomic"
-				},
-				"annotations": [
-					"Pipeline atomica per inserimento prenotazioni summary",
-					"Riceve solo i 9 campi del summary",
-					"Sintassi corretta uniforme per CREATE e APPEND"
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_UPDATE_Booking_Summary')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline atomica per aggiornamento di una prenotazione nel file summary",
-				"activities": [
-					{
-						"name": "Update Summary Record",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -570,55 +199,26 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "VFD_DFL_Mida2_Atomic_UPDATE_Booking_Summary",
+								"referenceName": "VFD_DFL_Mida_Seals_Processed_Curated_Daily",
 								"type": "DataFlowReference",
-								"parameters": {
-									"row_id": {
-										"value": "@concat('''', pipeline().parameters.row_id, '''')",
-										"type": "Expression"
-									},
-									"reservation_code": {
-										"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
-										"type": "Expression"
-									},
-									"priceList": {
-										"value": "@concat('''', pipeline().parameters.priceList, '''')",
-										"type": "Expression"
-									},
-									"channel_label": {
-										"value": "@concat('''', pipeline().parameters.channel_label, '''')",
-										"type": "Expression"
-									},
-									"pax_quantity": {
-										"value": "pipeline().parameters.pax_quantity",
-										"type": "Expression"
-									},
-									"insertTimestamp": {
-										"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
-										"type": "Expression"
-									},
-									"updateTimestamp": {
-										"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
-										"type": "Expression"
-									},
-									"reservation_amount": {
-										"value": "pipeline().parameters.reservation_amount",
-										"type": "Expression"
-									},
-									"visitDate": {
-										"value": "@concat('''', pipeline().parameters.visitDate, '''')",
-										"type": "Expression"
-									}
-								},
+								"parameters": {},
 								"datasetParameters": {
-									"DummySource": {},
-									"SourceExistingContent": {
-										"folderPath": "@pipeline().parameters.targetFolderPath",
-										"fileName": "@pipeline().parameters.targetFileName"
+									"SourceProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')"
 									},
-									"SinkTemp": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "temp_update_summary.parquet"
+									"SinkCurated": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('Mida_Seals_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)",
+											"type": "Expression"
+										}
 									}
 								}
 							},
@@ -631,11 +231,11 @@
 						}
 					},
 					{
-						"name": "Copy Temp To Final",
+						"name": "Copy Data from Temporary Curated",
 						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "Update Summary Record",
+								"activity": "Processed to Curated Transformation",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -654,8 +254,11 @@
 								"type": "ParquetSource",
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
+									"recursive": true,
 									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							},
 							"sink": {
@@ -667,35 +270,55 @@
 									"type": "ParquetWriteSettings"
 								}
 							},
-							"enableStaging": false
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
 						},
 						"inputs": [
 							{
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.tempFolderPath",
-									"fileName": "temp_update_summary.parquet"
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "VFD_DFL_Mida_Seals_Processed_Curated_Daily_output.parquet",
+										"type": "Expression"
+									}
 								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+								"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.targetFolderPath",
-									"fileName": "@pipeline().parameters.targetFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('Mida_Seals_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
+										"type": "Expression"
+									}
 								}
 							}
 						]
 					},
 					{
-						"name": "Delete Temp File",
+						"name": "Delete Temporary File Curated",
 						"type": "Delete",
 						"dependsOn": [
 							{
-								"activity": "Copy Temp To Final",
+								"activity": "Copy Data from Temporary Curated",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -711,17 +334,20 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"referenceName": "VFD_DS_Curated_Mida_Seals_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.tempFolderPath",
-									"fileName": "temp_update_summary.parquet"
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Seals_Processed_Curated_Daily_output.parquet"
 								}
 							},
 							"enableLogging": false,
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
-								"recursive": false,
+								"recursive": true,
 								"enablePartitionDiscovery": false
 							}
 						}
@@ -731,65 +357,51 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"row_id": {
-						"type": "string"
+					"folderPath": {
+						"type": "String",
+						"defaultValue": "Mida/Seals/2025/03"
 					},
-					"reservation_code": {
-						"type": "string"
+					"fileName": {
+						"type": "String",
+						"defaultValue": "EmissioniGiornoPrecedente20250313.xlsx"
 					},
-					"priceList": {
-						"type": "string"
+					"year": {
+						"type": "string",
+						"defaultValue": "2025"
 					},
-					"channel_label": {
-						"type": "string"
+					"month": {
+						"type": "string",
+						"defaultValue": "03"
 					},
-					"pax_quantity": {
-						"type": "int"
+					"day": {
+						"type": "string",
+						"defaultValue": "13"
+					}
+				},
+				"variables": {
+					"year": {
+						"type": "String"
 					},
-					"insertTimestamp": {
-						"type": "string"
-					},
-					"updateTimestamp": {
-						"type": "string"
-					},
-					"reservation_amount": {
-						"type": "float"
-					},
-					"visitDate": {
-						"type": "string"
-					},
-					"targetFolderPath": {
-						"type": "string"
-					},
-					"targetFileName": {
-						"type": "string"
-					},
-					"tempFolderPath": {
-						"type": "string"
-					},
-					"tempFileName": {
-						"type": "string"
+					"day": {
+						"type": "String"
 					}
 				},
 				"folder": {
-					"name": "Mida2/Bookings/Atomic"
+					"name": "Mida/Seals"
 				},
-				"annotations": [
-					"Pipeline atomica per aggiornamento prenotazioni summary",
-					"Sintassi corretta per tutti i parametri dataflow"
-				]
+				"annotations": []
 			},
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_DELETE_Booking_Summary')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Users_Processed_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline atomica per rimozione di una prenotazione dal file summary",
+				"description": "Pipeline parametrica per convertire CSV in Parquet usando Data Flow",
 				"activities": [
 					{
-						"name": "Delete Record From Summary",
+						"name": "Processed to Curated Transformation",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -802,39 +414,49 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "VFD_DFL_Mida2_Atomic_DELETE_Booking_Summary",
+								"referenceName": "VFD_DFL_Mida_Users_Processed_Curated_Daily",
 								"type": "DataFlowReference",
 								"parameters": {
-									"row_id": {
-										"value": "@concat('''', pipeline().parameters.row_id, '''')",
-										"type": "Expression"
-									}
+									"folderPath": "\"folder\"",
+									"fileName": "\"file\""
 								},
 								"datasetParameters": {
-									"SourceExistingContent": {
-										"folderPath": "@pipeline().parameters.targetFolderPath",
-										"fileName": "@pipeline().parameters.targetFileName"
+									"SourceProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.bookingsFolderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@replace(pipeline().parameters.bookingsFileName,'.csv','.parquet')",
+											"type": "Expression"
+										}
 									},
-									"SinkTemp": {
-										"folderPath": "@pipeline().parameters.tempFolderPath",
-										"fileName": "@pipeline().parameters.tempFileName"
+									"SinkCurated": {
+										"folderPath": {
+											"value": "@pipeline().parameters.usersFolderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@concat('Mida_Users_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day)",
+											"type": "Expression"
+										}
 									}
 								}
 							},
 							"staging": {},
 							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+								"coreCount": 32,
+								"computeType": "MemoryOptimized"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "Coarse"
 						}
 					},
 					{
-						"name": "Copy Temp To Final",
+						"name": "Copy Data from Temporary Curated",
 						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "Delete Record From Summary",
+								"activity": "Processed to Curated Transformation",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -853,8 +475,11 @@
 								"type": "ParquetSource",
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
-									"recursive": false,
+									"recursive": true,
 									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							},
 							"sink": {
@@ -866,35 +491,55 @@
 									"type": "ParquetWriteSettings"
 								}
 							},
-							"enableStaging": false
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
 						},
 						"inputs": [
 							{
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"referenceName": "VFD_DS_Curated_Mida_Users_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.tempFolderPath",
-									"fileName": "@pipeline().parameters.tempFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.usersFolderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "VFD_DFL_Mida_Users_Processed_Curated_Daily_output.parquet",
+										"type": "Expression"
+									}
 								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+								"referenceName": "VFD_DS_Curated_Mida_Users_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.targetFolderPath",
-									"fileName": "@pipeline().parameters.targetFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.usersFolderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('Mida_Users_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
+										"type": "Expression"
+									}
 								}
 							}
 						]
 					},
 					{
-						"name": "Delete Temp File",
+						"name": "Delete Temporary File Curated",
 						"type": "Delete",
 						"dependsOn": [
 							{
-								"activity": "Copy Temp To Final",
+								"activity": "Copy Data from Temporary Curated",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -910,1236 +555,86 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"referenceName": "VFD_DS_Curated_Mida_Users_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.tempFolderPath",
-									"fileName": "@pipeline().parameters.tempFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.usersFolderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet"
 								}
 							},
 							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"row_id": {
-						"type": "string"
-					},
-					"targetFolderPath": {
-						"type": "string"
-					},
-					"targetFileName": {
-						"type": "string"
-					},
-					"tempFolderPath": {
-						"type": "string"
-					},
-					"tempFileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida2/Bookings/Atomic"
-				},
-				"annotations": [
-					"Pipeline atomica per rimozione prenotazioni summary",
-					"Sintassi corretta per parametri e dataset"
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_APPEND_Historical')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline atomica per aggiungere record al file historical con audit trail",
-				"activities": [
-					{
-						"name": "Check Historical File Exists",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": "@pipeline().parameters.targetFolderPath",
-									"fileName": "@pipeline().parameters.targetFileName"
-								}
-							},
-							"fieldList": [
-								"exists"
-							],
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
 								"enablePartitionDiscovery": false
 							}
 						}
-					},
-					{
-						"name": "If File Exists",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "Check Historical File Exists",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@activity('Check Historical File Exists').output.exists",
-								"type": "Expression"
-							},
-							"ifFalseActivities": [
-								{
-									"name": "Create New Historical File",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "VFD_DFL_Mida2_Atomic_CREATE_Historical",
-											"type": "DataFlowReference",
-											"parameters": {
-												"guid_pk": {
-													"value": "@concat('''', pipeline().parameters.guid_pk, '''')",
-													"type": "Expression"
-												},
-												"reservation_progressiveCode": {
-													"value": "@concat('''', pipeline().parameters.reservation_progressiveCode, '''')",
-													"type": "Expression"
-												},
-												"reservation_code": {
-													"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
-													"type": "Expression"
-												},
-												"reservation_status": {
-													"value": "pipeline().parameters.reservation_status",
-													"type": "Expression"
-												},
-												"invoiceRequired": {
-													"value": "@concat('''', pipeline().parameters.invoiceRequired, '''')",
-													"type": "Expression"
-												},
-												"customer": {
-													"value": "pipeline().parameters.customer",
-													"type": "Expression"
-												},
-												"visitDate": {
-													"value": "@concat('''', pipeline().parameters.visitDate, '''')",
-													"type": "Expression"
-												},
-												"reservationPayment_guid": {
-													"value": "@concat('''', pipeline().parameters.reservationPayment_guid, '''')",
-													"type": "Expression"
-												},
-												"parentPayment_guid": {
-													"value": "@concat('''', pipeline().parameters.parentPayment_guid, '''')",
-													"type": "Expression"
-												},
-												"sliced": {
-													"value": "@concat('''', pipeline().parameters.sliced, '''')",
-													"type": "Expression"
-												},
-												"reservation_guid": {
-													"value": "@concat('''', pipeline().parameters.reservation_guid, '''')",
-													"type": "Expression"
-												},
-												"group_guid": {
-													"value": "@concat('''', pipeline().parameters.group_guid, '''')",
-													"type": "Expression"
-												},
-												"group_label": {
-													"value": "@concat('''', pipeline().parameters.group_label, '''')",
-													"type": "Expression"
-												},
-												"group_email": {
-													"value": "@concat('''', pipeline().parameters.group_email, '''')",
-													"type": "Expression"
-												},
-												"paymentCode": {
-													"value": "@concat('''', pipeline().parameters.paymentCode, '''')",
-													"type": "Expression"
-												},
-												"paymentCondition": {
-													"value": "pipeline().parameters.paymentCondition",
-													"type": "Expression"
-												},
-												"reservation_amount": {
-													"value": "pipeline().parameters.reservation_amount",
-													"type": "Expression"
-												},
-												"reservation_amountTax": {
-													"value": "pipeline().parameters.reservation_amountTax",
-													"type": "Expression"
-												},
-												"status": {
-													"value": "pipeline().parameters.status",
-													"type": "Expression"
-												},
-												"status_text": {
-													"value": "@concat('''', pipeline().parameters.status_text, '''')",
-													"type": "Expression"
-												},
-												"stamp": {
-													"value": "@concat('''', pipeline().parameters.stamp, '''')",
-													"type": "Expression"
-												},
-												"notes": {
-													"value": "@concat('''', pipeline().parameters.notes, '''')",
-													"type": "Expression"
-												},
-												"transactionType": {
-													"value": "@concat('''', pipeline().parameters.transactionType, '''')",
-													"type": "Expression"
-												},
-												"transactionType_text": {
-													"value": "@concat('''', pipeline().parameters.transactionType_text, '''')",
-													"type": "Expression"
-												},
-												"paymentLimitDate": {
-													"value": "@concat('''', pipeline().parameters.paymentLimitDate, '''')",
-													"type": "Expression"
-												},
-												"paymentDate": {
-													"value": "@concat('''', pipeline().parameters.paymentDate, '''')",
-													"type": "Expression"
-												},
-												"refund": {
-													"value": "@concat('''', pipeline().parameters.refund, '''')",
-													"type": "Expression"
-												},
-												"refunded": {
-													"value": "@concat('''', pipeline().parameters.refunded, '''')",
-													"type": "Expression"
-												},
-												"convention_label": {
-													"value": "@concat('''', pipeline().parameters.convention_label, '''')",
-													"type": "Expression"
-												},
-												"receiptCode": {
-													"value": "@concat('''', pipeline().parameters.receiptCode, '''')",
-													"type": "Expression"
-												},
-												"insertTimestamp": {
-													"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
-													"type": "Expression"
-												},
-												"updateTimestamp": {
-													"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
-													"type": "Expression"
-												},
-												"owner": {
-													"value": "@concat('''', pipeline().parameters.owner, '''')",
-													"type": "Expression"
-												},
-												"owner_text": {
-													"value": "@concat('''', pipeline().parameters.owner_text, '''')",
-													"type": "Expression"
-												},
-												"sessionId": {
-													"value": "@concat('''', pipeline().parameters.sessionId, '''')",
-													"type": "Expression"
-												},
-												"terminal_label": {
-													"value": "@concat('''', pipeline().parameters.terminal_label, '''')",
-													"type": "Expression"
-												},
-												"terminalGroup_label": {
-													"value": "@concat('''', pipeline().parameters.terminalGroup_label, '''')",
-													"type": "Expression"
-												},
-												"gateway_guid": {
-													"value": "@concat('''', pipeline().parameters.gateway_guid, '''')",
-													"type": "Expression"
-												},
-												"gateway_label": {
-													"value": "@concat('''', pipeline().parameters.gateway_label, '''')",
-													"type": "Expression"
-												},
-												"transactionID": {
-													"value": "@concat('''', pipeline().parameters.transactionID, '''')",
-													"type": "Expression"
-												},
-												"bankAccount_guid": {
-													"value": "@concat('''', pipeline().parameters.bankAccount_guid, '''')",
-													"type": "Expression"
-												},
-												"bankAccount_label": {
-													"value": "@concat('''', pipeline().parameters.bankAccount_label, '''')",
-													"type": "Expression"
-												},
-												"channel_guid": {
-													"value": "@concat('''', pipeline().parameters.channel_guid, '''')",
-													"type": "Expression"
-												},
-												"channel_label": {
-													"value": "@concat('''', pipeline().parameters.channel_label, '''')",
-													"type": "Expression"
-												},
-												"channelType": {
-													"value": "@concat('''', pipeline().parameters.channelType, '''')",
-													"type": "Expression"
-												},
-												"detail_guid": {
-													"value": "@concat('''', pipeline().parameters.detail_guid, '''')",
-													"type": "Expression"
-												},
-												"extra_guid": {
-													"value": "@concat('''', pipeline().parameters.extra_guid, '''')",
-													"type": "Expression"
-												},
-												"priceList": {
-													"value": "@concat('''', pipeline().parameters.priceList, '''')",
-													"type": "Expression"
-												},
-												"event": {
-													"value": "@concat('''', pipeline().parameters.event, '''')",
-													"type": "Expression"
-												},
-												"detailType": {
-													"value": "@concat('''', pipeline().parameters.detailType, '''')",
-													"type": "Expression"
-												},
-												"detail_text": {
-													"value": "@concat('''', pipeline().parameters.detail_text, '''')",
-													"type": "Expression"
-												},
-												"detail_label": {
-													"value": "@concat('''', pipeline().parameters.detail_label, '''')",
-													"type": "Expression"
-												},
-												"detail_count": {
-													"value": "pipeline().parameters.detail_count",
-													"type": "Expression"
-												},
-												"paymentDetail_guid": {
-													"value": "@concat('''', pipeline().parameters.paymentDetail_guid, '''')",
-													"type": "Expression"
-												},
-												"detail_payingPartecipants": {
-													"value": "pipeline().parameters.detail_payingPartecipants",
-													"type": "Expression"
-												},
-												"detail_quantity": {
-													"value": "pipeline().parameters.detail_quantity",
-													"type": "Expression"
-												},
-												"tickets_quantity": {
-													"value": "pipeline().parameters.tickets_quantity",
-													"type": "Expression"
-												},
-												"pax_quantity": {
-													"value": "pipeline().parameters.pax_quantity",
-													"type": "Expression"
-												},
-												"costCenter_guid": {
-													"value": "@concat('''', pipeline().parameters.costCenter_guid, '''')",
-													"type": "Expression"
-												},
-												"costCenter_label": {
-													"value": "@concat('''', pipeline().parameters.costCenter_label, '''')",
-													"type": "Expression"
-												},
-												"object_receipt": {
-													"value": "pipeline().parameters.object_receipt",
-													"type": "Expression"
-												},
-												"object_taxCode": {
-													"value": "@concat('''', pipeline().parameters.object_taxCode, '''')",
-													"type": "Expression"
-												},
-												"object_taxNotes": {
-													"value": "@concat('''', pipeline().parameters.object_taxNotes, '''')",
-													"type": "Expression"
-												},
-												"object_amount": {
-													"value": "pipeline().parameters.object_amount",
-													"type": "Expression"
-												},
-												"object_taxPercentage": {
-													"value": "pipeline().parameters.object_taxPercentage",
-													"type": "Expression"
-												},
-												"amount": {
-													"value": "pipeline().parameters.amount",
-													"type": "Expression"
-												},
-												"amountNet": {
-													"value": "pipeline().parameters.amountNet",
-													"type": "Expression"
-												},
-												"amountPresale": {
-													"value": "pipeline().parameters.amountPresale",
-													"type": "Expression"
-												},
-												"amountSold": {
-													"value": "pipeline().parameters.amountSold",
-													"type": "Expression"
-												},
-												"amountPayed": {
-													"value": "pipeline().parameters.amountPayed",
-													"type": "Expression"
-												},
-												"amountPending": {
-													"value": "pipeline().parameters.amountPending",
-													"type": "Expression"
-												},
-												"amountCanceled": {
-													"value": "pipeline().parameters.amountCanceled",
-													"type": "Expression"
-												},
-												"externalId": {
-													"value": "@concat('''', pipeline().parameters.externalId, '''')",
-													"type": "Expression"
-												},
-												"amountRefunded": {
-													"value": "pipeline().parameters.amountRefunded",
-													"type": "Expression"
-												},
-												"invoiceSummary": {
-													"value": "@concat('''', pipeline().parameters.invoiceSummary, '''')",
-													"type": "Expression"
-												},
-												"eventCalendar_guid": {
-													"value": "@concat('''', pipeline().parameters.eventCalendar_guid, '''')",
-													"type": "Expression"
-												},
-												"passDetail_guid": {
-													"value": "@concat('''', pipeline().parameters.passDetail_guid, '''')",
-													"type": "Expression"
-												},
-												"paymentCostCenter_guid": {
-													"value": "@concat('''', pipeline().parameters.paymentCostCenter_guid, '''')",
-													"type": "Expression"
-												},
-												"organization_guid": {
-													"value": "@concat('''', pipeline().parameters.organization_guid, '''')",
-													"type": "Expression"
-												},
-												"venue_guid": {
-													"value": "@concat('''', pipeline().parameters.venue_guid, '''')",
-													"type": "Expression"
-												},
-												"olapUpdateTimestamp": {
-													"value": "@concat('''', pipeline().parameters.olapUpdateTimestamp, '''')",
-													"type": "Expression"
-												},
-												"row_id": {
-													"value": "@concat('''', pipeline().parameters.row_id, '''')",
-													"type": "Expression"
-												},
-												"operationType": {
-													"value": "@concat('''', pipeline().parameters.operationType, '''')",
-													"type": "Expression"
-												}
-											},
-											"datasetParameters": {
-												"DummySource": {},
-												"SinkHistorical": {
-													"folderPath": "@pipeline().parameters.targetFolderPath",
-													"fileName": "@pipeline().parameters.targetFileName"
-												}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								}
-							],
-							"ifTrueActivities": [
-								{
-									"name": "Append To Existing Historical",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "VFD_DFL_Mida2_Atomic_APPEND_Historical",
-											"type": "DataFlowReference",
-											"parameters": {
-												"guid_pk": {
-													"value": "@concat('''', pipeline().parameters.guid_pk, '''')",
-													"type": "Expression"
-												},
-												"reservation_progressiveCode": {
-													"value": "@concat('''', pipeline().parameters.reservation_progressiveCode, '''')",
-													"type": "Expression"
-												},
-												"reservation_code": {
-													"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
-													"type": "Expression"
-												},
-												"reservation_status": {
-													"value": "pipeline().parameters.reservation_status",
-													"type": "Expression"
-												},
-												"invoiceRequired": {
-													"value": "@concat('''', pipeline().parameters.invoiceRequired, '''')",
-													"type": "Expression"
-												},
-												"customer": {
-													"value": "pipeline().parameters.customer",
-													"type": "Expression"
-												},
-												"visitDate": {
-													"value": "@concat('''', pipeline().parameters.visitDate, '''')",
-													"type": "Expression"
-												},
-												"reservationPayment_guid": {
-													"value": "@concat('''', pipeline().parameters.reservationPayment_guid, '''')",
-													"type": "Expression"
-												},
-												"parentPayment_guid": {
-													"value": "@concat('''', pipeline().parameters.parentPayment_guid, '''')",
-													"type": "Expression"
-												},
-												"sliced": {
-													"value": "@concat('''', pipeline().parameters.sliced, '''')",
-													"type": "Expression"
-												},
-												"reservation_guid": {
-													"value": "@concat('''', pipeline().parameters.reservation_guid, '''')",
-													"type": "Expression"
-												},
-												"group_guid": {
-													"value": "@concat('''', pipeline().parameters.group_guid, '''')",
-													"type": "Expression"
-												},
-												"group_label": {
-													"value": "@concat('''', pipeline().parameters.group_label, '''')",
-													"type": "Expression"
-												},
-												"group_email": {
-													"value": "@concat('''', pipeline().parameters.group_email, '''')",
-													"type": "Expression"
-												},
-												"paymentCode": {
-													"value": "@concat('''', pipeline().parameters.paymentCode, '''')",
-													"type": "Expression"
-												},
-												"paymentCondition": {
-													"value": "pipeline().parameters.paymentCondition",
-													"type": "Expression"
-												},
-												"reservation_amount": {
-													"value": "pipeline().parameters.reservation_amount",
-													"type": "Expression"
-												},
-												"reservation_amountTax": {
-													"value": "pipeline().parameters.reservation_amountTax",
-													"type": "Expression"
-												},
-												"status": {
-													"value": "pipeline().parameters.status",
-													"type": "Expression"
-												},
-												"status_text": {
-													"value": "@concat('''', pipeline().parameters.status_text, '''')",
-													"type": "Expression"
-												},
-												"stamp": {
-													"value": "@concat('''', pipeline().parameters.stamp, '''')",
-													"type": "Expression"
-												},
-												"notes": {
-													"value": "@concat('''', pipeline().parameters.notes, '''')",
-													"type": "Expression"
-												},
-												"transactionType": {
-													"value": "@concat('''', pipeline().parameters.transactionType, '''')",
-													"type": "Expression"
-												},
-												"transactionType_text": {
-													"value": "@concat('''', pipeline().parameters.transactionType_text, '''')",
-													"type": "Expression"
-												},
-												"paymentLimitDate": {
-													"value": "@concat('''', pipeline().parameters.paymentLimitDate, '''')",
-													"type": "Expression"
-												},
-												"paymentDate": {
-													"value": "@concat('''', pipeline().parameters.paymentDate, '''')",
-													"type": "Expression"
-												},
-												"refund": {
-													"value": "@concat('''', pipeline().parameters.refund, '''')",
-													"type": "Expression"
-												},
-												"refunded": {
-													"value": "@concat('''', pipeline().parameters.refunded, '''')",
-													"type": "Expression"
-												},
-												"convention_label": {
-													"value": "@concat('''', pipeline().parameters.convention_label, '''')",
-													"type": "Expression"
-												},
-												"receiptCode": {
-													"value": "@concat('''', pipeline().parameters.receiptCode, '''')",
-													"type": "Expression"
-												},
-												"insertTimestamp": {
-													"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
-													"type": "Expression"
-												},
-												"updateTimestamp": {
-													"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
-													"type": "Expression"
-												},
-												"owner": {
-													"value": "@concat('''', pipeline().parameters.owner, '''')",
-													"type": "Expression"
-												},
-												"owner_text": {
-													"value": "@concat('''', pipeline().parameters.owner_text, '''')",
-													"type": "Expression"
-												},
-												"sessionId": {
-													"value": "@concat('''', pipeline().parameters.sessionId, '''')",
-													"type": "Expression"
-												},
-												"terminal_label": {
-													"value": "@concat('''', pipeline().parameters.terminal_label, '''')",
-													"type": "Expression"
-												},
-												"terminalGroup_label": {
-													"value": "@concat('''', pipeline().parameters.terminalGroup_label, '''')",
-													"type": "Expression"
-												},
-												"gateway_guid": {
-													"value": "@concat('''', pipeline().parameters.gateway_guid, '''')",
-													"type": "Expression"
-												},
-												"gateway_label": {
-													"value": "@concat('''', pipeline().parameters.gateway_label, '''')",
-													"type": "Expression"
-												},
-												"transactionID": {
-													"value": "@concat('''', pipeline().parameters.transactionID, '''')",
-													"type": "Expression"
-												},
-												"bankAccount_guid": {
-													"value": "@concat('''', pipeline().parameters.bankAccount_guid, '''')",
-													"type": "Expression"
-												},
-												"bankAccount_label": {
-													"value": "@concat('''', pipeline().parameters.bankAccount_label, '''')",
-													"type": "Expression"
-												},
-												"channel_guid": {
-													"value": "@concat('''', pipeline().parameters.channel_guid, '''')",
-													"type": "Expression"
-												},
-												"channel_label": {
-													"value": "@concat('''', pipeline().parameters.channel_label, '''')",
-													"type": "Expression"
-												},
-												"channelType": {
-													"value": "@concat('''', pipeline().parameters.channelType, '''')",
-													"type": "Expression"
-												},
-												"detail_guid": {
-													"value": "@concat('''', pipeline().parameters.detail_guid, '''')",
-													"type": "Expression"
-												},
-												"extra_guid": {
-													"value": "@concat('''', pipeline().parameters.extra_guid, '''')",
-													"type": "Expression"
-												},
-												"priceList": {
-													"value": "@concat('''', pipeline().parameters.priceList, '''')",
-													"type": "Expression"
-												},
-												"event": {
-													"value": "@concat('''', pipeline().parameters.event, '''')",
-													"type": "Expression"
-												},
-												"detailType": {
-													"value": "@concat('''', pipeline().parameters.detailType, '''')",
-													"type": "Expression"
-												},
-												"detail_text": {
-													"value": "@concat('''', pipeline().parameters.detail_text, '''')",
-													"type": "Expression"
-												},
-												"detail_label": {
-													"value": "@concat('''', pipeline().parameters.detail_label, '''')",
-													"type": "Expression"
-												},
-												"detail_count": {
-													"value": "pipeline().parameters.detail_count",
-													"type": "Expression"
-												},
-												"paymentDetail_guid": {
-													"value": "@concat('''', pipeline().parameters.paymentDetail_guid, '''')",
-													"type": "Expression"
-												},
-												"detail_payingPartecipants": {
-													"value": "pipeline().parameters.detail_payingPartecipants",
-													"type": "Expression"
-												},
-												"detail_quantity": {
-													"value": "pipeline().parameters.detail_quantity",
-													"type": "Expression"
-												},
-												"tickets_quantity": {
-													"value": "pipeline().parameters.tickets_quantity",
-													"type": "Expression"
-												},
-												"pax_quantity": {
-													"value": "pipeline().parameters.pax_quantity",
-													"type": "Expression"
-												},
-												"costCenter_guid": {
-													"value": "@concat('''', pipeline().parameters.costCenter_guid, '''')",
-													"type": "Expression"
-												},
-												"costCenter_label": {
-													"value": "@concat('''', pipeline().parameters.costCenter_label, '''')",
-													"type": "Expression"
-												},
-												"object_receipt": {
-													"value": "pipeline().parameters.object_receipt",
-													"type": "Expression"
-												},
-												"object_taxCode": {
-													"value": "@concat('''', pipeline().parameters.object_taxCode, '''')",
-													"type": "Expression"
-												},
-												"object_taxNotes": {
-													"value": "@concat('''', pipeline().parameters.object_taxNotes, '''')",
-													"type": "Expression"
-												},
-												"object_amount": {
-													"value": "pipeline().parameters.object_amount",
-													"type": "Expression"
-												},
-												"object_taxPercentage": {
-													"value": "pipeline().parameters.object_taxPercentage",
-													"type": "Expression"
-												},
-												"amount": {
-													"value": "pipeline().parameters.amount",
-													"type": "Expression"
-												},
-												"amountNet": {
-													"value": "pipeline().parameters.amountNet",
-													"type": "Expression"
-												},
-												"amountPresale": {
-													"value": "pipeline().parameters.amountPresale",
-													"type": "Expression"
-												},
-												"amountSold": {
-													"value": "pipeline().parameters.amountSold",
-													"type": "Expression"
-												},
-												"amountPayed": {
-													"value": "pipeline().parameters.amountPayed",
-													"type": "Expression"
-												},
-												"amountPending": {
-													"value": "pipeline().parameters.amountPending",
-													"type": "Expression"
-												},
-												"amountCanceled": {
-													"value": "pipeline().parameters.amountCanceled",
-													"type": "Expression"
-												},
-												"externalId": {
-													"value": "@concat('''', pipeline().parameters.externalId, '''')",
-													"type": "Expression"
-												},
-												"amountRefunded": {
-													"value": "pipeline().parameters.amountRefunded",
-													"type": "Expression"
-												},
-												"invoiceSummary": {
-													"value": "@concat('''', pipeline().parameters.invoiceSummary, '''')",
-													"type": "Expression"
-												},
-												"eventCalendar_guid": {
-													"value": "@concat('''', pipeline().parameters.eventCalendar_guid, '''')",
-													"type": "Expression"
-												},
-												"passDetail_guid": {
-													"value": "@concat('''', pipeline().parameters.passDetail_guid, '''')",
-													"type": "Expression"
-												},
-												"paymentCostCenter_guid": {
-													"value": "@concat('''', pipeline().parameters.paymentCostCenter_guid, '''')",
-													"type": "Expression"
-												},
-												"organization_guid": {
-													"value": "@concat('''', pipeline().parameters.organization_guid, '''')",
-													"type": "Expression"
-												},
-												"venue_guid": {
-													"value": "@concat('''', pipeline().parameters.venue_guid, '''')",
-													"type": "Expression"
-												},
-												"olapUpdateTimestamp": {
-													"value": "@concat('''', pipeline().parameters.olapUpdateTimestamp, '''')",
-													"type": "Expression"
-												},
-												"row_id": {
-													"value": "@concat('''', pipeline().parameters.row_id, '''')",
-													"type": "Expression"
-												},
-												"operationType": {
-													"value": "@concat('''', pipeline().parameters.operationType, '''')",
-													"type": "Expression"
-												}
-											},
-											"datasetParameters": {
-												"DummySource": {},
-												"SourceExistingHistorical": {
-													"folderPath": "@pipeline().parameters.targetFolderPath",
-													"fileName": "@pipeline().parameters.targetFileName"
-												},
-												"SinkTemp": {
-													"folderPath": "@pipeline().parameters.tempFolderPath",
-													"fileName": "@pipeline().parameters.tempFileName"
-												}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								},
-								{
-									"name": "Copy Temp To Final",
-									"type": "Copy",
-									"dependsOn": [
-										{
-											"activity": "Append To Existing Historical",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "ParquetSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": false,
-												"enablePartitionDiscovery": false
-											}
-										},
-										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@pipeline().parameters.tempFolderPath",
-												"fileName": "@pipeline().parameters.tempFileName"
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@pipeline().parameters.targetFolderPath",
-												"fileName": "@pipeline().parameters.targetFileName"
-											}
-										}
-									]
-								},
-								{
-									"name": "Delete Temp File",
-									"type": "Delete",
-									"dependsOn": [
-										{
-											"activity": "Copy Temp To Final",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@pipeline().parameters.tempFolderPath",
-												"fileName": "@pipeline().parameters.tempFileName"
-											}
-										},
-										"enableLogging": false,
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": false,
-											"enablePartitionDiscovery": false
-										}
-									}
-								}
-							]
-						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"guid_pk": {
-						"type": "string"
-					},
-					"reservation_progressiveCode": {
-						"type": "string"
-					},
-					"reservation_code": {
-						"type": "string"
-					},
-					"reservation_status": {
-						"type": "int"
-					},
-					"invoiceRequired": {
-						"type": "string"
-					},
-					"customer": {
-						"type": "float"
-					},
-					"visitDate": {
-						"type": "string"
-					},
-					"reservationPayment_guid": {
-						"type": "string"
-					},
-					"parentPayment_guid": {
-						"type": "string"
-					},
-					"sliced": {
-						"type": "string"
-					},
-					"reservation_guid": {
-						"type": "string"
-					},
-					"group_guid": {
-						"type": "string"
-					},
-					"group_label": {
-						"type": "string"
-					},
-					"group_email": {
-						"type": "string"
-					},
-					"paymentCode": {
-						"type": "string"
-					},
-					"paymentCondition": {
-						"type": "float"
-					},
-					"reservation_amount": {
-						"type": "float"
-					},
-					"reservation_amountTax": {
-						"type": "float"
-					},
-					"status": {
-						"type": "int"
-					},
-					"status_text": {
-						"type": "string"
-					},
-					"stamp": {
-						"type": "string"
-					},
-					"notes": {
-						"type": "string"
-					},
-					"transactionType": {
-						"type": "string"
-					},
-					"transactionType_text": {
-						"type": "string"
-					},
-					"paymentLimitDate": {
-						"type": "string"
-					},
-					"paymentDate": {
-						"type": "string"
-					},
-					"refund": {
-						"type": "string"
-					},
-					"refunded": {
-						"type": "string"
-					},
-					"convention_label": {
-						"type": "string"
-					},
-					"receiptCode": {
-						"type": "string"
-					},
-					"insertTimestamp": {
-						"type": "string"
-					},
-					"updateTimestamp": {
-						"type": "string"
-					},
-					"owner": {
-						"type": "string"
-					},
-					"owner_text": {
-						"type": "string"
-					},
-					"sessionId": {
-						"type": "string"
-					},
-					"terminal_label": {
-						"type": "string"
-					},
-					"terminalGroup_label": {
-						"type": "string"
-					},
-					"gateway_guid": {
-						"type": "string"
-					},
-					"gateway_label": {
-						"type": "string"
-					},
-					"transactionID": {
-						"type": "string"
-					},
-					"bankAccount_guid": {
-						"type": "string"
-					},
-					"bankAccount_label": {
-						"type": "string"
-					},
-					"channel_guid": {
-						"type": "string"
-					},
-					"channel_label": {
-						"type": "string"
-					},
-					"channelType": {
-						"type": "string"
-					},
-					"detail_guid": {
-						"type": "string"
-					},
-					"extra_guid": {
-						"type": "string"
-					},
-					"priceList": {
-						"type": "string"
-					},
-					"event": {
-						"type": "string"
-					},
-					"detailType": {
-						"type": "string"
-					},
-					"detail_text": {
-						"type": "string"
-					},
-					"detail_label": {
-						"type": "string"
-					},
-					"detail_count": {
-						"type": "int"
-					},
-					"paymentDetail_guid": {
-						"type": "string"
-					},
-					"detail_payingPartecipants": {
-						"type": "int"
-					},
-					"detail_quantity": {
-						"type": "int"
-					},
-					"tickets_quantity": {
-						"type": "int"
-					},
-					"pax_quantity": {
-						"type": "int"
-					},
-					"costCenter_guid": {
-						"type": "string"
-					},
-					"costCenter_label": {
-						"type": "string"
-					},
-					"object_receipt": {
-						"type": "int"
-					},
-					"object_taxCode": {
-						"type": "string"
-					},
-					"object_taxNotes": {
-						"type": "string"
-					},
-					"object_amount": {
-						"type": "float"
-					},
-					"object_taxPercentage": {
-						"type": "float"
-					},
-					"amount": {
-						"type": "float"
-					},
-					"amountNet": {
-						"type": "float"
-					},
-					"amountPresale": {
-						"type": "float"
-					},
-					"amountSold": {
-						"type": "float"
-					},
-					"amountPayed": {
-						"type": "float"
-					},
-					"amountPending": {
-						"type": "float"
-					},
-					"amountCanceled": {
-						"type": "float"
-					},
-					"externalId": {
-						"type": "string"
-					},
-					"amountRefunded": {
-						"type": "float"
-					},
-					"invoiceSummary": {
-						"type": "string"
-					},
-					"eventCalendar_guid": {
-						"type": "string"
-					},
-					"passDetail_guid": {
-						"type": "string"
-					},
-					"paymentCostCenter_guid": {
-						"type": "string"
-					},
-					"organization_guid": {
-						"type": "string"
-					},
-					"venue_guid": {
-						"type": "string"
-					},
-					"olapUpdateTimestamp": {
-						"type": "string"
-					},
-					"row_id": {
-						"type": "string"
-					},
-					"operationType": {
-						"type": "string"
-					},
-					"targetFolderPath": {
-						"type": "string"
-					},
-					"targetFileName": {
-						"type": "string"
-					},
-					"tempFolderPath": {
-						"type": "string"
-					},
-					"tempFileName": {
-						"type": "string"
+					"bookingsFolderPath": {
+						"type": "String",
+						"defaultValue": "Mida/Bookings/2021/10"
+					},
+					"bookingsFileName": {
+						"type": "String",
+						"defaultValue": "export_vw_summary_reservationPayments20211001.csv"
+					},
+					"year": {
+						"type": "string",
+						"defaultValue": "2021"
+					},
+					"month": {
+						"type": "string",
+						"defaultValue": "10"
+					},
+					"day": {
+						"type": "string",
+						"defaultValue": "01"
+					},
+					"usersFolderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Users/2021/10"
+					},
+					"usersFileName": {
+						"type": "string",
+						"defaultValue": "export_vw_summary_reservationPayments20211001.csv"
+					}
+				},
+				"variables": {
+					"year": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
 					}
 				},
 				"folder": {
-					"name": "Mida2/Bookings/Atomic"
+					"name": "Mida/Users"
 				},
-				"annotations": [
-					"Pipeline atomica per append a historical con audit trail",
-					"Sintassi corretta uniforme per CREATE e APPEND dataflow",
-					"Tutti gli 83 parametri con mappatura corretta"
-				]
+				"annotations": []
 			},
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_LOOKUP_Summary')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Validations_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline atomica per cercare record nel file summary usando row_id",
+				"description": "Pipeline per convertire file Excel Validations in formato Parquet usando Data Flow",
 				"activities": [
 					{
-						"name": "Lookup Summary Record",
+						"name": "Raw to Processed Transformation",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
-							"timeout": "0.12:00:00",
+							"timeout": "7.00:00:00",
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
 							"secureOutput": false,
@@ -2148,22 +643,26 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "VFD_DFL_Mida2_Atomic_LOOKUP_Summary",
+								"referenceName": "VFD_DFL_Mida_Validations_Raw_Processed",
 								"type": "DataFlowReference",
-								"parameters": {
-									"row_id": {
-										"value": "@concat('''', pipeline().parameters.row_id, '''')",
-										"type": "Expression"
-									}
-								},
+								"parameters": {},
 								"datasetParameters": {
-									"SourceSummaryFile": {
-										"folderPath": "@pipeline().parameters.sourceFolderPath",
-										"fileName": "@pipeline().parameters.sourceFileName"
+									"SourceExcel": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
 									},
-									"SinkTemp": {
-										"folderPath": "@pipeline().parameters.outputFolderPath",
-										"fileName": "@pipeline().parameters.outputFileName"
+									"SinkParquet": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Mida_Validations_Raw_Processed_output.parquet"
 									}
 								}
 							},
@@ -2176,11 +675,91 @@
 						}
 					},
 					{
-						"name": "Check If Record Found",
-						"type": "GetMetadata",
+						"name": "Copy Data from Temporary File",
+						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "Lookup Summary Record",
+								"activity": "Raw to Processed Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Raw_Processed_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary File",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Data from Temporary File",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -2196,17 +775,17 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
 								"type": "DatasetReference",
 								"parameters": {
-									"folderPath": "@pipeline().parameters.outputFolderPath",
-									"fileName": "@pipeline().parameters.outputFileName"
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Raw_Processed_output.parquet"
 								}
 							},
-							"fieldList": [
-								"exists",
-								"size"
-							],
+							"enableLogging": false,
 							"storeSettings": {
 								"type": "AzureBlobFSReadSettings",
 								"recursive": true,
@@ -2215,35 +794,496 @@
 						}
 					},
 					{
-						"name": "Set Output Variable",
-						"type": "SetVariable",
+						"name": "Processed to Curated Transformation",
+						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
-								"activity": "Check If Record Found",
+								"activity": "Delete Temporary File",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							}
 						],
 						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
 							"secureOutput": false,
 							"secureInput": false
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"variableName": "recordFound",
-							"value": {
-								"value": "@if(greater(activity('Check If Record Found').output.size, 0), true, false)",
-								"type": "Expression"
+							"dataflow": {
+								"referenceName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')",
+											"type": "Expression"
+										}
+									},
+									"SinkCurated": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Copy Data from Temporary Curated",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Processed to Curated Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('Mida_Validations_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary File Curated",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Data from Temporary Curated",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Test_Single_Parameter')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline di test con un solo parametro per verificare il passaggio al dataflow",
+				"activities": [
+					{
+						"name": "Test Dataflow Single Param",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Test_Single_Parameter",
+								"type": "DataFlowReference",
+								"parameters": {
+									"test_param": {
+										"value": "@pipeline().parameters.test_input",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"SourceProcessed": {
+										"folderPath": "Mida/Bookings/Processed/2025/01",
+										"fileName": "VFD_Mida_Processed_20250101.parquet\""
+									},
+									"SinkTest": {
+										"folderPath": "Test",
+										"fileName": "test_single_param_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"test_input": {
+						"type": "string",
+						"defaultValue": "TEST_VALUE_123"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Test"
+				},
+				"annotations": [
+					"Test per verificare passaggio parametri da pipeline a dataflow"
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_Raw_Curated')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per convertire CSV meteo in Parquet e aggiornare file mensili con ForEach",
+				"activities": [
+					{
+						"name": "Raw to Processed Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Weather_Raw_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceRaw": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
+									},
+									"SinkProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Coarse"
+						}
+					},
+					{
+						"name": "Copy Raw to Processed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Raw to Processed Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary Processed",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Raw to Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
 							}
 						}
 					},
 					{
-						"name": "If Record Found Copy Fields",
-						"type": "IfCondition",
+						"name": "Get Processed Data Rows",
+						"type": "Lookup",
 						"dependsOn": [
 							{
-								"activity": "Set Output Variable",
+								"activity": "Delete Temporary Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach Weather Row",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Processed Data Rows",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -2251,13 +1291,14 @@
 						],
 						"userProperties": [],
 						"typeProperties": {
-							"expression": {
-								"value": "@variables('recordFound')",
+							"items": {
+								"value": "@activity('Get Processed Data Rows').output.value",
 								"type": "Expression"
 							},
-							"ifTrueActivities": [
+							"isSequential": true,
+							"activities": [
 								{
-									"name": "Set Summary Fields",
+									"name": "SetRowYear",
 									"type": "SetVariable",
 									"dependsOn": [],
 									"policy": {
@@ -2266,10 +1307,253 @@
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"variableName": "summaryFields",
+										"variableName": "rowYear",
 										"value": {
-											"value": "@concat('Record found for row_id: ', pipeline().parameters.row_id)",
+											"value": "@substring(item().datetime, 0, 4)",
 											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowMonth",
+										"value": {
+											"value": "@substring(item().datetime, 5, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowDate",
+										"value": {
+											"value": "@item().datetime",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Update Monthly File",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "SetRowDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "VFD_DFL_Weather_Single_Row_To_Monthly",
+											"type": "DataFlowReference",
+											"parameters": {
+												"target_date": {
+													"value": "'@{variables('rowDate')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SourceProcessed": {
+													"folderPath": {
+														"value": "@pipeline().parameters.folderPath",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SourceCuratedExisting": {
+													"folderPath": {
+														"value": "@concat('Weather/',variables('rowYear'))",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SinkCurated": {
+													"folderPath": {
+														"value": "@concat('Weather/',variables('rowYear'))",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Coarse"
+									}
+								},
+								{
+									"name": "Copy to Final Monthly File",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Update Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Delete Temporary Monthly",
+									"type": "Delete",
+									"dependsOn": [
+										{
+											"activity": "Copy to Final Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
 										}
 									}
 								}
@@ -2281,51 +1565,46 @@
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"row_id": {
-						"type": "string"
+					"folderPath": {
+						"type": "String"
 					},
-					"sourceFolderPath": {
-						"type": "string"
+					"fileName": {
+						"type": "String"
 					},
-					"sourceFileName": {
-						"type": "string"
+					"year": {
+						"type": "String"
 					},
-					"outputFolderPath": {
-						"type": "string"
-					},
-					"outputFileName": {
-						"type": "string"
+					"month": {
+						"type": "String"
 					}
 				},
 				"variables": {
-					"recordFound": {
-						"type": "Boolean",
-						"defaultValue": false
+					"rowYear": {
+						"type": "String"
 					},
-					"summaryFields": {
+					"rowMonth": {
+						"type": "String"
+					},
+					"rowDate": {
 						"type": "String"
 					}
 				},
 				"folder": {
-					"name": "Mida2/Bookings/Atomic"
+					"name": "Visual Crossing/Weather"
 				},
-				"annotations": [
-					"Pipeline per lookup in summary",
-					"Cerca record per row_id nei file summary",
-					"Sintassi corretta per parametri dataflow"
-				]
+				"annotations": []
 			},
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_LOOKUP_Historical')]",
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_test')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline atomica per cercare record nel file historical usando row_id",
+				"description": "Pipeline di test per verificare passaggio parametri da pipeline a dataflow",
 				"activities": [
 					{
-						"name": "Lookup Historical Record",
+						"name": "Data flow1",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -2338,22 +1617,30 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "VFD_DFL_Mida2_Atomic_LOOKUP_Historical",
+								"referenceName": "CFD_DFL_Mida2_test2",
 								"type": "DataFlowReference",
 								"parameters": {
-									"row_id": {
-										"value": "@concat('''', pipeline().parameters.row_id, '''')",
+									"param_string": {
+										"value": "@concat('''', pipeline().parameters.pipeparam_string, '''')",
+										"type": "Expression"
+									},
+									"param_int": {
+										"value": "@pipeline().parameters.pipeparam_int",
+										"type": "Expression"
+									},
+									"param_date": {
+										"value": "@concat('''', pipeline().parameters.pipeparam_date, '''')",
 										"type": "Expression"
 									}
 								},
 								"datasetParameters": {
-									"SourceHistorical": {
-										"folderPath": "@pipeline().parameters.sourceFolderPath",
-										"fileName": "@pipeline().parameters.sourceFileName"
+									"source1": {
+										"folderPath": "Mida/Bookings/Temp",
+										"fileName": "temp_update.parquet"
 									},
-									"SinkTemp": {
-										"folderPath": "@pipeline().parameters.outputFolderPath",
-										"fileName": "@pipeline().parameters.outputFileName"
+									"sink1": {
+										"folderPath": "Mida/Bookings/Temp",
+										"fileName": "temp_update2.parquet"
 									}
 								}
 							},
@@ -2364,104 +1651,34 @@
 							},
 							"traceLevel": "Fine"
 						}
-					},
-					{
-						"name": "Check If Record Found",
-						"type": "GetMetadata",
-						"dependsOn": [
-							{
-								"activity": "Lookup Historical Record",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": "@pipeline().parameters.outputFolderPath",
-									"fileName": "@pipeline().parameters.outputFileName"
-								}
-							},
-							"fieldList": [
-								"exists",
-								"size"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							}
-						}
-					},
-					{
-						"name": "Set Output Variable",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "Check If Record Found",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "recordFound",
-							"value": {
-								"value": "@if(greater(activity('Check If Record Found').output.size, 0), true, false)",
-								"type": "Expression"
-							}
-						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
 				"parameters": {
-					"row_id": {
-						"type": "string"
+					"pipeparam_string": {
+						"type": "string",
+						"defaultValue": "RVFD2XNDRPZ3XPQX"
 					},
-					"sourceFolderPath": {
-						"type": "string"
+					"pipeparam_int": {
+						"type": "int",
+						"defaultValue": 12
 					},
-					"sourceFileName": {
-						"type": "string"
+					"pipeparam_date": {
+						"type": "string",
+						"defaultValue": "2025-07-25"
 					},
-					"outputFolderPath": {
-						"type": "string"
-					},
-					"outputFileName": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"recordFound": {
-						"type": "Boolean",
-						"defaultValue": false
+					"pipeparam_timestamp": {
+						"type": "string",
+						"defaultValue": "2025-07-25T10:18:56.146Z"
 					}
 				},
 				"folder": {
-					"name": "Mida2/Bookings/Atomic"
+					"name": "Mida2/Test"
 				},
 				"annotations": [
-					"Pipeline per lookup in historical",
-					"Cerca record per row_id e salva risultato in file temp",
-					"Sintassi corretta per parametri dataflow"
+					"Test per verificare passaggio parametri da pipeline a dataflow"
 				]
 			},
 			"dependsOn": []
@@ -2891,6 +2108,941 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Test_All_Atomic_Operations')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline di test completa per tutte le operazioni atomiche MIDA2 con dati reali",
+				"activities": [
+					{
+						"name": "FASE_1_SETUP",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Test_Setup",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "FASE_2_INSERT_RECORD_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_1_SETUP",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 10,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": "2025-07-25T10:18:56.163Z",
+								"owner": "MTK\\duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-25T23:49:00.179Z",
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "test_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "INSERT_Summary_Record_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_2_INSERT_RECORD_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"priceList": "duomo_museo",
+								"channel_label": "Cassa",
+								"pax_quantity": 1,
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": "2025-07-25T10:18:56.163Z",
+								"reservation_amount": 10,
+								"visitDate": "2025-07-25",
+								"targetFolderPath": "Mida2/Test/Summary/2025/01",
+								"targetFileName": "test_summary.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "APPEND_Historical_INSERT_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "INSERT_Summary_Record_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 10,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": "2025-07-25T10:18:56.163Z",
+								"owner": "MTK\\duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-25T23:49:00.179Z",
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"operationType": "INSERT",
+								"targetFolderPath": "Mida2/Test/Historical/2025/01",
+								"targetFileName": "test_historical.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "FASE_3_INSERT_RECORD_2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "APPEND_Historical_INSERT_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "1ccc6071-f5cb-46aa-9467-000edde646db",
+								"reservation_progressiveCode": "PFD2367467",
+								"reservation_code": "RVFDLXJKLRGK4K46",
+								"reservation_status": 10,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-26",
+								"reservationPayment_guid": "9790238b-6950-424f-a833-bf4d3b9fc406",
+								"parentPayment_guid": "e256989d-d167-4ccf-a547-edf84e33afd4",
+								"sliced": "true",
+								"reservation_guid": "e6ab6906-ef11-4a0e-ba25-13a953b3934b",
+								"group_guid": "d0c0c4c9-43a1-442c-bd70-913b94b41283",
+								"group_label": "Giovanna  Marongiu",
+								"group_email": "marongiu.giovanna@tiscali.it",
+								"paymentCode": "MVFDR3BPGZD2J645",
+								"paymentCondition": 0,
+								"reservation_amount": 109,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "GW",
+								"transactionType_text": "Gateway",
+								"paymentLimitDate": "2025-07-18T12:39:34.999Z",
+								"paymentDate": "2025-07-18T12:39:34.999Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-18T12:38:25.819Z",
+								"updateTimestamp": "2025-07-18T12:39:50.130Z",
+								"owner": "MTK\\wp-vfd.application",
+								"owner_text": " ",
+								"sessionId": "8plo2s7o47e0u8c7lnq3omdcqs",
+								"terminal_label": "",
+								"terminalGroup_label": "",
+								"gateway_guid": "cded4878-fd5e-4cba-8682-7bf519e45fe0",
+								"gateway_label": "Nexi",
+								"transactionID": "M4PFD2367467cYpCZw",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "71e6d9a7-0f69-4d00-aacb-e5106680a533",
+								"channel_label": "Vendita Online",
+								"channelType": "OP",
+								"detail_guid": "ae276193-d3bc-4892-a593-e7259e327495",
+								"extra_guid": "0",
+								"priceList": "duomo_tour_fast_track",
+								"event": "VISITE DT Duomo Tour Fast-Track",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "DT_Anni6-11_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "729bc3b0-0160-41f1-aabe-11d0310b2152",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 21,
+								"object_taxPercentage": 0,
+								"amount": 21,
+								"amountNet": 21,
+								"amountPresale": 0,
+								"amountSold": 21,
+								"amountPayed": 21,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DTFT_6-11_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "65c92c94-c8b5-4450-b06b-d5a7c6b23e42",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-18T23:08:18.363Z",
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "test_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "Verify_2_Records_In_Complete",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "FASE_3_INSERT_RECORD_2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida2/Test/Complete/2025/01",
+									"fileName": "test_complete.parquet"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "FASE_4_UPDATE_RECORD_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Verify_2_Records_In_Complete",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 50,
+								"reservation_amountTax": 0,
+								"status": 2,
+								"status_text": "Annullato",
+								"stamp": "false",
+								"notes": "Record aggiornato durante test",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"owner": "MTK\\duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 5,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "test_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_update_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "APPEND_Historical_UPDATE",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_4_UPDATE_RECORD_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 50,
+								"reservation_amountTax": 0,
+								"status": 2,
+								"status_text": "Annullato",
+								"stamp": "false",
+								"notes": "Record aggiornato durante test",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"owner": "MTK\\duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 5,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"operationType": "UPDATE",
+								"targetFolderPath": "Mida2/Test/Historical/2025/01",
+								"targetFileName": "test_historical.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "FASE_5_LOOKUP_Tests",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "APPEND_Historical_UPDATE",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_LOOKUP_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"sourceFolderPath": "Mida2/Test/Historical/2025/01",
+								"sourceFileName": "test_historical.parquet",
+								"outputFolderPath": "Mida2/Test/Lookup",
+								"outputFileName": "lookup_result.parquet"
+							}
+						}
+					},
+					{
+						"name": "FASE_6_DELETE_RECORD_2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_5_LOOKUP_Tests",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "test_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_delete_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "DELETE_Summary_Record_2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_6_DELETE_RECORD_2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"targetFolderPath": "Mida2/Test/Summary/2025/01",
+								"targetFileName": "test_summary.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_delete_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "APPEND_Historical_DELETE",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "DELETE_Summary_Record_2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "1ccc6071-f5cb-46aa-9467-000edde646db",
+								"reservation_progressiveCode": "PFD2367467",
+								"reservation_code": "RVFDLXJKLRGK4K46",
+								"reservation_status": 10,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-26",
+								"reservationPayment_guid": "9790238b-6950-424f-a833-bf4d3b9fc406",
+								"parentPayment_guid": "e256989d-d167-4ccf-a547-edf84e33afd4",
+								"sliced": "true",
+								"reservation_guid": "e6ab6906-ef11-4a0e-ba25-13a953b3934b",
+								"group_guid": "d0c0c4c9-43a1-442c-bd70-913b94b41283",
+								"group_label": "Giovanna  Marongiu",
+								"group_email": "marongiu.giovanna@tiscali.it",
+								"paymentCode": "MVFDR3BPGZD2J645",
+								"paymentCondition": 0,
+								"reservation_amount": 109,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "GW",
+								"transactionType_text": "Gateway",
+								"paymentLimitDate": "2025-07-18T12:39:34.999Z",
+								"paymentDate": "2025-07-18T12:39:34.999Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-18T12:38:25.819Z",
+								"updateTimestamp": "2025-07-18T12:39:50.130Z",
+								"owner": "MTK\\wp-vfd.application",
+								"owner_text": " ",
+								"sessionId": "8plo2s7o47e0u8c7lnq3omdcqs",
+								"terminal_label": "",
+								"terminalGroup_label": "",
+								"gateway_guid": "cded4878-fd5e-4cba-8682-7bf519e45fe0",
+								"gateway_label": "Nexi",
+								"transactionID": "M4PFD2367467cYpCZw",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "71e6d9a7-0f69-4d00-aacb-e5106680a533",
+								"channel_label": "Vendita Online",
+								"channelType": "OP",
+								"detail_guid": "ae276193-d3bc-4892-a593-e7259e327495",
+								"extra_guid": "0",
+								"priceList": "duomo_tour_fast_track",
+								"event": "VISITE DT Duomo Tour Fast-Track",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "DT_Anni6-11_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "729bc3b0-0160-41f1-aabe-11d0310b2152",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 21,
+								"object_taxPercentage": 0,
+								"amount": 21,
+								"amountNet": 21,
+								"amountPresale": 0,
+								"amountSold": 21,
+								"amountPayed": 21,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DTFT_6-11_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "65c92c94-c8b5-4450-b06b-d5a7c6b23e42",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-18T23:08:18.363Z",
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"operationType": "DELETE",
+								"targetFolderPath": "Mida2/Test/Historical/2025/01",
+								"targetFileName": "test_historical.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "FINAL_VALIDATION",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "APPEND_Historical_DELETE",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida2/Test/Historical/2025/01",
+									"fileName": "test_historical.parquet"
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"testResult": {
+						"type": "String"
+					},
+					"recordCount": {
+						"type": "String",
+						"defaultValue": "0"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Test"
+				},
+				"annotations": [
+					"Pipeline di test completa per operazioni atomiche MIDA2",
+					"Testa: INSERT, UPDATE, DELETE, LOOKUP su Complete, Summary e Historical",
+					"Parametri corretti per tutte le chiamate atomiche"
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Seals_FTP')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -3257,7 +3409,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Seals_Raw_Curated')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Validations_FTP')]",
@@ -3629,7 +3783,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Validations_Raw_Curated')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_API_Daily')]",
@@ -4014,7 +4170,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_Raw_Curated')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Affluences_Daily')]",
