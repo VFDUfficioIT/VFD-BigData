@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
 	"properties": {
-		"description": "@pipeline atomica per inserimento di una prenotazione nel file completo - riceve tutti i campi come parametri",
+		"description": "pipeline atomica per inserimento di una prenotazione nel file completo - riceve tutti i campi come parametri",
 		"activities": [
 			{
 				"name": "Check Complete File Exists",
