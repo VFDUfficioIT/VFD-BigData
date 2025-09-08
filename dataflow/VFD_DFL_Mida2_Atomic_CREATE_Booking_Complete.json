@@ -123,7 +123,7 @@
 				"     useSchema: false,",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
+				"     ignoreNoFilesFound: true,",
 				"     format: 'delimited',",
 				"     fileSystem: 'curated',",
 				"     columnDelimiter: ',',",
