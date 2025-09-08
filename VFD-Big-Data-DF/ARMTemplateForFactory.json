@@ -4930,7 +4930,7 @@
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline atomica per inserimento di una prenotazione nel file summary - riceve solo i 9 campi summary",
+				"description": "pipeline atomica per inserimento di una prenotazione nel file summary - riceve solo i 9 campi summary",
 				"activities": [
 					{
 						"name": "Check Summary File Exists",
@@ -5015,7 +5015,7 @@
 													"type": "Expression"
 												},
 												"pax_quantity": {
-													"value": "pipeline().parameters.pax_quantity",
+													"value": "@pipeline().parameters.pax_quantity",
 													"type": "Expression"
 												},
 												"insertTimestamp": {
@@ -5027,7 +5027,7 @@
 													"type": "Expression"
 												},
 												"reservation_amount": {
-													"value": "pipeline().parameters.reservation_amount",
+													"value": "@pipeline().parameters.reservation_amount",
 													"type": "Expression"
 												},
 												"visitDate": {
@@ -5087,7 +5087,7 @@
 													"type": "Expression"
 												},
 												"pax_quantity": {
-													"value": "pipeline().parameters.pax_quantity",
+													"value": "@pipeline().parameters.pax_quantity",
 													"type": "Expression"
 												},
 												"insertTimestamp": {
@@ -5099,7 +5099,7 @@
 													"type": "Expression"
 												},
 												"reservation_amount": {
-													"value": "pipeline().parameters.reservation_amount",
+													"value": "@pipeline().parameters.reservation_amount",
 													"type": "Expression"
 												},
 												"visitDate": {
@@ -5153,6 +5153,9 @@
 												"type": "AzureBlobFSReadSettings",
 												"recursive": false,
 												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
 											}
 										},
 										"sink": {
@@ -5275,7 +5278,7 @@
 					"name": "Mida2/Bookings/Atomic"
 				},
 				"annotations": [
-					"Pipeline atomica per inserimento prenotazioni summary",
+					"pipeline atomica per inserimento prenotazioni summary",
 					"Riceve solo i 9 campi del summary",
 					"Sintassi corretta uniforme per CREATE e APPEND"
 				]
@@ -6783,9 +6786,9 @@
 								"reservation_amount": 10,
 								"visitDate": "2025-07-25",
 								"targetFolderPath": "Mida2/Test/Summary/2025/01",
-								"targetFileName": "test_summary.parquet",
+								"targetFileName": "bookings_summary.parquet",
 								"tempFolderPath": "Mida2/Test/Temp",
-								"tempFileName": "temp_summary.parquet"
+								"tempFileName": "temp_append_summary.parquet"
 							}
 						}
 					},
@@ -16672,9 +16675,9 @@
 				"typeProperties": {
 					"sources": [
 						{
-							"linkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_dummy",
+								"type": "DatasetReference"
 							},
 							"name": "DummySource"
 						},
@@ -16719,20 +16722,24 @@
 						"     visitDate as string",
 						"}",
 						"source(output(",
-						"          dummy as integer",
+						"          dummy as string",
 						"     ),",
-						"     useSchema: false,",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
-						"     format: 'delimited',",
-						"     fileSystem: 'dummy',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: true,",
 						"     data: 'dummy\\n1') ~> DummySource",
-						"source(allowSchemaDrift: true,",
+						"source(output(",
+						"          row_id as string,",
+						"          reservation_code as string,",
+						"          priceList as string,",
+						"          channel_label as string,",
+						"          pax_quantity as integer,",
+						"          insertTimestamp as date,",
+						"          updateTimestamp as date,",
+						"          reservation_amount as decimal(10,2),",
+						"          visitDate as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     format: 'parquet') ~> SourceExistingContent",
@@ -16773,7 +16780,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_dummy')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Summary_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Temp_Parquet')]"
 			]
@@ -17532,9 +17539,9 @@
 				"typeProperties": {
 					"sources": [
 						{
-							"linkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_dummy",
+								"type": "DatasetReference"
 							},
 							"name": "DummySource"
 						}
@@ -17569,18 +17576,11 @@
 						"     visitDate as string",
 						"}",
 						"source(output(",
-						"          dummy as integer",
+						"          dummy as string",
 						"     ),",
-						"     useSchema: false,",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
-						"     format: 'delimited',",
-						"     fileSystem: 'dummy',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: true,",
 						"     data: 'dummy\\n1') ~> DummySource",
 						"DummySource derive(row_id = $row_id,",
 						"          reservation_code = $reservation_code,",
@@ -17629,7 +17629,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_dummy')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Summary_Parquet')]"
 			]
 		},

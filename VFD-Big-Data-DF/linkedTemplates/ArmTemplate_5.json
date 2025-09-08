@@ -2506,9 +2506,9 @@
 								"reservation_amount": 10,
 								"visitDate": "2025-07-25",
 								"targetFolderPath": "Mida2/Test/Summary/2025/01",
-								"targetFileName": "test_summary.parquet",
+								"targetFileName": "bookings_summary.parquet",
 								"tempFolderPath": "Mida2/Test/Temp",
-								"tempFileName": "temp_summary.parquet"
+								"tempFileName": "temp_append_summary.parquet"
 							}
 						}
 					},
