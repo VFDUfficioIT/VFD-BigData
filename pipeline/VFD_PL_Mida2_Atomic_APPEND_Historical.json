@@ -82,7 +82,7 @@
 											"type": "Expression"
 										},
 										"reservation_status": {
-											"value": "pipeline().parameters.reservation_status",
+											"value": "@pipeline().parameters.reservation_status",
 											"type": "Expression"
 										},
 										"invoiceRequired": {
@@ -90,7 +90,7 @@
 											"type": "Expression"
 										},
 										"customer": {
-											"value": "pipeline().parameters.customer",
+											"value": "@pipeline().parameters.customer",
 											"type": "Expression"
 										},
 										"visitDate": {
@@ -130,19 +130,19 @@
 											"type": "Expression"
 										},
 										"paymentCondition": {
-											"value": "pipeline().parameters.paymentCondition",
+											"value": "@pipeline().parameters.paymentCondition",
 											"type": "Expression"
 										},
 										"reservation_amount": {
-											"value": "pipeline().parameters.reservation_amount",
+											"value": "@pipeline().parameters.reservation_amount",
 											"type": "Expression"
 										},
 										"reservation_amountTax": {
-											"value": "pipeline().parameters.reservation_amountTax",
+											"value": "@pipeline().parameters.reservation_amountTax",
 											"type": "Expression"
 										},
 										"status": {
-											"value": "pipeline().parameters.status",
+											"value": "@pipeline().parameters.status",
 											"type": "Expression"
 										},
 										"status_text": {
@@ -278,7 +278,7 @@
 											"type": "Expression"
 										},
 										"detail_count": {
-											"value": "pipeline().parameters.detail_count",
+											"value": "@pipeline().parameters.detail_count",
 											"type": "Expression"
 										},
 										"paymentDetail_guid": {
@@ -286,19 +286,19 @@
 											"type": "Expression"
 										},
 										"detail_payingPartecipants": {
-											"value": "pipeline().parameters.detail_payingPartecipants",
+											"value": "@pipeline().parameters.detail_payingPartecipants",
 											"type": "Expression"
 										},
 										"detail_quantity": {
-											"value": "pipeline().parameters.detail_quantity",
+											"value": "@pipeline().parameters.detail_quantity",
 											"type": "Expression"
 										},
 										"tickets_quantity": {
-											"value": "pipeline().parameters.tickets_quantity",
+											"value": "@pipeline().parameters.tickets_quantity",
 											"type": "Expression"
 										},
 										"pax_quantity": {
-											"value": "pipeline().parameters.pax_quantity",
+											"value": "@pipeline().parameters.pax_quantity",
 											"type": "Expression"
 										},
 										"costCenter_guid": {
@@ -310,7 +310,7 @@
 											"type": "Expression"
 										},
 										"object_receipt": {
-											"value": "pipeline().parameters.object_receipt",
+											"value": "@pipeline().parameters.object_receipt",
 											"type": "Expression"
 										},
 										"object_taxCode": {
@@ -322,39 +322,39 @@
 											"type": "Expression"
 										},
 										"object_amount": {
-											"value": "pipeline().parameters.object_amount",
+											"value": "@pipeline().parameters.object_amount",
 											"type": "Expression"
 										},
 										"object_taxPercentage": {
-											"value": "pipeline().parameters.object_taxPercentage",
+											"value": "@pipeline().parameters.object_taxPercentage",
 											"type": "Expression"
 										},
 										"amount": {
-											"value": "pipeline().parameters.amount",
+											"value": "@pipeline().parameters.amount",
 											"type": "Expression"
 										},
 										"amountNet": {
-											"value": "pipeline().parameters.amountNet",
+											"value": "@pipeline().parameters.amountNet",
 											"type": "Expression"
 										},
 										"amountPresale": {
-											"value": "pipeline().parameters.amountPresale",
+											"value": "@pipeline().parameters.amountPresale",
 											"type": "Expression"
 										},
 										"amountSold": {
-											"value": "pipeline().parameters.amountSold",
+											"value": "@pipeline().parameters.amountSold",
 											"type": "Expression"
 										},
 										"amountPayed": {
-											"value": "pipeline().parameters.amountPayed",
+											"value": "@pipeline().parameters.amountPayed",
 											"type": "Expression"
 										},
 										"amountPending": {
-											"value": "pipeline().parameters.amountPending",
+											"value": "@pipeline().parameters.amountPending",
 											"type": "Expression"
 										},
 										"amountCanceled": {
-											"value": "pipeline().parameters.amountCanceled",
+											"value": "@pipeline().parameters.amountCanceled",
 											"type": "Expression"
 										},
 										"externalId": {
@@ -362,7 +362,7 @@
 											"type": "Expression"
 										},
 										"amountRefunded": {
-											"value": "pipeline().parameters.amountRefunded",
+											"value": "@pipeline().parameters.amountRefunded",
 											"type": "Expression"
 										},
 										"invoiceSummary": {
@@ -448,7 +448,7 @@
 											"type": "Expression"
 										},
 										"reservation_status": {
-											"value": "pipeline().parameters.reservation_status",
+											"value": "@pipeline().parameters.reservation_status",
 											"type": "Expression"
 										},
 										"invoiceRequired": {
@@ -456,7 +456,7 @@
 											"type": "Expression"
 										},
 										"customer": {
-											"value": "pipeline().parameters.customer",
+											"value": "@pipeline().parameters.customer",
 											"type": "Expression"
 										},
 										"visitDate": {
@@ -496,19 +496,19 @@
 											"type": "Expression"
 										},
 										"paymentCondition": {
-											"value": "pipeline().parameters.paymentCondition",
+											"value": "@pipeline().parameters.paymentCondition",
 											"type": "Expression"
 										},
 										"reservation_amount": {
-											"value": "pipeline().parameters.reservation_amount",
+											"value": "@pipeline().parameters.reservation_amount",
 											"type": "Expression"
 										},
 										"reservation_amountTax": {
-											"value": "pipeline().parameters.reservation_amountTax",
+											"value": "@pipeline().parameters.reservation_amountTax",
 											"type": "Expression"
 										},
 										"status": {
-											"value": "pipeline().parameters.status",
+											"value": "@pipeline().parameters.status",
 											"type": "Expression"
 										},
 										"status_text": {
@@ -644,7 +644,7 @@
 											"type": "Expression"
 										},
 										"detail_count": {
-											"value": "pipeline().parameters.detail_count",
+											"value": "@pipeline().parameters.detail_count",
 											"type": "Expression"
 										},
 										"paymentDetail_guid": {
@@ -652,19 +652,19 @@
 											"type": "Expression"
 										},
 										"detail_payingPartecipants": {
-											"value": "pipeline().parameters.detail_payingPartecipants",
+											"value": "@pipeline().parameters.detail_payingPartecipants",
 											"type": "Expression"
 										},
 										"detail_quantity": {
-											"value": "pipeline().parameters.detail_quantity",
+											"value": "@pipeline().parameters.detail_quantity",
 											"type": "Expression"
 										},
 										"tickets_quantity": {
-											"value": "pipeline().parameters.tickets_quantity",
+											"value": "@pipeline().parameters.tickets_quantity",
 											"type": "Expression"
 										},
 										"pax_quantity": {
-											"value": "pipeline().parameters.pax_quantity",
+											"value": "@pipeline().parameters.pax_quantity",
 											"type": "Expression"
 										},
 										"costCenter_guid": {
@@ -676,7 +676,7 @@
 											"type": "Expression"
 										},
 										"object_receipt": {
-											"value": "pipeline().parameters.object_receipt",
+											"value": "@pipeline().parameters.object_receipt",
 											"type": "Expression"
 										},
 										"object_taxCode": {
@@ -688,39 +688,39 @@
 											"type": "Expression"
 										},
 										"object_amount": {
-											"value": "pipeline().parameters.object_amount",
+											"value": "@pipeline().parameters.object_amount",
 											"type": "Expression"
 										},
 										"object_taxPercentage": {
-											"value": "pipeline().parameters.object_taxPercentage",
+											"value": "@pipeline().parameters.object_taxPercentage",
 											"type": "Expression"
 										},
 										"amount": {
-											"value": "pipeline().parameters.amount",
+											"value": "@pipeline().parameters.amount",
 											"type": "Expression"
 										},
 										"amountNet": {
-											"value": "pipeline().parameters.amountNet",
+											"value": "@pipeline().parameters.amountNet",
 											"type": "Expression"
 										},
 										"amountPresale": {
-											"value": "pipeline().parameters.amountPresale",
+											"value": "@pipeline().parameters.amountPresale",
 											"type": "Expression"
 										},
 										"amountSold": {
-											"value": "pipeline().parameters.amountSold",
+											"value": "@pipeline().parameters.amountSold",
 											"type": "Expression"
 										},
 										"amountPayed": {
-											"value": "pipeline().parameters.amountPayed",
+											"value": "@pipeline().parameters.amountPayed",
 											"type": "Expression"
 										},
 										"amountPending": {
-											"value": "pipeline().parameters.amountPending",
+											"value": "@pipeline().parameters.amountPending",
 											"type": "Expression"
 										},
 										"amountCanceled": {
-											"value": "pipeline().parameters.amountCanceled",
+											"value": "@pipeline().parameters.amountCanceled",
 											"type": "Expression"
 										},
 										"externalId": {
@@ -728,7 +728,7 @@
 											"type": "Expression"
 										},
 										"amountRefunded": {
-											"value": "pipeline().parameters.amountRefunded",
+											"value": "@pipeline().parameters.amountRefunded",
 											"type": "Expression"
 										},
 										"invoiceSummary": {
