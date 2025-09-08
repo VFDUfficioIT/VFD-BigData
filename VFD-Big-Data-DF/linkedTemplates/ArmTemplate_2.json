@@ -13,6 +13,42 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_AccessAreas_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Utils/AccessAreas"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Associazioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "utils/AccessAreas",
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Affluences_CSV')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1552,286 +1588,6 @@
 				},
 				"folder": {
 					"name": "Mida/Utilities"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_AccessAreas_Raw_Curated')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "TicketArea_CopyRawToProcessed",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ExcelSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Raw_AccessAreas_Excel",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneBigliettiAccessi.xlsx"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneBigliettiAccessi.parquet"
-								}
-							}
-						]
-					},
-					{
-						"name": "TicketArea_CopyProcessedToCurated",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "TicketArea_CopyRawToProcessed",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneBigliettiAccessi.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Curated_AccessAreas_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneBigliettiAccessi.parquet"
-								}
-							}
-						]
-					},
-					{
-						"name": "AreaSiteID_CopyRawToProcessed",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "TicketArea_CopyProcessedToCurated",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ExcelSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Raw_AccessAreas_Excel",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneAccessiSiteIDAffluences.xlsx"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneAccessiSiteIDAffluences.parquet"
-								}
-							}
-						]
-					},
-					{
-						"name": "AreaSiteID_CopyProcessedToCurated",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "AreaSiteID_CopyRawToProcessed",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Processed_AccessAreas_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneAccessiSiteIDAffluences.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Curated_AccessAreas_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "AssociazioneAccessiSiteIDAffluences.parquet"
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "Utils/AccessAreas"
 				},
 				"annotations": []
 			},

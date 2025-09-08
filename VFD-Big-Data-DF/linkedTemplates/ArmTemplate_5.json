@@ -17,6 +17,238 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_UPDATE_Booking_Summary')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline atomica per aggiornamento di una prenotazione nel file summary",
+				"activities": [
+					{
+						"name": "Update Summary Record",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Mida2_Atomic_UPDATE_Booking_Summary",
+								"type": "DataFlowReference",
+								"parameters": {
+									"row_id": {
+										"value": "@concat('''', pipeline().parameters.row_id, '''')",
+										"type": "Expression"
+									},
+									"reservation_code": {
+										"value": "@concat('''', pipeline().parameters.reservation_code, '''')",
+										"type": "Expression"
+									},
+									"priceList": {
+										"value": "@concat('''', pipeline().parameters.priceList, '''')",
+										"type": "Expression"
+									},
+									"channel_label": {
+										"value": "@concat('''', pipeline().parameters.channel_label, '''')",
+										"type": "Expression"
+									},
+									"pax_quantity": {
+										"value": "pipeline().parameters.pax_quantity",
+										"type": "Expression"
+									},
+									"insertTimestamp": {
+										"value": "@concat('''', pipeline().parameters.insertTimestamp, '''')",
+										"type": "Expression"
+									},
+									"updateTimestamp": {
+										"value": "@concat('''', pipeline().parameters.updateTimestamp, '''')",
+										"type": "Expression"
+									},
+									"reservation_amount": {
+										"value": "pipeline().parameters.reservation_amount",
+										"type": "Expression"
+									},
+									"visitDate": {
+										"value": "@concat('''', pipeline().parameters.visitDate, '''')",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"DummySource": {},
+									"SourceExistingContent": {
+										"folderPath": "@pipeline().parameters.targetFolderPath",
+										"fileName": "@pipeline().parameters.targetFileName"
+									},
+									"SinkTemp": {
+										"folderPath": "@pipeline().parameters.tempFolderPath",
+										"fileName": "temp_update_summary.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Copy Temp To Final",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Update Summary Record",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": false,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "@pipeline().parameters.tempFolderPath",
+									"fileName": "temp_update_summary.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "@pipeline().parameters.targetFolderPath",
+									"fileName": "@pipeline().parameters.targetFileName"
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temp File",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Temp To Final",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "@pipeline().parameters.tempFolderPath",
+									"fileName": "temp_update_summary.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"row_id": {
+						"type": "string"
+					},
+					"reservation_code": {
+						"type": "string"
+					},
+					"priceList": {
+						"type": "string"
+					},
+					"channel_label": {
+						"type": "string"
+					},
+					"pax_quantity": {
+						"type": "int"
+					},
+					"insertTimestamp": {
+						"type": "string"
+					},
+					"updateTimestamp": {
+						"type": "string"
+					},
+					"reservation_amount": {
+						"type": "float"
+					},
+					"visitDate": {
+						"type": "string"
+					},
+					"targetFolderPath": {
+						"type": "string"
+					},
+					"targetFileName": {
+						"type": "string"
+					},
+					"tempFolderPath": {
+						"type": "string"
+					},
+					"tempFileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Bookings/Atomic"
+				},
+				"annotations": [
+					"Pipeline atomica per aggiornamento prenotazioni summary",
+					"Sintassi corretta per tutti i parametri dataflow"
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Seals_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",

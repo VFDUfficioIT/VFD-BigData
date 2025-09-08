@@ -13154,6 +13154,42 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_dummy')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Mida2/Bookings"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "dummy.csv",
+						"fileSystem": "curated"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "dummy",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Bookings_FTPServer_Binary')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -17103,9 +17139,9 @@
 				"typeProperties": {
 					"sources": [
 						{
-							"linkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_dummy",
+								"type": "DatasetReference"
 							},
 							"name": "DummySource"
 						}
@@ -17213,19 +17249,11 @@
 						"     row_id as string",
 						"}",
 						"source(output(",
-						"          dummy as integer '000'",
+						"          dummy as string",
 						"     ),",
-						"     useSchema: false,",
 						"     allowSchemaDrift: false,",
 						"     validateSchema: false,",
-						"     ignoreNoFilesFound: true,",
-						"     format: 'delimited',",
-						"     fileSystem: 'curated',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: true,",
-						"     data: 'dummy\\n1') ~> DummySource",
+						"     ignoreNoFilesFound: false) ~> DummySource",
 						"DummySource derive(guid_pk = $guid_pk,",
 						"          reservation_progressiveCode = $reservation_progressiveCode,",
 						"          reservation_code = $reservation_code,",
@@ -17492,7 +17520,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_dummy')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
 			]
 		},
