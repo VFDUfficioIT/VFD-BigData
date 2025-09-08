@@ -21,6 +21,11 @@
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "dummy",
+				"type": "String"
+			}
+		]
 	}
 }
