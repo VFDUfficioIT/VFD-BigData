@@ -8,9 +8,9 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"linkedService": {
-						"referenceName": "VFD_Big_Data_DL",
-						"type": "LinkedServiceReference"
+					"dataset": {
+						"referenceName": "VFD_DS_Curated_dummy",
+						"type": "DatasetReference"
 					},
 					"name": "DummySource"
 				}
@@ -45,18 +45,11 @@
 				"     visitDate as string",
 				"}",
 				"source(output(",
-				"          dummy as integer",
+				"          dummy as string",
 				"     ),",
-				"     useSchema: false,",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     format: 'delimited',",
-				"     fileSystem: 'dummy',",
-				"     columnDelimiter: ',',",
-				"     escapeChar: '\\\\',",
-				"     quoteChar: '\\\"',",
-				"     columnNamesAsHeader: true,",
 				"     data: 'dummy\\n1') ~> DummySource",
 				"DummySource derive(row_id = $row_id,",
 				"          reservation_code = $reservation_code,",

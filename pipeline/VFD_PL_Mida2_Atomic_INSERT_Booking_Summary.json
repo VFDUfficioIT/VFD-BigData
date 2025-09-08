@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_Mida2_Atomic_INSERT_Booking_Summary",
 	"properties": {
-		"description": "Pipeline atomica per inserimento di una prenotazione nel file summary - riceve solo i 9 campi summary",
+		"description": "pipeline atomica per inserimento di una prenotazione nel file summary - riceve solo i 9 campi summary",
 		"activities": [
 			{
 				"name": "Check Summary File Exists",
@@ -86,7 +86,7 @@
 											"type": "Expression"
 										},
 										"pax_quantity": {
-											"value": "pipeline().parameters.pax_quantity",
+											"value": "@pipeline().parameters.pax_quantity",
 											"type": "Expression"
 										},
 										"insertTimestamp": {
@@ -98,7 +98,7 @@
 											"type": "Expression"
 										},
 										"reservation_amount": {
-											"value": "pipeline().parameters.reservation_amount",
+											"value": "@pipeline().parameters.reservation_amount",
 											"type": "Expression"
 										},
 										"visitDate": {
@@ -156,7 +156,7 @@
 											"type": "Expression"
 										},
 										"pax_quantity": {
-											"value": "pipeline().parameters.pax_quantity",
+											"value": "@pipeline().parameters.pax_quantity",
 											"type": "Expression"
 										},
 										"insertTimestamp": {
@@ -168,7 +168,7 @@
 											"type": "Expression"
 										},
 										"reservation_amount": {
-											"value": "pipeline().parameters.reservation_amount",
+											"value": "@pipeline().parameters.reservation_amount",
 											"type": "Expression"
 										},
 										"visitDate": {
@@ -220,6 +220,9 @@
 										"type": "AzureBlobFSReadSettings",
 										"recursive": false,
 										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "ParquetReadSettings"
 									}
 								},
 								"sink": {
@@ -339,7 +342,7 @@
 			"name": "Mida2/Bookings/Atomic"
 		},
 		"annotations": [
-			"Pipeline atomica per inserimento prenotazioni summary",
+			"pipeline atomica per inserimento prenotazioni summary",
 			"Riceve solo i 9 campi del summary",
 			"Sintassi corretta uniforme per CREATE e APPEND"
 		]
