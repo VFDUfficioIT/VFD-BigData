@@ -3992,7 +3992,7 @@
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "@pipeline atomica per inserimento di una prenotazione nel file completo - riceve tutti i campi come parametri",
+				"description": "pipeline atomica per inserimento di una prenotazione nel file completo - riceve tutti i campi come parametri",
 				"activities": [
 					{
 						"name": "Check Complete File Exists",
