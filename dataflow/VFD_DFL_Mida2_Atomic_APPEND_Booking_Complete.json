@@ -310,7 +310,7 @@
 				"UnionAllRecords sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
-				"     partitionFileNames:['temp_append_complete.parquet'],",
+				"     partitionFileNames:['temp_complete.parquet'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
