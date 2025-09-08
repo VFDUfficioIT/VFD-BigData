@@ -2618,9 +2618,9 @@
 								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
 								"operationType": "INSERT",
 								"targetFolderPath": "Mida2/Test/Historical/2025/01",
-								"targetFileName": "test_historical.parquet",
+								"targetFileName": "booking_historical.parquet",
 								"tempFolderPath": "Mida2/Test/Temp",
-								"tempFileName": "temp_historical.parquet"
+								"tempFileName": "temp_append_historical.parquet"
 							}
 						}
 					},
