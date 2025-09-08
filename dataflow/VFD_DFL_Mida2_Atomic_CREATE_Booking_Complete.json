@@ -125,6 +125,7 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: true,",
 				"     format: 'delimited',",
+				"     fileSystem: 'curated',",
 				"     columnDelimiter: ',',",
 				"     escapeChar: '\\\\',",
 				"     quoteChar: '\\\"',",
