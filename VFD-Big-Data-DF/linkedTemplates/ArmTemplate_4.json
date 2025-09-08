@@ -5143,7 +5143,7 @@
 					"name": "Mida2/Bookings/Atomic"
 				},
 				"annotations": [
-					"@pipeline atomica per inserimento prenotazioni complete",
+					"pipeline atomica per inserimento prenotazioni complete",
 					"Sintassi corretta e uniforme per entrambi i dataflow CREATE e APPEND"
 				]
 			},
