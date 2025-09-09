@@ -1645,11 +1645,14 @@
 								}
 							},
 							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
 							},
-							"traceLevel": "Fine"
+							"traceLevel": "None",
+							"cacheSinks": {
+								"firstRowOnly": true
+							}
 						}
 					}
 				],
