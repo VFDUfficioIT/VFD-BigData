@@ -164,9 +164,7 @@
 			},
 			{
 				"name": "receiptCode",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "insertTimestamp",
