@@ -2,7 +2,7 @@
 	"name": "VFD_TRG_Mida_Bookings_FTP_Schedule",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
