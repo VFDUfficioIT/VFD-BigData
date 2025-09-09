@@ -179,11 +179,11 @@
 				"description": "IR dedicated to the execution of VFD dataflows and transformation",
 				"typeProperties": {
 					"computeProperties": {
-						"location": "West Europe",
+						"location": "AutoResolve",
 						"dataFlowProperties": {
 							"computeType": "General",
-							"coreCount": 8,
-							"timeToLive": 10,
+							"coreCount": 48,
+							"timeToLive": 30,
 							"cleanup": false,
 							"customProperties": []
 						}
