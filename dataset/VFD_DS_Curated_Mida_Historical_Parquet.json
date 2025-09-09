@@ -366,9 +366,7 @@
 			},
 			{
 				"name": "invoiceSummary",
-				"type": "DECIMAL",
-				"precision": 10,
-				"scale": 2
+				"type": "UTF8"
 			},
 			{
 				"name": "eventCalendar_guid",
