@@ -1446,9 +1446,7 @@
 					},
 					{
 						"name": "notes",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "transactionType",
@@ -1480,9 +1478,7 @@
 					},
 					{
 						"name": "receiptCode",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "insertTimestamp",
@@ -1506,15 +1502,11 @@
 					},
 					{
 						"name": "terminal_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "terminalGroup_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "gateway_guid",
@@ -1530,15 +1522,11 @@
 					},
 					{
 						"name": "bankAccount_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "bankAccount_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "channel_guid",
@@ -1558,9 +1546,7 @@
 					},
 					{
 						"name": "extra_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "priceList",
@@ -1692,9 +1678,7 @@
 					},
 					{
 						"name": "invoiceSummary",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "eventCalendar_guid",
@@ -1702,15 +1686,11 @@
 					},
 					{
 						"name": "passDetail_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "paymentCostCenter_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
+						"type": "UTF8"
 					},
 					{
 						"name": "organization_guid",
