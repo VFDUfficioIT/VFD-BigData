@@ -15098,9 +15098,15 @@
 						"type": "SecureString",
 						"value": "[parameters('VFD_Big_Data_DL_accountKey')]"
 					}
+				},
+				"connectVia": {
+					"referenceName": "VFD-IR-DataflowExecution",
+					"type": "IntegrationRuntimeReference"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_LS_Affluences_API')]",
@@ -15314,6 +15320,28 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Daily')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"description": "IR dedicated to the execution of VFD dataflows and transformation",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 80,
+							"timeToLive": 10,
+							"cleanup": false,
+							"customProperties": []
+						}
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/CFD_DFL_Mida2_test2')]",
@@ -20063,28 +20091,6 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"description": "IR dedicated to the execution of VFD dataflows and transformation",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "Italy North",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 4,
-							"timeToLive": 10,
-							"cleanup": false,
-							"customProperties": []
-						}
-					}
-				}
-			},
-			"dependsOn": []
 		}
 	]
 }

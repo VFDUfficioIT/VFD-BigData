@@ -13,6 +13,165 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Seals_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Validations_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Weather_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_AccessAreas_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Utils/AccessAreas"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Associazioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "utils/AccessAreas",
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Affluences_CSV')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -730,134 +889,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_VisualCrossing_HTTP_CSV')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_VisualCrossing_HTTP",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"data_inizio": {
-						"type": "string"
-					},
-					"data_fine": {
-						"type": "string"
-					},
-					"location": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Visual Crossing/Weather"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "HttpServerLocation",
-						"relativeUrl": {
-							"value": "@concat(dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2C&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
-							"type": "Expression"
-						}
-					},
-					"columnDelimiter": ",",
-					"rowDelimiter": "\n",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_VisualCrossing_Historical_API')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_VisualCrossing_API",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"data_inizio": {
-						"type": "string"
-					},
-					"data_fine": {
-						"type": "string"
-					},
-					"location": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Visual Crossing/Weather"
-				},
-				"annotations": [],
-				"type": "RestResource",
-				"typeProperties": {
-					"relativeUrl": {
-						"value": "@concat(dataset().location,'/',dataset().data_inizio,'/',dataset().data_fine,'?unitGroup=metric&elements=datetime%2Cname%2Ctempmax%2Ctempmin%2Ctemp%2Cfeelslikemax%2Cfeelslikemin%2Cfeelslike%2Chumidity%2Cprecip%2Cpreciptype%2Cwindgust%2Cwindspeed%2Ccloudcover%2Cvisibility%2Csunset%2Cconditions%2Cdescription%2Cicon&include=days%2C&key=K8ZWJUA9BMDLD97KL8KGY292Y&contentType=csv')",
-						"type": "Expression"
-					}
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Explore_Seals_Folder')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Esplora il contenuto della cartella 'emissioni' per capire i pattern dei file Seals",
-				"activities": [
-					{
-						"name": "ListSealsFiles",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "Mida/Utilities"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Test_Setup')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1508,56 +1539,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_FTP_Simple_Explorer')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline semplice per ottenere la lista delle directory del server FTP Mida",
-				"activities": [
-					{
-						"name": "ListAllFTPDirectories",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "Mida/Utilities"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_AccessAreas_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1835,7 +1816,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_AccessAreas_Excel')]"
+			]
 		}
 	]
 }
