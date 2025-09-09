@@ -777,6 +777,14 @@
 											"folderPath": "@pipeline().parameters.tempFolderPath",
 											"fileName": "@pipeline().parameters.tempFileName"
 										}
+									},
+									"linkedServiceParameters": {
+										"SourceExistingHistorical": {
+											"schemaLinkedService": {
+												"folderPath": "Mida2/Bookings/Historical/2025/01",
+												"fileName": "VFD_Mida_Historical_20250101.parquet"
+											}
+										}
 									}
 								},
 								"compute": {
