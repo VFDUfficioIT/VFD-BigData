@@ -15316,49 +15316,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/TestIR')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "Italy North",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 32,
-							"timeToLive": 10,
-							"cleanup": false,
-							"customProperties": []
-						}
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"description": "IR dedicated to the execution of VFD dataflows and transformation",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "Italy North",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 8,
-							"timeToLive": 10,
-							"cleanup": false,
-							"customProperties": []
-						}
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/CFD_DFL_Mida2_test2')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -20106,6 +20063,28 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"description": "IR dedicated to the execution of VFD dataflows and transformation",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "Italy North",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 4,
+							"timeToLive": 10,
+							"cleanup": false,
+							"customProperties": []
+						}
+					}
+				}
+			},
+			"dependsOn": []
 		}
 	]
 }

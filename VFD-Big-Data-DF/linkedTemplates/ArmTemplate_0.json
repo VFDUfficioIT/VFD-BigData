@@ -150,27 +150,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/TestIR')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "Managed",
-				"typeProperties": {
-					"computeProperties": {
-						"location": "Italy North",
-						"dataFlowProperties": {
-							"computeType": "General",
-							"coreCount": 32,
-							"timeToLive": 10,
-							"cleanup": false,
-							"customProperties": []
-						}
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
 			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
 			"apiVersion": "2018-06-01",
@@ -182,7 +161,7 @@
 						"location": "Italy North",
 						"dataFlowProperties": {
 							"computeType": "General",
-							"coreCount": 8,
+							"coreCount": 4,
 							"timeToLive": 10,
 							"cleanup": false,
 							"customProperties": []
@@ -1717,6 +1696,49 @@
 						"type": "TIMESTAMP_MILLIS"
 					}
 				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Seals_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
