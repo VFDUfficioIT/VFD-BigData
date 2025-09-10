@@ -25,6 +25,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": "@dataset().fileName",
+				"folderPath": "@dataset().folderPath",
 				"fileSystem": "curated"
 			},
 			"compressionCodec": "snappy"
