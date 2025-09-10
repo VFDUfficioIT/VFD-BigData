@@ -11361,9 +11361,9 @@
 								}
 							},
 							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
 							},
 							"traceLevel": "None",
 							"cacheSinks": {
@@ -11401,8 +11401,7 @@
 				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/CFD_DFL_Mida2_test2')]",
-				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+				"[concat(variables('factoryId'), '/dataflows/CFD_DFL_Mida2_test2')]"
 			]
 		},
 		{
