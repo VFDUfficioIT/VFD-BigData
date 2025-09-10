@@ -11322,7 +11322,14 @@
 					{
 						"name": "Data flow1",
 						"type": "ExecuteDataFlow",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Copy data1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -11370,6 +11377,70 @@
 								"firstRowOnly": true
 							}
 						}
+					},
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida2/Bookings/Complete/2025/01",
+									"fileName": "VFD_Mida_Bookings_20250101.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida2/Bookings/Complete/2025/01",
+									"fileName": "VFD_Mida_Bookings_20250102.parquet"
+								}
+							}
+						]
 					}
 				],
 				"policy": {
@@ -11402,7 +11473,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/CFD_DFL_Mida2_test2')]",
-				"[concat(variables('factoryId'), '/integrationRuntimes/IRTest')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/IRTest')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
 			]
 		},
 		{
@@ -15103,12 +15175,12 @@
 					}
 				},
 				"connectVia": {
-					"referenceName": "IRTest",
+					"referenceName": "VFD-IR-DataflowExecution",
 					"type": "IntegrationRuntimeReference"
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/IRTest')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
 			]
 		},
 		{

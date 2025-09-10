@@ -696,12 +696,12 @@
 					}
 				},
 				"connectVia": {
-					"referenceName": "IRTest",
+					"referenceName": "VFD-IR-DataflowExecution",
 					"type": "IntegrationRuntimeReference"
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/IRTest')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
 			]
 		},
 		{
