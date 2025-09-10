@@ -11361,9 +11361,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "IRTest",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "None",
 							"cacheSinks": {
@@ -11401,7 +11401,8 @@
 				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/CFD_DFL_Mida2_test2')]"
+				"[concat(variables('factoryId'), '/dataflows/CFD_DFL_Mida2_test2')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/IRTest')]"
 			]
 		},
 		{
@@ -15322,6 +15323,27 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Daily')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IRTest')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "Central US",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": false,
+							"customProperties": []
+						}
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD-IR-DataflowExecution')]",
