@@ -15103,12 +15103,12 @@
 					}
 				},
 				"connectVia": {
-					"referenceName": "VFD-IR-DataflowExecution",
+					"referenceName": "IRTest",
 					"type": "IntegrationRuntimeReference"
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/IRTest')]"
 			]
 		},
 		{
