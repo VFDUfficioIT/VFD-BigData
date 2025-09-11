@@ -4,16 +4,16 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -11369,7 +11369,7 @@
 							},
 							"staging": {},
 							"integrationRuntime": {
-								"referenceName": "IRTest",
+								"referenceName": "VFD-IR-DataflowExecution",
 								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "None",
@@ -11427,7 +11427,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"folderPath": "Mida2/Bookings/Complete/2025/01",
-									"fileName": "VFD_Mida_Bookings_20250101.parquet"
+									"fileName": "test.parquet"
 								}
 							}
 						],
@@ -11437,7 +11437,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"folderPath": "Mida2/Bookings/Complete/2025/01",
-									"fileName": "VFD_Mida_Bookings_20250102.parquet"
+									"fileName": "test2.parquet"
 								}
 							}
 						]
@@ -11473,7 +11473,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/CFD_DFL_Mida2_test2')]",
-				"[concat(variables('factoryId'), '/integrationRuntimes/IRTest')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Mida_Bookings_Complete_Parquet')]"
 			]
 		},

@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
@@ -1885,7 +1885,7 @@
 							},
 							"staging": {},
 							"integrationRuntime": {
-								"referenceName": "IRTest",
+								"referenceName": "VFD-IR-DataflowExecution",
 								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "None",
@@ -1943,7 +1943,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"folderPath": "Mida2/Bookings/Complete/2025/01",
-									"fileName": "VFD_Mida_Bookings_20250101.parquet"
+									"fileName": "test.parquet"
 								}
 							}
 						],
@@ -1953,7 +1953,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"folderPath": "Mida2/Bookings/Complete/2025/01",
-									"fileName": "VFD_Mida_Bookings_20250102.parquet"
+									"fileName": "test2.parquet"
 								}
 							}
 						]
