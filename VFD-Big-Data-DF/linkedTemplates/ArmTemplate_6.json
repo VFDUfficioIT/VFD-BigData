@@ -1,0 +1,2462 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "VFD-Big-Data-DF"
+		},
+		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
+			"type": "string",
+			"defaultValue": "Milano"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline wrapper per esecuzione giornaliera automatica - usa SEMPRE la data di ieri",
+				"activities": [
+					{
+						"name": "Set_Yesterday_Date",
+						"description": "Imposta la data di ieri per entrambi i parametri",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "yesterday_date",
+							"value": {
+								"value": "@formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Execute_WiFi_Extract_Transform",
+						"description": "Esegue la pipeline principale con la data di ieri",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Set_Yesterday_Date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"p_dateStart": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								},
+								"p_dateStop": {
+									"value": "@variables('yesterday_date')",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"yesterday_date": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": [
+					"Daily Execution",
+					"Wrapper Pipeline",
+					"No Parameters"
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Reprocessing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SetFirstDate",
+						"description": "Imposta per la prima volta la currentDate in base a startDate",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "currentDate",
+							"value": {
+								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "RepeatUntilEndDate",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "SetFirstDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('currentDate'),pipeline().parameters.endDate)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "ProcessCurrentDate",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_DuomoWiFi_Extract_Transform",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dateStart": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											},
+											"p_dateStop": {
+												"value": "@variables('currentDate')",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "CalculateNextDate",
+									"description": "Usa una variabile temp per calcolare il valore di currentDate + 1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ProcessCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "nextDate",
+										"value": {
+											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetCurrentDate",
+									"description": "Imposta il valore di currentDate con nextDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "CalculateNextDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "currentDate",
+										"value": {
+											"value": "@variables('nextDate')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "WaitForCooldown",
+									"type": "Wait",
+									"dependsOn": [
+										{
+											"activity": "SetCurrentDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 10
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"startDate": {
+						"type": "string"
+					},
+					"endDate": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"currentDate": {
+						"type": "String"
+					},
+					"nextDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "WiFi"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Test_All_Atomic_Operations')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline di test completa per tutte le operazioni atomiche MIDA2 con dati reali",
+				"activities": [
+					{
+						"name": "FASE_1_SETUP",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Test_Setup",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "FASE_2_INSERT_RECORD_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_1_SETUP",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 10,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": "2025-07-25T10:18:56.163Z",
+								"owner": "MTK/duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-25T23:49:00.179Z",
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "booking_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "INSERT_Summary_Record_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_2_INSERT_RECORD_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"priceList": "duomo_museo",
+								"channel_label": "Cassa",
+								"pax_quantity": 1,
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": "2025-07-25T10:18:56.163Z",
+								"reservation_amount": 10,
+								"visitDate": "2025-07-25",
+								"targetFolderPath": "Mida2/Test/Summary/2025/01",
+								"targetFileName": "bookings_summary.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_append_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "APPEND_Historical_INSERT_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "INSERT_Summary_Record_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 10,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": "2025-07-25T10:18:56.163Z",
+								"owner": "MTK/duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-25T23:49:00.179Z",
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"operationType": "INSERT",
+								"targetFolderPath": "Mida2/Test/Historical/2025/01",
+								"targetFileName": "booking_historical.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_append_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "FASE_3_INSERT_RECORD_2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "APPEND_Historical_INSERT_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_INSERT_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "1ccc6071-f5cb-46aa-9467-000edde646db",
+								"reservation_progressiveCode": "PFD2367467",
+								"reservation_code": "RVFDLXJKLRGK4K46",
+								"reservation_status": 10,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-26",
+								"reservationPayment_guid": "9790238b-6950-424f-a833-bf4d3b9fc406",
+								"parentPayment_guid": "e256989d-d167-4ccf-a547-edf84e33afd4",
+								"sliced": "true",
+								"reservation_guid": "e6ab6906-ef11-4a0e-ba25-13a953b3934b",
+								"group_guid": "d0c0c4c9-43a1-442c-bd70-913b94b41283",
+								"group_label": "Giovanna  Marongiu",
+								"group_email": "marongiu.giovanna@tiscali.it",
+								"paymentCode": "MVFDR3BPGZD2J645",
+								"paymentCondition": 0,
+								"reservation_amount": 109,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "GW",
+								"transactionType_text": "Gateway",
+								"paymentLimitDate": "2025-07-18T12:39:34.999Z",
+								"paymentDate": "2025-07-18T12:39:34.999Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-18T12:38:25.819Z",
+								"updateTimestamp": "2025-07-18T12:39:50.130Z",
+								"owner": "MTK/wp-vfd.application",
+								"owner_text": " ",
+								"sessionId": "8plo2s7o47e0u8c7lnq3omdcqs",
+								"terminal_label": "",
+								"terminalGroup_label": "",
+								"gateway_guid": "cded4878-fd5e-4cba-8682-7bf519e45fe0",
+								"gateway_label": "Nexi",
+								"transactionID": "M4PFD2367467cYpCZw",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "71e6d9a7-0f69-4d00-aacb-e5106680a533",
+								"channel_label": "Vendita Online",
+								"channelType": "OP",
+								"detail_guid": "ae276193-d3bc-4892-a593-e7259e327495",
+								"extra_guid": "0",
+								"priceList": "duomo_tour_fast_track",
+								"event": "VISITE DT Duomo Tour Fast-Track",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "DT_Anni6-11_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "729bc3b0-0160-41f1-aabe-11d0310b2152",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 21,
+								"object_taxPercentage": 0,
+								"amount": 21,
+								"amountNet": 21,
+								"amountPresale": 0,
+								"amountSold": 21,
+								"amountPayed": 21,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DTFT_6-11_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "65c92c94-c8b5-4450-b06b-d5a7c6b23e42",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-18T23:08:18.363Z",
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "booking_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "Verify_2_Records_In_Complete",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "FASE_3_INSERT_RECORD_2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida2/Test/Complete/2025/01",
+									"fileName": "booking_complete.parquet"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "FASE_4_UPDATE_RECORD_1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Verify_2_Records_In_Complete",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 50,
+								"reservation_amountTax": 0,
+								"status": 2,
+								"status_text": "Annullato",
+								"stamp": "false",
+								"notes": "Record aggiornato durante test",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"owner": "MTK/duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 5,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "booking_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_update_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "APPEND_Historical_UPDATE",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_4_UPDATE_RECORD_1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "369f7c03-3ea7-4fa8-a4c5-0000d58323cb",
+								"reservation_progressiveCode": "",
+								"reservation_code": "RVFDKJQ5633NJZNX",
+								"reservation_status": 50,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-25",
+								"reservationPayment_guid": "2e3cf753-0637-4657-b538-fb97bb87f6a3",
+								"parentPayment_guid": "0ebfa3f5-e6b4-4024-84a9-c1ac81fa9fef",
+								"sliced": "false",
+								"reservation_guid": "aa32bdbe-bac5-4de7-9030-9ecbc7c0c964",
+								"group_guid": "019ba95e-b0d3-47be-83fa-3c46f491b04b",
+								"group_label": "",
+								"group_email": "",
+								"paymentCode": "MVFD2XB4YZZ8XQWZ",
+								"paymentCondition": 0,
+								"reservation_amount": 50,
+								"reservation_amountTax": 0,
+								"status": 2,
+								"status_text": "Annullato",
+								"stamp": "false",
+								"notes": "Record aggiornato durante test",
+								"transactionType": "CA",
+								"transactionType_text": "Contanti",
+								"paymentLimitDate": "2025-07-25T10:18:56.146Z",
+								"paymentDate": "2025-07-25T10:18:56.146Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-25T10:18:55.740Z",
+								"updateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"owner": "MTK/duomomilano.cassiere023",
+								"owner_text": "23 Cassiere",
+								"sessionId": "b9ff1305-84b2-4d3b-afe2-f66fd5e9982e",
+								"terminal_label": "WIN-1308-VFD",
+								"terminalGroup_label": "SDC",
+								"gateway_guid": "",
+								"gateway_label": "",
+								"transactionID": "",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "2abad1e7-da98-4603-986c-5f2bce837e18",
+								"channel_label": "Cassa",
+								"channelType": "CP",
+								"detail_guid": "98bb9375-aeac-444b-8bad-d81bc4fa1e42",
+								"extra_guid": "0",
+								"priceList": "duomo_museo",
+								"event": "DUOMO+MUSEO",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "Intero_DuomoMuseo_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "9aec2978-8b88-403d-822a-5328d5e54d1a",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 5,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 10,
+								"object_taxPercentage": 0,
+								"amount": 10,
+								"amountNet": 10,
+								"amountPresale": 0,
+								"amountSold": 10,
+								"amountPayed": 10,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DUOMUS_INT_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "f4f4c301-510e-4818-afea-4ba4799f501a",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": {
+									"value": "@utcnow()",
+									"type": "Expression"
+								},
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"operationType": "UPDATE",
+								"targetFolderPath": "Mida2/Test/Historical/2025/01",
+								"targetFileName": "test_historical.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "FASE_5_LOOKUP_Tests",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "APPEND_Historical_UPDATE",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_LOOKUP_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "840AA72DB857CD070985B141558C63C3DEEE7072AE68584657376E674AE0C8A9",
+								"sourceFolderPath": "Mida2/Test/Historical/2025/01",
+								"sourceFileName": "test_historical.parquet",
+								"outputFolderPath": "Mida2/Test/Lookup",
+								"outputFileName": "lookup_result.parquet"
+							}
+						}
+					},
+					{
+						"name": "FASE_6_DELETE_RECORD_2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_5_LOOKUP_Tests",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Complete",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"targetFolderPath": "Mida2/Test/Complete/2025/01",
+								"targetFileName": "test_complete.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_delete_complete.parquet"
+							}
+						}
+					},
+					{
+						"name": "DELETE_Summary_Record_2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "FASE_6_DELETE_RECORD_2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_DELETE_Booking_Summary",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"targetFolderPath": "Mida2/Test/Summary/2025/01",
+								"targetFileName": "test_summary.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_delete_summary.parquet"
+							}
+						}
+					},
+					{
+						"name": "APPEND_Historical_DELETE",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "DELETE_Summary_Record_2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Mida2_Atomic_APPEND_Historical",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"guid_pk": "1ccc6071-f5cb-46aa-9467-000edde646db",
+								"reservation_progressiveCode": "PFD2367467",
+								"reservation_code": "RVFDLXJKLRGK4K46",
+								"reservation_status": 10,
+								"invoiceRequired": "false",
+								"customer": 0,
+								"visitDate": "2025-07-26",
+								"reservationPayment_guid": "9790238b-6950-424f-a833-bf4d3b9fc406",
+								"parentPayment_guid": "e256989d-d167-4ccf-a547-edf84e33afd4",
+								"sliced": "true",
+								"reservation_guid": "e6ab6906-ef11-4a0e-ba25-13a953b3934b",
+								"group_guid": "d0c0c4c9-43a1-442c-bd70-913b94b41283",
+								"group_label": "Giovanna  Marongiu",
+								"group_email": "marongiu.giovanna@tiscali.it",
+								"paymentCode": "MVFDR3BPGZD2J645",
+								"paymentCondition": 0,
+								"reservation_amount": 109,
+								"reservation_amountTax": 0,
+								"status": 1,
+								"status_text": "Confermato",
+								"stamp": "false",
+								"notes": "",
+								"transactionType": "GW",
+								"transactionType_text": "Gateway",
+								"paymentLimitDate": "2025-07-18T12:39:34.999Z",
+								"paymentDate": "2025-07-18T12:39:34.999Z",
+								"refund": "false",
+								"refunded": "false",
+								"convention_label": "",
+								"receiptCode": "",
+								"insertTimestamp": "2025-07-18T12:38:25.819Z",
+								"updateTimestamp": "2025-07-18T12:39:50.130Z",
+								"owner": "MTK/wp-vfd.application",
+								"owner_text": " ",
+								"sessionId": "8plo2s7o47e0u8c7lnq3omdcqs",
+								"terminal_label": "",
+								"terminalGroup_label": "",
+								"gateway_guid": "cded4878-fd5e-4cba-8682-7bf519e45fe0",
+								"gateway_label": "Nexi",
+								"transactionID": "M4PFD2367467cYpCZw",
+								"bankAccount_guid": "0",
+								"bankAccount_label": "0",
+								"channel_guid": "71e6d9a7-0f69-4d00-aacb-e5106680a533",
+								"channel_label": "Vendita Online",
+								"channelType": "OP",
+								"detail_guid": "ae276193-d3bc-4892-a593-e7259e327495",
+								"extra_guid": "0",
+								"priceList": "duomo_tour_fast_track",
+								"event": "VISITE DT Duomo Tour Fast-Track",
+								"detailType": "PK",
+								"detail_text": "Pacchetto",
+								"detail_label": "DT_Anni6-11_L2504",
+								"detail_count": 1,
+								"paymentDetail_guid": "729bc3b0-0160-41f1-aabe-11d0310b2152",
+								"detail_payingPartecipants": 1,
+								"detail_quantity": 1,
+								"tickets_quantity": 1,
+								"pax_quantity": 1,
+								"costCenter_guid": "1ae0783c-78f6-4f91-b8b1-0a40c74b06d3",
+								"costCenter_label": "VFD",
+								"object_receipt": 0,
+								"object_taxCode": "N4  ",
+								"object_taxNotes": "IVA esente art.10 c.1 n.22 DPR633/79",
+								"object_amount": 21,
+								"object_taxPercentage": 0,
+								"amount": 21,
+								"amountNet": 21,
+								"amountPresale": 0,
+								"amountSold": 21,
+								"amountPayed": 21,
+								"amountPending": 0,
+								"amountCanceled": 0,
+								"externalId": "DTFT_6-11_L2504",
+								"amountRefunded": 0,
+								"invoiceSummary": "",
+								"eventCalendar_guid": "65c92c94-c8b5-4450-b06b-d5a7c6b23e42",
+								"passDetail_guid": "",
+								"paymentCostCenter_guid": "",
+								"organization_guid": "0b2a8439-6fd5-4310-847e-fd7c551d0893",
+								"venue_guid": "bb2426b0-816d-496e-a859-06ebf5bfe106",
+								"olapUpdateTimestamp": "2025-07-18T23:08:18.363Z",
+								"row_id": "6FF1B80D5DC8BB34C078330EF568A2A02022A8E9C6428FB46C9E1B9A5E7DE897",
+								"operationType": "DELETE",
+								"targetFolderPath": "Mida2/Test/Historical/2025/01",
+								"targetFileName": "test_historical.parquet",
+								"tempFolderPath": "Mida2/Test/Temp",
+								"tempFileName": "temp_historical.parquet"
+							}
+						}
+					},
+					{
+						"name": "FINAL_VALIDATION",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "APPEND_Historical_DELETE",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida2/Test/Historical/2025/01",
+									"fileName": "test_historical.parquet"
+								}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"testResult": {
+						"type": "String"
+					},
+					"recordCount": {
+						"type": "String",
+						"defaultValue": "0"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Test"
+				},
+				"annotations": [
+					"Pipeline di test completa per operazioni atomiche MIDA2",
+					"Testa: INSERT, UPDATE, DELETE, LOOKUP su Complete, Summary e Historical",
+					"Parametri corretti per tutte le chiamate atomiche"
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Seals_FTP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire i dati di emissioni biglietti (Seals) da FTP a Data Lake",
+				"activities": [
+					{
+						"name": "ListFTPFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEachFTPFile",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ListFTPFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ListFTPFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "fileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetYear",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "year",
+										"value": {
+											"value": "@substring(item().name, 25, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "month",
+										"value": {
+											"value": "@substring(item().name, 29, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetDay",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "day",
+										"value": {
+											"value": "@substring(item().name, 31, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetFolderPathVar",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetDay",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "folderPathVar",
+										"value": {
+											"value": "@concat('Mida/Seals/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckIfExistsOnADLS",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetFolderPathVar",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckIfExistsOnADLS",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckIfExistsOnADLS').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "CopyFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": true,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@variables('folderPathVar')",
+																"type": "Expression"
+															},
+															"fileName": "@variables('fileName')"
+														}
+													}
+												]
+											},
+											{
+												"name": "Raw to Curated Pipeline",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "CopyFromFTP",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "VFD_PL_Mida_Seals_Raw_Curated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"folderPath": {
+															"value": "@variables('folderPathVar')",
+															"type": "Expression"
+														},
+														"fileName": {
+															"value": "@variables('fileName')",
+															"type": "Expression"
+														},
+														"year": {
+															"value": "@variables('year')",
+															"type": "Expression"
+														},
+														"month": {
+															"value": "@variables('month')",
+															"type": "Expression"
+														},
+														"day": {
+															"value": "@variables('day')",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPathVar": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Validations_FTP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire i dati di vidimazioni (Validations) da FTP a Data Lake",
+				"activities": [
+					{
+						"name": "ListFTPFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Validations_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEachFTPFile",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ListFTPFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ListFTPFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "fileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetYear",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "year",
+										"value": {
+											"value": "@substring(item().name, 27, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "month",
+										"value": {
+											"value": "@substring(item().name, 31, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetDay",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "day",
+										"value": {
+											"value": "@substring(item().name, 33, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetFolderPathVar",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetDay",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "folderPathVar",
+										"value": {
+											"value": "@concat('Mida/Validations/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckIfExistsOnADLS",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetFolderPathVar",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckIfExistsOnADLS",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckIfExistsOnADLS').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "CopyFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": true,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Validations_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@variables('folderPathVar')",
+																"type": "Expression"
+															},
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											},
+											{
+												"name": "Raw to Curated Pipeline",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "CopyFromFTP",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "VFD_PL_Mida_Validations_Raw_Curated",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"folderPath": {
+															"value": "@variables('folderPathVar')",
+															"type": "Expression"
+														},
+														"fileName": {
+															"value": "@variables('fileName')",
+															"type": "Expression"
+														},
+														"year": {
+															"value": "@variables('year')",
+															"type": "Expression"
+														},
+														"month": {
+															"value": "@variables('month')",
+															"type": "Expression"
+														},
+														"day": {
+															"value": "@variables('day')",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPathVar": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_API_Daily')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire dati meteo da Visual Crossing API e processarli",
+				"activities": [
+					{
+						"name": "SetDataInizio",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "data_inizio",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.data_inizio, formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetDataFine",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "data_fine",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.data_fine, formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetLocation",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "location",
+							"value": {
+								"value": "@coalesce(pipeline().parameters.location, 'Milano')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetYear",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetDataInizio",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "year",
+							"value": {
+								"value": "@substring(variables('data_inizio'), 0, 4)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetMonth",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetYear",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "month",
+							"value": {
+								"value": "@substring(variables('data_inizio'), 5, 2)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetFolderPath",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetMonth",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "folderPath",
+							"value": {
+								"value": "@concat('Weather/', variables('year'), '/', variables('month'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "SetFileName",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "SetDataFine",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "SetFolderPath",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "fileName",
+							"value": {
+								"value": "@concat('weather_', replace(variables('data_inizio'), '-', ''), '_', replace(variables('data_fine'), '-', ''), '.csv')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "CheckIfExistsInRaw",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "SetFileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Weather_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@variables('folderPath')",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@variables('fileName')",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "IfNotExistsInRaw",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "CheckIfExistsInRaw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(activity('CheckIfExistsInRaw').output.exists)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "CopyFromAPI",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_VisualCrossing_HTTP_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"data_inizio": "@variables('data_inizio')",
+												"data_fine": "@variables('data_fine')",
+												"location": "@variables('location')"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Raw_Weather_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPath')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Raw to Curated Pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "IfNotExistsInRaw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_Weather_Raw_Curated",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"folderPath": {
+									"value": "@variables('folderPath')",
+									"type": "Expression"
+								},
+								"fileName": {
+									"value": "@variables('fileName')",
+									"type": "Expression"
+								},
+								"year": {
+									"value": "@variables('year')",
+									"type": "Expression"
+								},
+								"month": {
+									"value": "@variables('month')",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"data_inizio": {
+						"type": "String"
+					},
+					"data_fine": {
+						"type": "String"
+					},
+					"location": {
+						"type": "String",
+						"defaultValue": "Milano"
+					}
+				},
+				"variables": {
+					"data_inizio": {
+						"type": "String"
+					},
+					"data_fine": {
+						"type": "String"
+					},
+					"location": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Affluences_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Affluences_Daily_v2",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-06-11T06:00:00",
+						"timeZone": "W. Europe Standard Time"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Mida_Bookings_FTP_Schedule')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Mida",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-11T04:00:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"minutes": [
+								30
+							],
+							"hours": [
+								4
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Weather_API_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_Weather_API_Daily",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"location": "[parameters('VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location')]"
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-05T06:00:00",
+						"timeZone": "W. Europe Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_API_Daily')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_TRG_WiFi_Daily')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_DuomoWiFi_Daily",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2025-07-11T16:00:00",
+						"timeZone": "W. Europe Standard Time",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								4
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_DuomoWiFi_Daily')]"
+			]
+		}
+	]
+}
