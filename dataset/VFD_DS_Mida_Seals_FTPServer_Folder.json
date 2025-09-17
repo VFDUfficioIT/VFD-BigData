@@ -13,7 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "FtpServerLocation",
-				"folderPath": "emissioni"
+				"folderPath": "emissioni_new"
 			}
 		}
 	}

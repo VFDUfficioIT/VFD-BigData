@@ -22,7 +22,7 @@
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "emissioni"
+				"folderPath": "emissioni_new"
 			},
 			"sheetName": "Emissioni di ieri",
 			"firstRowAsHeader": true

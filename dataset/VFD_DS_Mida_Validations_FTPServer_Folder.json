@@ -13,7 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "FtpServerLocation",
-				"folderPath": "vidimazioni"
+				"folderPath": "vidimazioni_new"
 			}
 		}
 	}
