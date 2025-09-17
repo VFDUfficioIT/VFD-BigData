@@ -1642,6 +1642,857 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_MIDA_SQL_Master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline madre: scansiona 3 FTP folder, scarica file mancanti, chiama pipeline figlie",
+				"activities": [
+					{
+						"name": "ScanBookingsFTP",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ScanSealsFTP",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ScanValidationsFTP",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Validations_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ProcessBookingsFiles",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ScanBookingsFTP",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ScanBookingsFTP').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetBookingsFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "bookingsFileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "ParseBookingsDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetBookingsFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "bookingsDate",
+										"value": {
+											"value": "@substring(variables('bookingsFileName'), 37, 8)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetBookingsFolderPath",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ParseBookingsDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "bookingsFolderPath",
+										"value": {
+											"value": "@concat('Mida/Bookings/', substring(variables('bookingsDate'), 0, 4), '/', substring(variables('bookingsDate'), 4, 2))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckBookingsExists",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetBookingsFolderPath",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "@variables('bookingsFolderPath')",
+												"fileName": "@variables('bookingsFileName')"
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfBookingsNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckBookingsExists",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckBookingsExists').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "DownloadBookingsFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 3,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": false,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": "@variables('bookingsFileName')"
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": "@variables('bookingsFolderPath')",
+															"fileName": "@variables('bookingsFileName')"
+														}
+													}
+												]
+											}
+										]
+									}
+								},
+								{
+									"name": "ProcessBookingsPipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "IfBookingsNotExists",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_Process_Bookings_SQL",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"folderPath": {
+												"value": "@variables('bookingsFolderPath')",
+												"type": "Expression"
+											},
+											"fileName": {
+												"value": "@variables('bookingsFileName')",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ProcessSealsFiles",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ScanSealsFTP",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "ProcessBookingsFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ScanSealsFTP').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetSealsFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "sealsFileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "ParseSealsDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetSealsFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "sealsDate",
+										"value": {
+											"value": "@substring(variables('sealsFileName'), 25, 8)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetSealsFolderPath",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ParseSealsDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "sealsFolderPath",
+										"value": {
+											"value": "@concat('Mida/Seals/', substring(variables('sealsDate'), 0, 4), '/', substring(variables('sealsDate'), 4, 2))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckSealsExists",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetSealsFolderPath",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "@variables('sealsFolderPath')",
+												"fileName": "@variables('sealsFileName')"
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfSealsNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckSealsExists",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckSealsExists').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "DownloadSealsFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 3,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": false,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": "@variables('sealsFileName')"
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": "@variables('sealsFolderPath')",
+															"fileName": "@variables('sealsFileName')"
+														}
+													}
+												]
+											}
+										]
+									}
+								},
+								{
+									"name": "ProcessSealsPipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "IfSealsNotExists",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_Process_Seals_SQL",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"folderPath": {
+												"value": "@variables('sealsFolderPath')",
+												"type": "Expression"
+											},
+											"fileName": {
+												"value": "@variables('sealsFileName')",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "ProcessValidationsFiles",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ScanValidationsFTP",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "ProcessSealsFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ScanValidationsFTP').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetValidationsFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "validationsFileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "ParseValidationsDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetValidationsFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "validationsDate",
+										"value": {
+											"value": "@substring(variables('validationsFileName'), 27, 8)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetValidationsFolderPath",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "ParseValidationsDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "validationsFolderPath",
+										"value": {
+											"value": "@concat('Mida/Validations/', substring(variables('validationsDate'), 0, 4), '/', substring(variables('validationsDate'), 4, 2))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckValidationsExists",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetValidationsFolderPath",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "@variables('validationsFolderPath')",
+												"fileName": "@variables('validationsFileName')"
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfValidationsNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckValidationsExists",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckValidationsExists').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "DownloadValidationsFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 3,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": false,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Validations_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": "@variables('validationsFileName')"
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": "@variables('validationsFolderPath')",
+															"fileName": "@variables('validationsFileName')"
+														}
+													}
+												]
+											}
+										]
+									}
+								},
+								{
+									"name": "ProcessValidationsPipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "IfValidationsNotExists",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_Process_Validations_SQL",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"folderPath": {
+												"value": "@variables('validationsFolderPath')",
+												"type": "Expression"
+											},
+											"fileName": {
+												"value": "@variables('validationsFileName')",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"bookingsFileName": {
+						"type": "String"
+					},
+					"bookingsDate": {
+						"type": "String"
+					},
+					"bookingsFolderPath": {
+						"type": "String"
+					},
+					"sealsFileName": {
+						"type": "String"
+					},
+					"sealsDate": {
+						"type": "String"
+					},
+					"sealsFolderPath": {
+						"type": "String"
+					},
+					"validationsFileName": {
+						"type": "String"
+					},
+					"validationsDate": {
+						"type": "String"
+					},
+					"validationsFolderPath": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "MIDA_SQL"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -7784,857 +8635,6 @@
 				"annotations": [
 					"Test per verificare passaggio parametri da pipeline a dataflow"
 				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_MIDA_SQL_Master')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline madre: scansiona 3 FTP folder, scarica file mancanti, chiama pipeline figlie",
-				"activities": [
-					{
-						"name": "ScanBookingsFTP",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ScanSealsFTP",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ScanValidationsFTP",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Validations_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ProcessBookingsFiles",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "ScanBookingsFTP",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ScanBookingsFTP').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "SetBookingsFileName",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "bookingsFileName",
-										"value": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "ParseBookingsDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "SetBookingsFileName",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "bookingsDate",
-										"value": {
-											"value": "@substring(variables('bookingsFileName'), 37, 8)",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetBookingsFolderPath",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ParseBookingsDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "bookingsFolderPath",
-										"value": {
-											"value": "@concat('Mida/Bookings/', substring(variables('bookingsDate'), 0, 4), '/', substring(variables('bookingsDate'), 4, 2))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "CheckBookingsExists",
-									"type": "GetMetadata",
-									"dependsOn": [
-										{
-											"activity": "SetBookingsFolderPath",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@variables('bookingsFolderPath')",
-												"fileName": "@variables('bookingsFileName')"
-											}
-										},
-										"fieldList": [
-											"exists"
-										],
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								},
-								{
-									"name": "IfBookingsNotExists",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "CheckBookingsExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@not(activity('CheckBookingsExists').output.exists)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "DownloadBookingsFromFTP",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "BinarySource",
-														"storeSettings": {
-															"type": "FtpReadSettings",
-															"recursive": false,
-															"useBinaryTransfer": true,
-															"disableChunking": false
-														},
-														"formatSettings": {
-															"type": "BinaryReadSettings"
-														}
-													},
-													"sink": {
-														"type": "BinarySink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														}
-													},
-													"enableStaging": false
-												},
-												"inputs": [
-													{
-														"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"fileName": "@variables('bookingsFileName')"
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"folderPath": "@variables('bookingsFolderPath')",
-															"fileName": "@variables('bookingsFileName')"
-														}
-													}
-												]
-											}
-										]
-									}
-								},
-								{
-									"name": "ProcessBookingsPipeline",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "IfBookingsNotExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Process_Bookings_SQL",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"folderPath": {
-												"value": "@variables('bookingsFolderPath')",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@variables('bookingsFileName')",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "ProcessSealsFiles",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "ScanSealsFTP",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "ProcessBookingsFiles",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ScanSealsFTP').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "SetSealsFileName",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsFileName",
-										"value": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "ParseSealsDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "SetSealsFileName",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsDate",
-										"value": {
-											"value": "@substring(variables('sealsFileName'), 25, 8)",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetSealsFolderPath",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ParseSealsDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsFolderPath",
-										"value": {
-											"value": "@concat('Mida/Seals/', substring(variables('sealsDate'), 0, 4), '/', substring(variables('sealsDate'), 4, 2))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "CheckSealsExists",
-									"type": "GetMetadata",
-									"dependsOn": [
-										{
-											"activity": "SetSealsFolderPath",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@variables('sealsFolderPath')",
-												"fileName": "@variables('sealsFileName')"
-											}
-										},
-										"fieldList": [
-											"exists"
-										],
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								},
-								{
-									"name": "IfSealsNotExists",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "CheckSealsExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@not(activity('CheckSealsExists').output.exists)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "DownloadSealsFromFTP",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "BinarySource",
-														"storeSettings": {
-															"type": "FtpReadSettings",
-															"recursive": false,
-															"useBinaryTransfer": true,
-															"disableChunking": false
-														},
-														"formatSettings": {
-															"type": "BinaryReadSettings"
-														}
-													},
-													"sink": {
-														"type": "BinarySink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														}
-													},
-													"enableStaging": false
-												},
-												"inputs": [
-													{
-														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"fileName": "@variables('sealsFileName')"
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"folderPath": "@variables('sealsFolderPath')",
-															"fileName": "@variables('sealsFileName')"
-														}
-													}
-												]
-											}
-										]
-									}
-								},
-								{
-									"name": "ProcessSealsPipeline",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "IfSealsNotExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Process_Seals_SQL",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"folderPath": {
-												"value": "@variables('sealsFolderPath')",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@variables('sealsFileName')",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "ProcessValidationsFiles",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "ScanValidationsFTP",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "ProcessSealsFiles",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ScanValidationsFTP').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "SetValidationsFileName",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "validationsFileName",
-										"value": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "ParseValidationsDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "SetValidationsFileName",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "validationsDate",
-										"value": {
-											"value": "@substring(variables('validationsFileName'), 27, 8)",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetValidationsFolderPath",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ParseValidationsDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "validationsFolderPath",
-										"value": {
-											"value": "@concat('Mida/Validations/', substring(variables('validationsDate'), 0, 4), '/', substring(variables('validationsDate'), 4, 2))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "CheckValidationsExists",
-									"type": "GetMetadata",
-									"dependsOn": [
-										{
-											"activity": "SetValidationsFolderPath",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@variables('validationsFolderPath')",
-												"fileName": "@variables('validationsFileName')"
-											}
-										},
-										"fieldList": [
-											"exists"
-										],
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								},
-								{
-									"name": "IfValidationsNotExists",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "CheckValidationsExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@not(activity('CheckValidationsExists').output.exists)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "DownloadValidationsFromFTP",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "BinarySource",
-														"storeSettings": {
-															"type": "FtpReadSettings",
-															"recursive": false,
-															"useBinaryTransfer": true,
-															"disableChunking": false
-														},
-														"formatSettings": {
-															"type": "BinaryReadSettings"
-														}
-													},
-													"sink": {
-														"type": "BinarySink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														}
-													},
-													"enableStaging": false
-												},
-												"inputs": [
-													{
-														"referenceName": "VFD_DS_Mida_Validations_FTPServer_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"fileName": "@variables('validationsFileName')"
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"folderPath": "@variables('validationsFolderPath')",
-															"fileName": "@variables('validationsFileName')"
-														}
-													}
-												]
-											}
-										]
-									}
-								},
-								{
-									"name": "ProcessValidationsPipeline",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "IfValidationsNotExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Process_Validations_SQL",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"folderPath": {
-												"value": "@variables('validationsFolderPath')",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@variables('validationsFileName')",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"bookingsFileName": {
-						"type": "String"
-					},
-					"bookingsDate": {
-						"type": "String"
-					},
-					"bookingsFolderPath": {
-						"type": "String"
-					},
-					"sealsFileName": {
-						"type": "String"
-					},
-					"sealsDate": {
-						"type": "String"
-					},
-					"sealsFolderPath": {
-						"type": "String"
-					},
-					"validationsFileName": {
-						"type": "String"
-					},
-					"validationsDate": {
-						"type": "String"
-					},
-					"validationsFolderPath": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "MIDA_SQL"
-				},
-				"annotations": []
 			},
 			"dependsOn": []
 		},
