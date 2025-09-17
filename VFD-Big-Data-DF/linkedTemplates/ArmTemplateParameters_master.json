@@ -5,11 +5,23 @@
 		"factoryName": {
 			"value": "VFD-Big-Data-DF"
 		},
+		"VFD_Big_Data_Azure_Sql_password": {
+			"value": ""
+		},
 		"VFD_Big_Data_DL_accountKey": {
 			"value": ""
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"value": ""
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
+			"value": "vfdbigdataserversql.database.windows.net"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_database": {
+			"value": "vfdbigdatasql"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_userName": {
+			"value": "user_vfdbigdataserversql"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"value": "https://vfdbigdataarchiviazione.dfs.core.windows.net/"

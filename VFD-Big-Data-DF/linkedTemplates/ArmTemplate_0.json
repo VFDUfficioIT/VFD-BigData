@@ -7,6 +7,10 @@
 			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
+		"VFD_Big_Data_Azure_Sql_password": {
+			"type": "secureString",
+			"metadata": "Stringa sicura per 'password' di 'VFD_Big_Data_Azure_Sql'"
+		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
 			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
@@ -14,6 +18,18 @@
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
 			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "vfdbigdataserversql.database.windows.net"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "vfdbigdatasql"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "user_vfdbigdataserversql"
 		},
 		"VFD_LS_Affluences_API_properties_typeProperties_url": {
 			"type": "string",
@@ -48,6 +64,28 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_Big_Data_Azure_Sql')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('VFD_Big_Data_Azure_Sql_properties_typeProperties_server')]",
+					"database": "[parameters('VFD_Big_Data_Azure_Sql_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('VFD_Big_Data_Azure_Sql_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('VFD_Big_Data_Azure_Sql_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_LS_Affluences_API')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
@@ -702,58 +740,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Explore_Seals_Folder')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Esplora il contenuto della cartella 'emissioni' per capire i pattern dei file Seals",
-				"activities": [
-					{
-						"name": "ListSealsFiles",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "Mida/Utilities"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Seals_FTPServer_Folder')]"
 			]
 		}
 	]

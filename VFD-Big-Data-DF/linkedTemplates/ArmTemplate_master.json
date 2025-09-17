@@ -7,6 +7,10 @@
 			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
+		"VFD_Big_Data_Azure_Sql_password": {
+			"type": "secureString",
+			"metadata": "Stringa sicura per 'password' di 'VFD_Big_Data_Azure_Sql'"
+		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
 			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
@@ -14,6 +18,18 @@
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
 			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "vfdbigdataserversql.database.windows.net"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "vfdbigdatasql"
+		},
+		"VFD_Big_Data_Azure_Sql_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "user_vfdbigdataserversql"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -74,11 +90,23 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"VFD_Big_Data_Azure_Sql_password": {
+						"value": "[parameters('VFD_Big_Data_Azure_Sql_password')]"
+					},
 					"VFD_LS_Mida_FtpServer_password": {
 						"value": "[parameters('VFD_LS_Mida_FtpServer_password')]"
 					},
 					"VFD_Big_Data_DL_accountKey": {
 						"value": "[parameters('VFD_Big_Data_DL_accountKey')]"
+					},
+					"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
+						"value": "[parameters('VFD_Big_Data_Azure_Sql_properties_typeProperties_server')]"
+					},
+					"VFD_Big_Data_Azure_Sql_properties_typeProperties_database": {
+						"value": "[parameters('VFD_Big_Data_Azure_Sql_properties_typeProperties_database')]"
+					},
+					"VFD_Big_Data_Azure_Sql_properties_typeProperties_userName": {
+						"value": "[parameters('VFD_Big_Data_Azure_Sql_properties_typeProperties_userName')]"
 					},
 					"VFD_LS_Affluences_API_properties_typeProperties_url": {
 						"value": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]"
