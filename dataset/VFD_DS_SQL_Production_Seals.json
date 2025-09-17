@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_SQL_Production_Seals",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_Azure_Sql",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": [
+			"Production table seals - FK verso bookings con CASCADE DELETE - Solo INSERT"
+		],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "production_seals"
+		}
+	}
+}

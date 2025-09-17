@@ -1,0 +1,104 @@
+{
+	"name": "VFD_PL_Process_Seals_SQL",
+	"properties": {
+		"description": "Pipeline figlia: carica Seals Excel → SQL staging → stored procedure (INSERT)",
+		"activities": [
+			{
+				"name": "LoadSealsToStaging",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "TRUNCATE TABLE staging_seals",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "@pipeline().parameters.folderPath",
+							"fileName": "@pipeline().parameters.fileName"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_SQL_Staging_Seals",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "ProcessSeals",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LoadSealsToStaging",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "sp_process_seals"
+				},
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_Azure_Sql",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"folderPath": {
+				"type": "string",
+				"defaultValue": "Mida/Seals/2025/09"
+			},
+			"fileName": {
+				"type": "string",
+				"defaultValue": "EmissioniGiornoPrecedente20250917.xlsx"
+			}
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": []
+	}
+}

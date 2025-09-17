@@ -1,0 +1,104 @@
+{
+	"name": "VFD_PL_Process_Bookings_SQL",
+	"properties": {
+		"description": "Pipeline figlia: carica Bookings Excel → SQL staging → stored procedure (DELETE/INSERT + Historical)",
+		"activities": [
+			{
+				"name": "LoadBookingsToStaging",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "TRUNCATE TABLE staging_bookings",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "@pipeline().parameters.folderPath",
+							"fileName": "@pipeline().parameters.fileName"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "VFD_DS_SQL_Staging_Bookings",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "ProcessBookingsComplete",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LoadBookingsToStaging",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "sp_process_bookings_complete"
+				},
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_Azure_Sql",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"folderPath": {
+				"type": "string",
+				"defaultValue": "Mida/Bookings/2025/09"
+			},
+			"fileName": {
+				"type": "string",
+				"defaultValue": "export_vw_summary_reservationPayments20250917.xlsx"
+			}
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": []
+	}
+}

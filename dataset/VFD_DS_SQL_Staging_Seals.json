@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_SQL_Staging_Seals",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_Azure_Sql",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": [
+			"Staging table per caricamento dati seals da RAW"
+		],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "staging_seals"
+		}
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_SQL_Production_Validations",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_Azure_Sql",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": [
+			"Production table validations - Solo INSERT, nessuna logica DELETE"
+		],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "production_validations"
+		}
+	}
+}

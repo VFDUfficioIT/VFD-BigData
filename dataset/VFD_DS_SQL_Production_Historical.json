@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_SQL_Production_Historical",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_Azure_Sql",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": [
+			"Production table historical - Audit trail append-only per tutte le elaborazioni bookings"
+		],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "production_historical"
+		}
+	}
+}

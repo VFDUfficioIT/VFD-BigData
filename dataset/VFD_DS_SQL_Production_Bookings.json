@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_SQL_Production_Bookings",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_Azure_Sql",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": [
+			"Production table bookings - DELETE/INSERT per reservationCode con CASCADE su seals"
+		],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "production_bookings"
+		}
+	}
+}

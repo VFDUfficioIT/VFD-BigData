@@ -1,0 +1,21 @@
+{
+	"name": "VFD_DS_SQL_Staging_Bookings",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_Azure_Sql",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MIDA_SQL"
+		},
+		"annotations": [
+			"Staging table per caricamento dati bookings da RAW - 82 campi"
+		],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "staging_bookings"
+		}
+	}
+}
