@@ -1815,7 +1815,7 @@
 					},
 					"fileName": {
 						"type": "string",
-						"defaultValue": "EEmissioniGiornoPrecedente2025091704.xlsx"
+						"defaultValue": "EmissioniGiornoPrecedente2025091704.xlsx"
 					}
 				},
 				"folder": {
