@@ -76,7 +76,7 @@
 				"annotations": [],
 				"type": "Excel",
 				"typeProperties": {
-					"sheetName": "Emissioni di ieri",
+					"sheetName": "Emissioni",
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
@@ -159,7 +159,7 @@
 				"annotations": [],
 				"type": "Excel",
 				"typeProperties": {
-					"sheetName": "Vidimazioni di ieri",
+					"sheetName": "Vidimazioni",
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
@@ -1928,7 +1928,7 @@
 					},
 					"fileName": {
 						"type": "string",
-						"defaultValue": "VidimazioniGiornoPrecedente20250917.xlsx"
+						"defaultValue": "VidimazioniGiornoPrecedente2025091704.xlsx"
 					}
 				},
 				"folder": {
