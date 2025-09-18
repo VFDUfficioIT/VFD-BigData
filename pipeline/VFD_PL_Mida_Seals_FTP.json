@@ -284,51 +284,6 @@
 												}
 											}
 										]
-									},
-									{
-										"name": "Raw to Curated Pipeline",
-										"type": "ExecutePipeline",
-										"dependsOn": [
-											{
-												"activity": "CopyFromFTP",
-												"dependencyConditions": [
-													"Succeeded"
-												]
-											}
-										],
-										"policy": {
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"pipeline": {
-												"referenceName": "VFD_PL_Mida_Seals_Raw_Curated",
-												"type": "PipelineReference"
-											},
-											"waitOnCompletion": true,
-											"parameters": {
-												"folderPath": {
-													"value": "@variables('folderPathVar')",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@variables('fileName')",
-													"type": "Expression"
-												},
-												"year": {
-													"value": "@variables('year')",
-													"type": "Expression"
-												},
-												"month": {
-													"value": "@variables('month')",
-													"type": "Expression"
-												},
-												"day": {
-													"value": "@variables('day')",
-													"type": "Expression"
-												}
-											}
-										}
 									}
 								]
 							}
