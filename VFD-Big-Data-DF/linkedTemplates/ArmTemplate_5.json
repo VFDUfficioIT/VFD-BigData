@@ -13,6 +13,136 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Single_Row_To_Monthly')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Aggiorna file mensile con singola riga filtrata per data",
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						},
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceCuratedExisting"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkCurated"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterTargetDate"
+						},
+						{
+							"name": "RemoveTargetDateFromExisting"
+						},
+						{
+							"name": "UnionWithExisting"
+						},
+						{
+							"name": "SortByDate"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     target_date as string",
+						"}",
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string,",
+						"          processing_date as timestamp,",
+						"          data_source as string,",
+						"          datetime_parsed as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string,",
+						"          processing_date as timestamp,",
+						"          data_source as string,",
+						"          datetime_parsed as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: true,",
+						"     format: 'parquet') ~> SourceCuratedExisting",
+						"SourceProcessed filter(datetime == $target_date) ~> FilterTargetDate",
+						"SourceCuratedExisting filter(datetime != $target_date) ~> RemoveTargetDateFromExisting",
+						"FilterTargetDate, RemoveTargetDateFromExisting union(byName: true)~> UnionWithExisting",
+						"UnionWithExisting sort(asc(datetime, false)) ~> SortByDate",
+						"SortByDate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkCurated"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Daily_v2')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -8475,7 +8605,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Single_Row_To_Monthly')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_test')]",
@@ -8637,188 +8769,6 @@
 				]
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Historical_Recovery')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline per il recupero storico dei dati Affluences dall'1 novembre 2024 al 15 maggio 2025",
-				"activities": [
-					{
-						"name": "SetStartDate",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "currentDate",
-							"value": {
-								"value": "@formatDateTime('2025-06-07', 'yyyy-MM-dd')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "SetEndDate",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "endDate",
-							"value": {
-								"value": "@formatDateTime('2025-06-09', 'yyyy-MM-dd')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "ProcessUntilEndDate",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "SetStartDate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "SetEndDate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@greater(variables('currentDate'), variables('endDate'))",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "ExecuteDailyPipeline",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Affluences_Daily_v2",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"date": {
-												"value": "@variables('currentDate')",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "CalculateNextDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ExecuteDailyPipeline",
-											"dependencyConditions": [
-												"Completed"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "tempDate",
-										"value": {
-											"value": "@formatDateTime(addDays(variables('currentDate'), 1), 'yyyy-MM-dd')",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "UpdateCurrentDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "CalculateNextDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "currentDate",
-										"value": {
-											"value": "@variables('tempDate')",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "WaitForCooldown",
-									"type": "Wait",
-									"dependsOn": [
-										{
-											"activity": "UpdateCurrentDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 10
-									}
-								}
-							],
-							"timeout": "7.00:00:00"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"currentDate": {
-						"type": "String"
-					},
-					"endDate": {
-						"type": "String"
-					},
-					"tempDate": {
-						"type": "String"
-					},
-					"progressMessage": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Affluences"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Affluences_Daily_v2')]"
-			]
 		}
 	]
 }

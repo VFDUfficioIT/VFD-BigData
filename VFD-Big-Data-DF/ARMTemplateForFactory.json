@@ -9458,51 +9458,6 @@
 														}
 													}
 												]
-											},
-											{
-												"name": "Raw to Curated Pipeline",
-												"type": "ExecutePipeline",
-												"dependsOn": [
-													{
-														"activity": "CopyFromFTP",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"pipeline": {
-														"referenceName": "VFD_PL_Mida_Seals_Raw_Curated",
-														"type": "PipelineReference"
-													},
-													"waitOnCompletion": true,
-													"parameters": {
-														"folderPath": {
-															"value": "@variables('folderPathVar')",
-															"type": "Expression"
-														},
-														"fileName": {
-															"value": "@variables('fileName')",
-															"type": "Expression"
-														},
-														"year": {
-															"value": "@variables('year')",
-															"type": "Expression"
-														},
-														"month": {
-															"value": "@variables('month')",
-															"type": "Expression"
-														},
-														"day": {
-															"value": "@variables('day')",
-															"type": "Expression"
-														}
-													}
-												}
 											}
 										]
 									}
@@ -9540,8 +9495,7 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Seals_FTPServer_Folder')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Seals_FTPServer_Binary')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Binary')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Seals_Raw_Curated')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Binary')]"
 			]
 		},
 		{
@@ -14578,7 +14532,7 @@
 							"value": "@dataset().fileName",
 							"type": "Expression"
 						},
-						"folderPath": "emissioni"
+						"folderPath": "emissioni_new"
 					},
 					"sheetName": "Emissioni di ieri",
 					"firstRowAsHeader": true
@@ -14605,7 +14559,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "FtpServerLocation",
-						"folderPath": "emissioni"
+						"folderPath": "emissioni_new"
 					}
 				}
 			},
@@ -14639,7 +14593,7 @@
 							"value": "@dataset().fileName",
 							"type": "Expression"
 						},
-						"folderPath": "vidimazioni"
+						"folderPath": "vidimazioni_new"
 					},
 					"sheetName": "Vidimazioni di ieri",
 					"firstRowAsHeader": true
@@ -14666,7 +14620,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "FtpServerLocation",
-						"folderPath": "vidimazioni"
+						"folderPath": "vidimazioni_new"
 					}
 				}
 			},

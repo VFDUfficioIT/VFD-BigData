@@ -532,7 +532,7 @@
 							"value": "@dataset().fileName",
 							"type": "Expression"
 						},
-						"folderPath": "emissioni"
+						"folderPath": "emissioni_new"
 					},
 					"sheetName": "Emissioni di ieri",
 					"firstRowAsHeader": true
@@ -559,7 +559,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "FtpServerLocation",
-						"folderPath": "emissioni"
+						"folderPath": "emissioni_new"
 					}
 				}
 			},
@@ -593,7 +593,7 @@
 							"value": "@dataset().fileName",
 							"type": "Expression"
 						},
-						"folderPath": "vidimazioni"
+						"folderPath": "vidimazioni_new"
 					},
 					"sheetName": "Vidimazioni di ieri",
 					"firstRowAsHeader": true
@@ -620,7 +620,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "FtpServerLocation",
-						"folderPath": "vidimazioni"
+						"folderPath": "vidimazioni_new"
 					}
 				}
 			},
