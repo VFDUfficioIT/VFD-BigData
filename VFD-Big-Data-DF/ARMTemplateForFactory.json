@@ -10404,51 +10404,6 @@
 														}
 													}
 												]
-											},
-											{
-												"name": "Raw to Curated Pipeline",
-												"type": "ExecutePipeline",
-												"dependsOn": [
-													{
-														"activity": "CopyFromFTP",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"pipeline": {
-														"referenceName": "VFD_PL_Mida_Validations_Raw_Curated",
-														"type": "PipelineReference"
-													},
-													"waitOnCompletion": true,
-													"parameters": {
-														"folderPath": {
-															"value": "@variables('folderPathVar')",
-															"type": "Expression"
-														},
-														"fileName": {
-															"value": "@variables('fileName')",
-															"type": "Expression"
-														},
-														"year": {
-															"value": "@variables('year')",
-															"type": "Expression"
-														},
-														"month": {
-															"value": "@variables('month')",
-															"type": "Expression"
-														},
-														"day": {
-															"value": "@variables('day')",
-															"type": "Expression"
-														}
-													}
-												}
 											}
 										]
 									}
@@ -10486,8 +10441,7 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Validations_FTPServer_Folder')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Mida_Validations_FTPServer_Binary')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Binary')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida_Validations_Raw_Curated')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Binary')]"
 			]
 		},
 		{

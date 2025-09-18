@@ -1274,6 +1274,336 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Validations_FTP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per acquisire i dati di vidimazioni (Validations) da FTP a Data Lake",
+				"activities": [
+					{
+						"name": "ListFTPFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Mida_Validations_FTPServer_Folder",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "FtpReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false,
+								"useBinaryTransfer": true,
+								"disableChunking": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEachFTPFile",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ListFTPFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ListFTPFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetFileName",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "fileName",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetYear",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetFileName",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "year",
+										"value": {
+											"value": "@substring(item().name, 27, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "month",
+										"value": {
+											"value": "@substring(item().name, 31, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetDay",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "day",
+										"value": {
+											"value": "@substring(item().name, 33, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetFolderPathVar",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetDay",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "folderPathVar",
+										"value": {
+											"value": "@concat('Mida/Validations/', variables('year'), '/', variables('month'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "CheckIfExistsOnADLS",
+									"type": "GetMetadata",
+									"dependsOn": [
+										{
+											"activity": "SetFolderPathVar",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('folderPathVar')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('fileName')",
+													"type": "Expression"
+												}
+											}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								},
+								{
+									"name": "IfNotExists",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "CheckIfExistsOnADLS",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@not(activity('CheckIfExistsOnADLS').output.exists)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "CopyFromFTP",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "BinarySource",
+														"storeSettings": {
+															"type": "FtpReadSettings",
+															"recursive": true,
+															"useBinaryTransfer": true,
+															"disableChunking": false
+														},
+														"formatSettings": {
+															"type": "BinaryReadSettings"
+														}
+													},
+													"sink": {
+														"type": "BinarySink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														}
+													},
+													"enableStaging": false
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Mida_Validations_FTPServer_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@variables('folderPathVar')",
+																"type": "Expression"
+															},
+															"fileName": {
+																"value": "@variables('fileName')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"folderPathVar": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Binary')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Process_Bookings_SQL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2739,98 +3069,6 @@
 						"     postCommands: [],",
 						"     partitionBy('hash', 1),",
 						"     compressionCodec: 'snappy') ~> SinkEnrichedData"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_DuomoWiFi_Users_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Consolida tutti i file JSON degli utenti in un singolo file Parquet",
-				"folder": {
-					"name": "WiFi"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_DuomoWiFi_Users_JSON",
-								"type": "DatasetReference"
-							},
-							"name": "SourceUsersJSON"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkUsersParquet"
-						}
-					],
-					"transformations": [
-						{
-							"name": "FlattenUserData"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     year as string,",
-						"     month as string",
-						"}",
-						"source(output(",
-						"          count as integer,",
-						"          scrollId as string,",
-						"          customers as (cid as string, username as string, firstName as string, lastName as string, email as string, gender as string, phone as string, birthDate as string, country as string, zipCode as string, wifiArea as string)[]",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:[(concat(\"/Wifi/users/\", $year, \"/\", $month, \"/VFD_Wifi_user_*.json\"))]) ~> SourceUsersJSON",
-						"SourceUsersJSON foldDown(unroll(customers),",
-						"     mapColumn(",
-						"          cid = customers.cid,",
-						"          username = customers.username,",
-						"          firstName = customers.firstName,",
-						"          lastName = customers.lastName,",
-						"          email = customers.email,",
-						"          gender = customers.gender,",
-						"          phone = customers.phone,",
-						"          birthDate = customers.birthDate,",
-						"          country = customers.country,",
-						"          zipCode = customers.zipCode,",
-						"          wifiArea = customers.wifiArea",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> FlattenUserData",
-						"FlattenUserData sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          cid as string,",
-						"          username as string,",
-						"          firstName as string,",
-						"          lastName as string,",
-						"          email as string,",
-						"          gender as string,",
-						"          phone as string,",
-						"          birthDate as string,",
-						"          country as string,",
-						"          zipCode as string,",
-						"          wifiArea as string",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkUsersParquet"
 					]
 				}
 			},

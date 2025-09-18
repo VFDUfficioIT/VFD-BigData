@@ -13,6 +13,98 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_DuomoWiFi_Users_Raw_Processed')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Consolida tutti i file JSON degli utenti in un singolo file Parquet",
+				"folder": {
+					"name": "WiFi"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_DuomoWiFi_Users_JSON",
+								"type": "DatasetReference"
+							},
+							"name": "SourceUsersJSON"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkUsersParquet"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FlattenUserData"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     year as string,",
+						"     month as string",
+						"}",
+						"source(output(",
+						"          count as integer,",
+						"          scrollId as string,",
+						"          customers as (cid as string, username as string, firstName as string, lastName as string, email as string, gender as string, phone as string, birthDate as string, country as string, zipCode as string, wifiArea as string)[]",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'documentPerLine',",
+						"     wildcardPaths:[(concat(\"/Wifi/users/\", $year, \"/\", $month, \"/VFD_Wifi_user_*.json\"))]) ~> SourceUsersJSON",
+						"SourceUsersJSON foldDown(unroll(customers),",
+						"     mapColumn(",
+						"          cid = customers.cid,",
+						"          username = customers.username,",
+						"          firstName = customers.firstName,",
+						"          lastName = customers.lastName,",
+						"          email = customers.email,",
+						"          gender = customers.gender,",
+						"          phone = customers.phone,",
+						"          birthDate = customers.birthDate,",
+						"          country = customers.country,",
+						"          zipCode = customers.zipCode,",
+						"          wifiArea = customers.wifiArea",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> FlattenUserData",
+						"FlattenUserData sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          cid as string,",
+						"          username as string,",
+						"          firstName as string,",
+						"          lastName as string,",
+						"          email as string,",
+						"          gender as string,",
+						"          phone as string,",
+						"          birthDate as string,",
+						"          country as string,",
+						"          zipCode as string,",
+						"          wifiArea as string",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkUsersParquet"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida2_Atomic_APPEND_Booking_Complete')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -3507,87 +3599,6 @@
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     partitionBy('hash', 1)) ~> SinkTest"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Conversione CSV meteo in Parquet senza modifiche",
-				"folder": {
-					"name": "Visual Crossing/Weather"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Weather_CSV",
-								"type": "DatasetReference"
-							},
-							"name": "SourceRaw"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Weather_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkProcessed",
-							"rejectedDataLinkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "AddProcessingMetadata"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          name as string,",
-						"          datetime as string,",
-						"          tempmax as double,",
-						"          tempmin as double,",
-						"          temp as double,",
-						"          feelslikemax as double,",
-						"          feelslikemin as double,",
-						"          feelslike as double,",
-						"          humidity as double,",
-						"          precip as double,",
-						"          precipprob as double,",
-						"          preciptype as string,",
-						"          windgust as double,",
-						"          windspeed as double,",
-						"          cloudcover as double,",
-						"          visibility as double,",
-						"          sunset as string,",
-						"          conditions as string,",
-						"          description as string,",
-						"          icon as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> SourceRaw",
-						"SourceRaw derive(processing_date = currentUTC(),",
-						"          data_source = 'visual_crossing_api',",
-						"          datetime_parsed = toDate(datetime)) ~> AddProcessingMetadata",
-						"AddProcessingMetadata sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Weather_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkProcessed"
 					]
 				}
 			},

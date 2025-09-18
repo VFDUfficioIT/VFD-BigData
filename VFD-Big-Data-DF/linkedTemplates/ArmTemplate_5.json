@@ -13,6 +13,87 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Raw_Processed')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Conversione CSV meteo in Parquet senza modifiche",
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Weather_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "SourceRaw"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkProcessed",
+							"rejectedDataLinkedService": {
+								"referenceName": "VFD_Big_Data_DL",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddProcessingMetadata"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          name as string,",
+						"          datetime as string,",
+						"          tempmax as double,",
+						"          tempmin as double,",
+						"          temp as double,",
+						"          feelslikemax as double,",
+						"          feelslikemin as double,",
+						"          feelslike as double,",
+						"          humidity as double,",
+						"          precip as double,",
+						"          precipprob as double,",
+						"          preciptype as string,",
+						"          windgust as double,",
+						"          windspeed as double,",
+						"          cloudcover as double,",
+						"          visibility as double,",
+						"          sunset as string,",
+						"          conditions as string,",
+						"          description as string,",
+						"          icon as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> SourceRaw",
+						"SourceRaw derive(processing_date = currentUTC(),",
+						"          data_source = 'visual_crossing_api',",
+						"          datetime_parsed = toDate(datetime)) ~> AddProcessingMetadata",
+						"AddProcessingMetadata sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Weather_Raw_Processed_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkProcessed"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Weather_Single_Row_To_Monthly')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -8606,169 +8687,9 @@
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Raw_Processed')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Single_Row_To_Monthly')]"
 			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_test')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline di test per verificare passaggio parametri da pipeline a dataflow",
-				"activities": [
-					{
-						"name": "Data flow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "Copy data1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "CFD_DFL_Mida2_test2",
-								"type": "DataFlowReference",
-								"parameters": {
-									"param_string": {
-										"value": "@concat('''', pipeline().parameters.pipeparam_string, '''')",
-										"type": "Expression"
-									},
-									"param_int": {
-										"value": "@pipeline().parameters.pipeparam_int",
-										"type": "Expression"
-									},
-									"param_date": {
-										"value": "@concat('''', pipeline().parameters.pipeparam_date, '''')",
-										"type": "Expression"
-									}
-								},
-								"datasetParameters": {
-									"source1": {
-										"folderPath": "Mida/Bookings/Temp",
-										"fileName": "temp_update.parquet"
-									},
-									"sink1": {
-										"folderPath": "Mida/Bookings/Temp",
-										"fileName": "temp_update2.parquet"
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "None",
-							"cacheSinks": {
-								"firstRowOnly": true
-							}
-						}
-					},
-					{
-						"name": "Copy data1",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": "Mida2/Bookings/Complete/2025/01",
-									"fileName": "test.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Mida_Bookings_Complete_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": "Mida2/Bookings/Complete/2025/01",
-									"fileName": "test2.parquet"
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"pipeparam_string": {
-						"type": "string",
-						"defaultValue": "RVFD2XNDRPZ3XPQX"
-					},
-					"pipeparam_int": {
-						"type": "int",
-						"defaultValue": 12
-					},
-					"pipeparam_date": {
-						"type": "string",
-						"defaultValue": "2025-07-25"
-					},
-					"pipeparam_timestamp": {
-						"type": "string",
-						"defaultValue": "2025-07-25T10:18:56.146Z"
-					}
-				},
-				"folder": {
-					"name": "Mida2/Test"
-				},
-				"annotations": [
-					"Test per verificare passaggio parametri da pipeline a dataflow"
-				]
-			},
-			"dependsOn": []
 		}
 	]
 }
