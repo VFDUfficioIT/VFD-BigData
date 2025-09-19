@@ -17,6 +17,980 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida_Validations_Raw_Curated')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per convertire file Excel Validations in formato Parquet usando Data Flow",
+				"activities": [
+					{
+						"name": "Raw to Processed Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Mida_Validations_Raw_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceExcel": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
+									},
+									"SinkParquet": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Mida_Validations_Raw_Processed_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Copy Data from Temporary File",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Raw to Processed Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Raw_Processed_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary File",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Data from Temporary File",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Raw_Processed_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Processed to Curated Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Delete Temporary File",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@replace(pipeline().parameters.fileName,'.xlsx','.parquet')",
+											"type": "Expression"
+										}
+									},
+									"SinkCurated": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Copy Data from Temporary Curated",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Processed to Curated Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@concat('Mida_Validations_',pipeline().parameters.year,pipeline().parameters.month,pipeline().parameters.day,'.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary File Curated",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Data from Temporary Curated",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					},
+					"day": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Test_Single_Parameter')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline di test con un solo parametro per verificare il passaggio al dataflow",
+				"activities": [
+					{
+						"name": "Test Dataflow Single Param",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Test_Single_Parameter",
+								"type": "DataFlowReference",
+								"parameters": {
+									"test_param": {
+										"value": "@pipeline().parameters.test_input",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"SourceProcessed": {
+										"folderPath": "Mida/Bookings/Processed/2025/01",
+										"fileName": "VFD_Mida_Processed_20250101.parquet\""
+									},
+									"SinkTest": {
+										"folderPath": "Test",
+										"fileName": "test_single_param_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"test_input": {
+						"type": "string",
+						"defaultValue": "TEST_VALUE_123"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Test"
+				},
+				"annotations": [
+					"Test per verificare passaggio parametri da pipeline a dataflow"
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_Raw_Curated')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per convertire CSV meteo in Parquet e aggiornare file mensili con ForEach",
+				"activities": [
+					{
+						"name": "Raw to Processed Transformation",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Weather_Raw_Processed",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SourceRaw": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
+									},
+									"SinkProcessed": {
+										"folderPath": {
+											"value": "@pipeline().parameters.folderPath",
+											"type": "Expression"
+										},
+										"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Coarse"
+						}
+					},
+					{
+						"name": "Copy Raw to Processed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Raw to Processed Transformation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Delete Temporary Processed",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Copy Raw to Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": "VFD_DFL_Weather_Raw_Processed_output.parquet"
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Get Processed Data Rows",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Delete Temporary Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Weather_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach Weather Row",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Processed Data Rows",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Processed Data Rows').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "SetRowYear",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowYear",
+										"value": {
+											"value": "@substring(item().datetime, 0, 4)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowMonth",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowYear",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowMonth",
+										"value": {
+											"value": "@substring(item().datetime, 5, 2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "SetRowDate",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "SetRowMonth",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "rowDate",
+										"value": {
+											"value": "@item().datetime",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Update Monthly File",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "SetRowDate",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "VFD_DFL_Weather_Single_Row_To_Monthly",
+											"type": "DataFlowReference",
+											"parameters": {
+												"target_date": {
+													"value": "'@{variables('rowDate')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SourceProcessed": {
+													"folderPath": {
+														"value": "@pipeline().parameters.folderPath",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@replace(pipeline().parameters.fileName, '.csv', '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SourceCuratedExisting": {
+													"folderPath": {
+														"value": "@concat('Weather/',variables('rowYear'))",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+														"type": "Expression"
+													}
+												},
+												"SinkCurated": {
+													"folderPath": {
+														"value": "@concat('Weather/',variables('rowYear'))",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@concat('VFD_DFL_Weather_Single_Row_To_Monthly_', variables('rowYear'), variables('rowMonth'), '_output.parquet')",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Coarse"
+									}
+								},
+								{
+									"name": "Copy to Final Monthly File",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Update Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "ParquetReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@concat('weather_monthly_', variables('rowYear'), variables('rowMonth'), '.parquet')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Delete Temporary Monthly",
+									"type": "Delete",
+									"dependsOn": [
+										{
+											"activity": "Copy to Final Monthly File",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "VFD_DS_Curated_Weather_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": {
+													"value": "@concat('Weather/',variables('rowYear'))",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "VFD_DFL_Weather_Single_Row_To_Monthly_output.parquet",
+													"type": "Expression"
+												}
+											}
+										},
+										"enableLogging": false,
+										"storeSettings": {
+											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					},
+					"year": {
+						"type": "String"
+					},
+					"month": {
+						"type": "String"
+					}
+				},
+				"variables": {
+					"rowYear": {
+						"type": "String"
+					},
+					"rowMonth": {
+						"type": "String"
+					},
+					"rowDate": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_test')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1922,7 +2896,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Weather_Raw_Curated')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Affluences_Daily')]",
