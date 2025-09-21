@@ -96,7 +96,7 @@
 			},
 			"fileName": {
 				"type": "string",
-				"defaultValue": "Storico_-_Vendite_20220101_20220630_part01.xlsx"
+				"defaultValue": "Storico_-_Vendite_20220701_20221231_part01.xlsx"
 			}
 		},
 		"folder": {
