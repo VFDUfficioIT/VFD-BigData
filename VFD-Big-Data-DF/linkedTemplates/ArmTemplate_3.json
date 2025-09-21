@@ -1703,11 +1703,11 @@
 				"parameters": {
 					"folderPath": {
 						"type": "string",
-						"defaultValue": "Mida/Bookings/2025/09"
+						"defaultValue": "Mida/Storico/Bookings"
 					},
 					"fileName": {
 						"type": "string",
-						"defaultValue": "export_vw_summary_reservationPayments2025091504.xlsx"
+						"defaultValue": "Storico_-_Vendite_20210101_20211231_part02.xlsx"
 					}
 				},
 				"folder": {
