@@ -993,6 +993,162 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Batch_Historical_Processing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per processare automaticamente tutti i file storico in ordine crescente",
+				"activities": [
+					{
+						"name": "GetHistoricalFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.baseFolderPath",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ProcessFilesInOrder",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetHistoricalFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetHistoricalFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CheckIfPartFile",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@contains(item().name, '_part')",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "ProcessSingleFile",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "VFD_PL_Process_Bookings_SQL",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"folderPath": {
+															"value": "@pipeline().parameters.baseFolderPath",
+															"type": "Expression"
+														},
+														"fileName": {
+															"value": "@item().name",
+															"type": "Expression"
+														}
+													}
+												}
+											},
+											{
+												"name": "LogProcessedFile",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "ProcessSingleFile",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "currentFile",
+													"value": {
+														"value": "@concat('Processed: ', item().name, ' at ', utcNow())",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"baseFolderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Storico/Bookings"
+					}
+				},
+				"variables": {
+					"currentFile": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Batch"
+				},
+				"annotations": [
+					"Processamento automatico file storici in ordine crescente"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]",
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Process_Bookings_SQL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Daily')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -11874,7 +12030,7 @@
 					},
 					"fileName": {
 						"type": "string",
-						"defaultValue": "Storico_-_Vendite_20220701_20221231_part01.xlsx"
+						"defaultValue": "Storico_-_Vendite_20220701_20221231_part03.xlsx"
 					}
 				},
 				"folder": {
