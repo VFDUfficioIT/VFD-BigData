@@ -19,7 +19,7 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "Vidimazioni",
+			"sheetName": "sheet1",
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
