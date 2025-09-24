@@ -12263,6 +12263,112 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Process_Validations_Historical_Batch')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline master per processare tutti i file storici validations in sequenza",
+				"activities": [
+					{
+						"name": "Get Files List",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida/Storico/Validazioni/",
+									"fileName": "*"
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Process Each File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Files List",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Files List').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Process Single Validations File",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "VFD_PL_Process_Validations_SQL",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"folderPath": {
+												"value": "Mida/Storico/Validazioni/",
+												"type": "Expression"
+											},
+											"fileName": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Mida/Batch"
+				},
+				"annotations": [
+					"Pipeline master per processing storico validations",
+					"Processa file in sequenza per mantenere ordine cronologico"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Binary')]",
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Process_Validations_SQL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Process_Validations_SQL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -17280,7 +17386,7 @@
 				"annotations": [],
 				"type": "Excel",
 				"typeProperties": {
-					"sheetName": "Vidimazioni",
+					"sheetName": "sheet1",
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
