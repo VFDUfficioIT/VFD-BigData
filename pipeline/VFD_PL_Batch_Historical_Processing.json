@@ -138,7 +138,7 @@
 			}
 		},
 		"folder": {
-			"name": "Batch"
+			"name": "Mida/Batch"
 		},
 		"annotations": [
 			"Processamento automatico file storici in ordine crescente"
