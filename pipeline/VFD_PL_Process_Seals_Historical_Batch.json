@@ -16,7 +16,17 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"fieldList": [],
+					"dataset": {
+						"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
+						"type": "DatasetReference",
+						"parameters": {
+							"folderPath": "Mida/Storico/Emissioni/",
+							"fileName": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
 						"recursive": false,
