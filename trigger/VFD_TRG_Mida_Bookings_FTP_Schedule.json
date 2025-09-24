@@ -2,11 +2,17 @@
 	"name": "VFD_TRG_Mida_Bookings_FTP_Schedule",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
 					"referenceName": "VFD_PL_Mida",
+					"type": "PipelineReference"
+				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "VFD_PL_MIDA_SQL_Master",
 					"type": "PipelineReference"
 				}
 			}
@@ -20,10 +26,10 @@
 				"timeZone": "W. Europe Standard Time",
 				"schedule": {
 					"minutes": [
-						30
+						0
 					],
 					"hours": [
-						4
+						6
 					]
 				}
 			}
