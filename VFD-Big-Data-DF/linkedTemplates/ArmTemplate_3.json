@@ -76,7 +76,7 @@
 				"annotations": [],
 				"type": "Excel",
 				"typeProperties": {
-					"sheetName": "Emissioni",
+					"sheetName": "sheet1",
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
