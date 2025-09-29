@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_Batch_Historical_Processing",
 	"properties": {
-		"description": "Pipeline per processare automaticamente tutti i file storico in ordine crescente",
+		"description": "Pipeline per processare automaticamente tutti i file storico con Copy Data diretta a production_bookings",
 		"activities": [
 			{
 				"name": "GetHistoricalFiles",
@@ -70,37 +70,87 @@
 								},
 								"ifTrueActivities": [
 									{
-										"name": "ProcessSingleFile",
-										"type": "ExecutePipeline",
+										"name": "Copy Historical File to Production",
+										"type": "Copy",
 										"dependsOn": [],
 										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
 											"secureInput": false
 										},
 										"userProperties": [],
 										"typeProperties": {
-											"pipeline": {
-												"referenceName": "VFD_PL_Process_Bookings_SQL",
-												"type": "PipelineReference"
+											"source": {
+												"type": "ExcelSource",
+												"additionalColumns": [
+													{
+														"name": "processing_timestamp",
+														"value": {
+															"value": "@utcNow()",
+															"type": "Expression"
+														}
+													},
+													{
+														"name": "source_file",
+														"value": {
+															"value": "@item().name",
+															"type": "Expression"
+														}
+													}
+												],
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": true,
+													"enablePartitionDiscovery": false
+												}
 											},
-											"waitOnCompletion": true,
-											"parameters": {
-												"folderPath": {
-													"value": "@pipeline().parameters.baseFolderPath",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@item().name",
-													"type": "Expression"
+											"sink": {
+												"type": "AzureSqlSink",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": false,
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
 												}
 											}
-										}
+										},
+										"inputs": [
+											{
+												"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+												"type": "DatasetReference",
+												"parameters": {
+													"folderPath": {
+														"value": "@pipeline().parameters.baseFolderPath",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "VFD_DS_SQL_Test_Bookings",
+												"type": "DatasetReference"
+											}
+										]
 									},
 									{
 										"name": "LogProcessedFile",
 										"type": "SetVariable",
 										"dependsOn": [
 											{
-												"activity": "ProcessSingleFile",
+												"activity": "Copy Historical File to Production",
 												"dependencyConditions": [
 													"Succeeded"
 												]
@@ -114,7 +164,7 @@
 										"typeProperties": {
 											"variableName": "currentFile",
 											"value": {
-												"value": "@concat('Processed: ', item().name, ' at ', utcNow())",
+												"value": "@concat('Processed: ', item().name, ' - Rows copied: ', activity('Copy Historical File to Production').output.rowsCopied, ' at ', utcNow())",
 												"type": "Expression"
 											}
 										}
@@ -141,7 +191,7 @@
 			"name": "Mida/Batch"
 		},
 		"annotations": [
-			"Processamento automatico file storici in ordine crescente"
+			"Processamento automatico file storici con Copy Data diretta a production_bookings"
 		]
 	}
 }
