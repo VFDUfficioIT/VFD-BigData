@@ -4,20 +4,20 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_Azure_Sql_password": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'password' di 'VFD_Big_Data_Azure_Sql'"
+			"metadata": "Secure string for 'password' of 'VFD_Big_Data_Azure_Sql'"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
 			"type": "string",
@@ -997,7 +997,7 @@
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline per processare automaticamente tutti i file storico in ordine crescente",
+				"description": "Pipeline per processare automaticamente tutti i file storico con Copy Data diretta a production_bookings",
 				"activities": [
 					{
 						"name": "GetHistoricalFiles",
@@ -1066,37 +1066,88 @@
 										},
 										"ifTrueActivities": [
 											{
-												"name": "ProcessSingleFile",
-												"type": "ExecutePipeline",
+												"name": "Copy Historical File to Production",
+												"type": "Copy",
 												"dependsOn": [],
 												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
 													"secureInput": false
 												},
 												"userProperties": [],
 												"typeProperties": {
-													"pipeline": {
-														"referenceName": "VFD_PL_Process_Bookings_SQL",
-														"type": "PipelineReference"
+													"source": {
+														"type": "ExcelSource",
+														"additionalColumns": [
+															{
+																"name": "processing_timestamp",
+																"value": {
+																	"value": "@utcNow()",
+																	"type": "Expression"
+																}
+															},
+															{
+																"name": "source_file",
+																"value": {
+																	"value": "@item().name",
+																	"type": "Expression"
+																}
+															}
+														],
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														}
 													},
-													"waitOnCompletion": true,
-													"parameters": {
-														"folderPath": {
-															"value": "@pipeline().parameters.baseFolderPath",
-															"type": "Expression"
-														},
-														"fileName": {
-															"value": "@item().name",
-															"type": "Expression"
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": false,
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
 														}
 													}
-												}
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@pipeline().parameters.baseFolderPath",
+																"type": "Expression"
+															},
+															"fileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_SQL_Test_Bookings",
+														"type": "DatasetReference",
+														"parameters": {}
+													}
+												]
 											},
 											{
 												"name": "LogProcessedFile",
 												"type": "SetVariable",
 												"dependsOn": [
 													{
-														"activity": "ProcessSingleFile",
+														"activity": "Copy Historical File to Production",
 														"dependencyConditions": [
 															"Succeeded"
 														]
@@ -1110,7 +1161,7 @@
 												"typeProperties": {
 													"variableName": "currentFile",
 													"value": {
-														"value": "@concat('Processed: ', item().name, ' at ', utcNow())",
+														"value": "@concat('Processed: ', item().name, ' - Rows copied: ', activity('Copy Historical File to Production').output.rowsCopied, ' at ', utcNow())",
 														"type": "Expression"
 													}
 												}
@@ -1140,12 +1191,13 @@
 					"name": "Mida/Batch"
 				},
 				"annotations": [
-					"Processamento automatico file storici in ordine crescente"
+					"Processamento automatico file storici con Copy Data diretta a production_bookings"
 				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Process_Bookings_SQL')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_SQL_Test_Bookings')]"
 			]
 		},
 		{
@@ -2379,7 +2431,9 @@
 								"type": "DatasetReference",
 								"parameters": {}
 							},
-							"fieldList": [],
+							"fieldList": [
+								"childItems"
+							],
 							"storeSettings": {
 								"type": "FtpReadSettings",
 								"recursive": true,
@@ -12077,6 +12131,9 @@
 								"type": "AzureBlobFSReadSettings",
 								"recursive": false,
 								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
 							}
 						}
 					},
@@ -17627,6 +17684,32 @@
 				"typeProperties": {
 					"schema": "dbo",
 					"table": "staging_validations"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_Azure_Sql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_SQL_Test_Bookings')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_Azure_Sql",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "MIDA_SQL"
+				},
+				"annotations": [
+					"Production table bookings - DELETE/INSERT per reservationCode con CASCADE su seals"
+				],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "test_bookings"
 				}
 			},
 			"dependsOn": [

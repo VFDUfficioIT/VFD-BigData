@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -12,6 +12,38 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Bookings_Folder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Bookings"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					}
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Binary')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
@@ -298,6 +330,212 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Batch_Historical_Processing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per processare automaticamente tutti i file storico con Copy Data diretta a production_bookings",
+				"activities": [
+					{
+						"name": "GetHistoricalFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.baseFolderPath",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ProcessFilesInOrder",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetHistoricalFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetHistoricalFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CheckIfPartFile",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@contains(item().name, '_part')",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Copy Historical File to Production",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "ExcelSource",
+														"additionalColumns": [
+															{
+																"name": "processing_timestamp",
+																"value": {
+																	"value": "@utcNow()",
+																	"type": "Expression"
+																}
+															},
+															{
+																"name": "source_file",
+																"value": {
+																	"value": "@item().name",
+																	"type": "Expression"
+																}
+															}
+														],
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": false,
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@pipeline().parameters.baseFolderPath",
+																"type": "Expression"
+															},
+															"fileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_SQL_Test_Bookings",
+														"type": "DatasetReference",
+														"parameters": {}
+													}
+												]
+											},
+											{
+												"name": "LogProcessedFile",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Copy Historical File to Production",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "currentFile",
+													"value": {
+														"value": "@concat('Processed: ', item().name, ' - Rows copied: ', activity('Copy Historical File to Production').output.rowsCopied, ' at ', utcNow())",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"baseFolderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Storico/Bookings"
+					}
+				},
+				"variables": {
+					"currentFile": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Batch"
+				},
+				"annotations": [
+					"Processamento automatico file storici con Copy Data diretta a production_bookings"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Test_Setup')]",
@@ -2826,252 +3064,6 @@
 						"     skipDuplicateMapOutputs: true,",
 						"     partitionBy('hash', 1),",
 						"     compressionCodec: 'snappy') ~> SinkMonthly"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_DuomoWiFi_Connections_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Trasforma connessioni da JSON Raw a Parquet Processed con calcoli e conversioni",
-				"folder": {
-					"name": "WiFi"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_DuomoWiFi_Connections_JSON",
-								"type": "DatasetReference"
-							},
-							"name": "SourceConnectionsJSON"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkConnectionsParquet"
-						}
-					],
-					"transformations": [
-						{
-							"name": "FlattenData"
-						},
-						{
-							"name": "DerivedColumns"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          generated as string,",
-						"          sId as string,",
-						"          count as integer,",
-						"          connections as (customerId as string, username as string, organizationId as string, start as string, startBusiness as string, stop as string, stopBusiness as string, duration as integer, traffic as integer, locationName as string, locationId as string, hotspotIdentifier as string, hotspotId as string, latitude as double, longitude as double, macAddressClient as string, ipAddressClient as string, terminateCause as string)[]",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'documentPerLine') ~> SourceConnectionsJSON",
-						"SourceConnectionsJSON foldDown(unroll(connections),",
-						"     mapColumn(",
-						"          hotspotIdentifier = connections.hotspotIdentifier,",
-						"          start = connections.start,",
-						"          stop = connections.stop,",
-						"          duration = connections.duration,",
-						"          traffic = connections.traffic,",
-						"          terminateCause = connections.terminateCause,",
-						"          username = connections.username,",
-						"          macAddressClient = connections.macAddressClient,",
-						"          ipAddressClient = connections.ipAddressClient,",
-						"          locationId = connections.locationId,",
-						"          customerId = connections.customerId",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> FlattenData",
-						"FlattenData derive(sessionTime_minutes = duration / 60,",
-						"          traffic_MB = traffic / (1024 * 1024)) ~> DerivedColumns",
-						"DerivedColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          hotspotIdentifier as string,",
-						"          start as string,",
-						"          stop as string,",
-						"          duration as integer,",
-						"          traffic as integer,",
-						"          terminateCause as string,",
-						"          username as string,",
-						"          macAddressClient as string,",
-						"          ipAddressClient as string,",
-						"          locationId as string,",
-						"          customerId as string,",
-						"          sessionTime_minutes as double,",
-						"          traffic_MB as double",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkConnectionsParquet"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_DuomoWiFi_Processed_Curated')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Esegue left join tra connessioni e utenti per creare dataset arricchito",
-				"folder": {
-					"name": "WiFi"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceConnections"
-						},
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceUsers"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_DuomoWiFi_Enriched_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkEnrichedData"
-						}
-					],
-					"transformations": [
-						{
-							"name": "LeftJoinConnectionsUsers"
-						},
-						{
-							"name": "SelectAndRenameColumns"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          hotspotIdentifier as string,",
-						"          start as string,",
-						"          stop as string,",
-						"          duration as integer,",
-						"          traffic as integer,",
-						"          terminateCause as string,",
-						"          username as string,",
-						"          macAddressClient as string,",
-						"          ipAddressClient as string,",
-						"          locationId as string,",
-						"          customerId as string,",
-						"          sessionTime_minutes as double,",
-						"          traffic_MB as double",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> SourceConnections",
-						"source(output(",
-						"          cid as string,",
-						"          username as string,",
-						"          firstName as string,",
-						"          lastName as string,",
-						"          email as string,",
-						"          gender as string,",
-						"          phone as string,",
-						"          birthDate as string,",
-						"          country as string,",
-						"          zipCode as string,",
-						"          wifiArea as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> SourceUsers",
-						"SourceConnections, SourceUsers join(SourceConnections@username == SourceUsers@username,",
-						"     joinType:'left',",
-						"     matchType:'exact',",
-						"     ignoreSpaces: false,",
-						"     broadcast: 'auto')~> LeftJoinConnectionsUsers",
-						"LeftJoinConnectionsUsers select(mapColumn(",
-						"          hotspotIdentifier,",
-						"          start,",
-						"          stop,",
-						"          duration,",
-						"          traffic,",
-						"          terminateCause,",
-						"          username = SourceConnections@username,",
-						"          macAddressClient,",
-						"          ipAddressClient,",
-						"          locationId,",
-						"          customerId,",
-						"          sessionTime_minutes,",
-						"          traffic_MB,",
-						"          user_cid = cid,",
-						"          user_firstName = firstName,",
-						"          user_lastName = lastName,",
-						"          user_email = email,",
-						"          user_gender = gender,",
-						"          user_phone = phone,",
-						"          user_birthDate = birthDate,",
-						"          user_country = country,",
-						"          user_zipCode = zipCode,",
-						"          user_wifiArea = wifiArea",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> SelectAndRenameColumns",
-						"SelectAndRenameColumns sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          hotspotIdentifier as string,",
-						"          start as string,",
-						"          stop as string,",
-						"          duration as integer,",
-						"          traffic as integer,",
-						"          terminateCause as string,",
-						"          username as string,",
-						"          macAddressClient as string,",
-						"          ipAddressClient as string,",
-						"          locationId as string,",
-						"          customerId as string,",
-						"          sessionTime_minutes as double,",
-						"          traffic_MB as double,",
-						"          user_firstName as string,",
-						"          user_lastName as string,",
-						"          user_email as string,",
-						"          user_gender as string,",
-						"          user_phone as string,",
-						"          user_birthDate as string,",
-						"          user_country as string,",
-						"          user_zipCode as string,",
-						"          user_wifiArea as string",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkEnrichedData"
 					]
 				}
 			},

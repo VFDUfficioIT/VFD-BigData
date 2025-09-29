@@ -4,12 +4,12 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
 		},
 		"VFD_Big_Data_DL_properties_typeProperties_url": {
 			"type": "string",
@@ -112,6 +112,30 @@
 				"typeProperties": {
 					"schema": "dbo",
 					"table": "staging_validations"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_SQL_Test_Bookings')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_Azure_Sql",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "MIDA_SQL"
+				},
+				"annotations": [
+					"Production table bookings - DELETE/INSERT per reservationCode con CASCADE su seals"
+				],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "test_bookings"
 				}
 			},
 			"dependsOn": []
@@ -1627,53 +1651,6 @@
 					"name": "Mida/Seals"
 				},
 				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Temp_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "string",
-						"defaultValue": "Mida2/Bookings/Temp"
-					},
-					"fileName": {
-						"type": "string",
-						"defaultValue": "temp_operation.parquet"
-					}
-				},
-				"folder": {
-					"name": "Mida2/Bookings"
-				},
-				"annotations": [
-					"File temporaneo per operazioni atomiche - schema flessibile"
-				],
 				"type": "Parquet",
 				"typeProperties": {
 					"location": {
