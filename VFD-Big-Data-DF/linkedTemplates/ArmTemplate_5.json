@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -2029,9 +2029,7 @@
 								"type": "DatasetReference",
 								"parameters": {}
 							},
-							"fieldList": [
-								"childItems"
-							],
+							"fieldList": [],
 							"storeSettings": {
 								"type": "FtpReadSettings",
 								"recursive": true,

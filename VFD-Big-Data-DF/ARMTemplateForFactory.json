@@ -4,20 +4,20 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_Azure_Sql_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_Big_Data_Azure_Sql'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_Big_Data_Azure_Sql'"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
 			"type": "string",
@@ -2379,9 +2379,7 @@
 								"type": "DatasetReference",
 								"parameters": {}
 							},
-							"fieldList": [
-								"childItems"
-							],
+							"fieldList": [],
 							"storeSettings": {
 								"type": "FtpReadSettings",
 								"recursive": true,
@@ -17969,6 +17967,13 @@
 							"type": "PipelineReference"
 						},
 						"parameters": {}
+					},
+					{
+						"pipelineReference": {
+							"referenceName": "VFD_PL_MIDA_SQL_Master",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -17980,17 +17985,18 @@
 						"timeZone": "W. Europe Standard Time",
 						"schedule": {
 							"minutes": [
-								30
+								0
 							],
 							"hours": [
-								4
+								6
 							]
 						}
 					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida')]"
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Mida')]",
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_MIDA_SQL_Master')]"
 			]
 		},
 		{
