@@ -6,12 +6,6 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "VFD_PL_Mida",
-					"type": "PipelineReference"
-				}
-			},
-			{
-				"pipelineReference": {
 					"referenceName": "VFD_PL_MIDA_SQL_Master",
 					"type": "PipelineReference"
 				}
