@@ -188,7 +188,7 @@
 			}
 		},
 		"folder": {
-			"name": "MIDA_SQL/Batch"
+			"name": "Mida/Batch"
 		},
 		"annotations": [
 			"Processamento automatico file storici con Copy Data diretta a production_bookings"

@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_Process_Validations_Historical_Batch",
 	"properties": {
-		"description": "Pipeline master per processare tutti i file storici validations in sequenza",
+		"description": "Pipeline master per processare tutti i file storici validations con Copy Data diretta a production_validations",
 		"activities": [
 			{
 				"name": "Get Files List",
@@ -57,30 +57,77 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Process Single Validations File",
-							"type": "ExecutePipeline",
+							"name": "Copy Validations File to Production",
+							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
 								"secureInput": false
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"pipeline": {
-									"referenceName": "VFD_PL_Process_Validations_SQL",
-									"type": "PipelineReference"
+								"source": {
+									"type": "ExcelSource",
+									"additionalColumns": [
+										{
+											"name": "processing_timestamp",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "source_file",
+											"value": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
 								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"folderPath": {
-										"value": "Mida/Storico/Validazioni/",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@item().name",
-										"type": "Expression"
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
 									}
 								}
-							}
+							},
+							"inputs": [
+								{
+									"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+									"type": "DatasetReference",
+									"parameters": {
+										"folderPath": "Mida/Storico/Validazioni/",
+										"fileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "VFD_DS_SQL_Production_Validations",
+									"type": "DatasetReference"
+								}
+							]
 						}
 					]
 				}
@@ -90,7 +137,7 @@
 			"name": "MIDA_SQL/Batch"
 		},
 		"annotations": [
-			"Pipeline master per processing storico validations",
+			"Pipeline master per processing storico validations con Copy Data diretta",
 			"Processa file in sequenza per mantenere ordine cronologico"
 		]
 	}
