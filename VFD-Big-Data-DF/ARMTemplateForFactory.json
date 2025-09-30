@@ -5278,7 +5278,7 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel_History",
 											"type": "DatasetReference",
 											"parameters": {
 												"folderPath": "Mida/Storico/Emissioni/",
@@ -5314,7 +5314,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Binary')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel_History')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_SQL_Production_Seals')]"
 			]
 		},
