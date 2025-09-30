@@ -527,7 +527,7 @@
 					}
 				},
 				"folder": {
-					"name": "MIDA_SQL/Batch"
+					"name": "Mida/Batch"
 				},
 				"annotations": [
 					"Processamento automatico file storici con Copy Data diretta a production_bookings"
@@ -2201,7 +2201,7 @@
 					"elapsedTimeMetric": {}
 				},
 				"folder": {
-					"name": "Batch"
+					"name": "Mida/Batch"
 				},
 				"annotations": [
 					"Pipeline master per processing storico seals",
@@ -2324,6 +2324,160 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Process_Validations_Historical_Batch')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline master per processare tutti i file storici validations con Copy Data diretta a production_validations",
+				"activities": [
+					{
+						"name": "Get Files List",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida/Storico/Validazioni/",
+									"fileName": "*"
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Process Each File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Files List",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Files List').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy Validations File to Production",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ExcelSource",
+											"additionalColumns": [
+												{
+													"name": "processing_timestamp",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "source_file",
+													"value": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											],
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											}
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "Mida/Storico/Validazioni/",
+												"fileName": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_SQL_Production_Validations",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "MIDA_SQL/Batch"
+				},
+				"annotations": [
+					"Pipeline master per processing storico validations con Copy Data diretta",
+					"Processa file in sequenza per mantenere ordine cronologico"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Binary')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]"
 			]
 		},
 		{
@@ -2942,74 +3096,6 @@
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_Daily_to_Curated')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "Affluences"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SourceProcessed"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkCuratedDaily"
-						}
-					],
-					"transformations": [],
-					"scriptLines": [
-						"source(output(",
-						"          site_id as string,",
-						"          site_name as string,",
-						"          date as date,",
-						"          hour as string,",
-						"          occupancy as integer,",
-						"          entries as integer,",
-						"          exits as integer",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'parquet') ~> SourceProcessed",
-						"SourceProcessed sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          site_id as string,",
-						"          site_name as string,",
-						"          date as date,",
-						"          hour as string,",
-						"          occupancy as integer,",
-						"          entries as integer,",
-						"          exits as integer",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Affluences_Daily_to_Curated_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkCuratedDaily"
 					]
 				}
 			},

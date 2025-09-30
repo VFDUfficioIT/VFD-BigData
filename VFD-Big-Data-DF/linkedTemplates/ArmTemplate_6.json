@@ -17,6 +17,196 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_LOOKUP_Summary')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline atomica per cercare record nel file summary usando row_id",
+				"activities": [
+					{
+						"name": "Lookup Summary Record",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VFD_DFL_Mida2_Atomic_LOOKUP_Summary",
+								"type": "DataFlowReference",
+								"parameters": {
+									"row_id": {
+										"value": "@concat('''', pipeline().parameters.row_id, '''')",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"SourceSummaryFile": {
+										"folderPath": "@pipeline().parameters.sourceFolderPath",
+										"fileName": "@pipeline().parameters.sourceFileName"
+									},
+									"SinkTemp": {
+										"folderPath": "@pipeline().parameters.outputFolderPath",
+										"fileName": "@pipeline().parameters.outputFileName"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Check If Record Found",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Lookup Summary Record",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "@pipeline().parameters.outputFolderPath",
+									"fileName": "@pipeline().parameters.outputFileName"
+								}
+							},
+							"fieldList": [
+								"exists",
+								"size"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Set Output Variable",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Check If Record Found",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "recordFound",
+							"value": {
+								"value": "@if(greater(activity('Check If Record Found').output.size, 0), true, false)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "If Record Found Copy Fields",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Set Output Variable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@variables('recordFound')",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Set Summary Fields",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "summaryFields",
+										"value": {
+											"value": "@concat('Record found for row_id: ', pipeline().parameters.row_id)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"row_id": {
+						"type": "string"
+					},
+					"sourceFolderPath": {
+						"type": "string"
+					},
+					"sourceFileName": {
+						"type": "string"
+					},
+					"outputFolderPath": {
+						"type": "string"
+					},
+					"outputFileName": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"recordFound": {
+						"type": "Boolean",
+						"defaultValue": false
+					},
+					"summaryFields": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida2/Bookings/Atomic"
+				},
+				"annotations": [
+					"Pipeline per lookup in summary",
+					"Cerca record per row_id nei file summary",
+					"Sintassi corretta per parametri dataflow"
+				]
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Mida2_Atomic_UPDATE_Booking_Complete')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1965,109 +2155,6 @@
 					"name": "Mida/Validations"
 				},
 				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Process_Validations_Historical_Batch')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline master per processare tutti i file storici validations in sequenza",
-				"activities": [
-					{
-						"name": "Get Files List",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Validations_Binary",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": "Mida/Storico/Validazioni/",
-									"fileName": "*"
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "Process Each File",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Files List",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Files List').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "Process Single Validations File",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Process_Validations_SQL",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"folderPath": {
-												"value": "Mida/Storico/Validazioni/",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@item().name",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"folder": {
-					"name": "MIDA_SQL/Batch"
-				},
-				"annotations": [
-					"Pipeline master per processing storico validations",
-					"Processa file in sequenza per mantenere ordine cronologico"
-				]
 			},
 			"dependsOn": []
 		},

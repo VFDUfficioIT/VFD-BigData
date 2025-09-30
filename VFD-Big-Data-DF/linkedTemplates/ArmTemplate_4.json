@@ -13,6 +13,74 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_Daily_to_Curated')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Affluences"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SourceProcessed"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "SinkCuratedDaily"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          site_id as string,",
+						"          site_name as string,",
+						"          date as date,",
+						"          hour as string,",
+						"          occupancy as integer,",
+						"          entries as integer,",
+						"          exits as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> SourceProcessed",
+						"SourceProcessed sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          site_id as string,",
+						"          site_name as string,",
+						"          date as date,",
+						"          hour as string,",
+						"          occupancy as integer,",
+						"          entries as integer,",
+						"          exits as integer",
+						"     ),",
+						"     format: 'parquet',",
+						"     partitionFileNames:['VFD_DFL_Affluences_Daily_to_Curated_output.parquet'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1),",
+						"     compressionCodec: 'snappy') ~> SinkCuratedDaily"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_JSON_to_Processed')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -3653,72 +3721,6 @@
 						"     postCommands: [],",
 						"     partitionBy('hash', 1),",
 						"     compressionCodec: 'snappy') ~> SinkCurated"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Mida_Seals_Raw_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Dataflow per convertire Excel Seals in Parquet con conversioni di tipo",
-				"folder": {
-					"name": "Mida/Seals"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
-								"type": "DatasetReference"
-							},
-							"name": "SourceExcel"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Mida_Seals_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkParquet",
-							"rejectedDataLinkedService": {
-								"referenceName": "VFD_Big_Data_DL",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "dataTypeConversions"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          sealCode as string,",
-						"          reservationCode as string,",
-						"          TicketLabel as string,",
-						"          EventLabel as string,",
-						"          List as string,",
-						"          externalCode as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> SourceExcel",
-						"SourceExcel derive(processing_date = currentUTC(),",
-						"          data_source = 'mida_seals') ~> dataTypeConversions",
-						"dataTypeConversions sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Mida_Seals_Raw_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     partitionBy('hash', 1),",
-						"     compressionCodec: 'snappy') ~> SinkParquet"
 					]
 				}
 			},
