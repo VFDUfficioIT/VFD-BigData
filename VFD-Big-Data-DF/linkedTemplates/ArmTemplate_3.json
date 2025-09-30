@@ -2468,7 +2468,7 @@
 					"elapsedTimeMetric": {}
 				},
 				"folder": {
-					"name": "MIDA_SQL/Batch"
+					"name": "Mida/Batch"
 				},
 				"annotations": [
 					"Pipeline master per processing storico validations con Copy Data diretta",
