@@ -13,410 +13,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Temp_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "string",
-						"defaultValue": "Mida2/Bookings/Temp"
-					},
-					"fileName": {
-						"type": "string",
-						"defaultValue": "temp_operation.parquet"
-					}
-				},
-				"folder": {
-					"name": "Mida2/Bookings"
-				},
-				"annotations": [
-					"File temporaneo per operazioni atomiche - schema flessibile"
-				],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Users_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "string"
-					},
-					"fileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida/Users"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Validations_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "String"
-					},
-					"fileName": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Mida/Validations"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "String"
-					},
-					"fileName": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Visual Crossing/Weather"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_dummy')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Mida2/Bookings"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "dummy.csv",
-						"fileSystem": "curated"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "dummy",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_AccessAreas_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"fileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Utils/AccessAreas"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": "utils/AccessAreas",
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Affluences_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "string"
-					},
-					"fileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Affluences"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "site_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "site_name",
-						"type": "UTF8"
-					},
-					{
-						"name": "date",
-						"type": "DATE"
-					},
-					{
-						"name": "hour",
-						"type": "UTF8"
-					},
-					{
-						"name": "occupancy",
-						"type": "INT32"
-					},
-					{
-						"name": "entries",
-						"type": "INT32"
-					},
-					{
-						"name": "exits",
-						"type": "INT32"
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_DuomoWiFi_Connections_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"year": {
-						"type": "string"
-					},
-					"month": {
-						"type": "string"
-					},
-					"fileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "WiFi/Processed"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@concat('Wifi/connections/', dataset().year, '/', dataset().month)",
-							"type": "Expression"
-						},
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "hotspotIdentifier",
-						"type": "String"
-					},
-					{
-						"name": "start",
-						"type": "String"
-					},
-					{
-						"name": "stop",
-						"type": "String"
-					},
-					{
-						"name": "duration",
-						"type": "Int32"
-					},
-					{
-						"name": "traffic",
-						"type": "Int32"
-					},
-					{
-						"name": "terminateCause",
-						"type": "String"
-					},
-					{
-						"name": "username",
-						"type": "String"
-					},
-					{
-						"name": "macAddressClient",
-						"type": "String"
-					},
-					{
-						"name": "ipAddressClient",
-						"type": "String"
-					},
-					{
-						"name": "locationId",
-						"type": "String"
-					},
-					{
-						"name": "customerId",
-						"type": "String"
-					},
-					{
-						"name": "sessionTime_minutes",
-						"type": "Double"
-					},
-					{
-						"name": "traffic_MB",
-						"type": "Double"
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_DuomoWiFi_Users_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -502,467 +98,6 @@
 						"type": "String"
 					}
 				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Bookings_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "String",
-						"defaultValue": "Mida/Bookings/Processed/2025/01"
-					},
-					"fileName": {
-						"type": "String",
-						"defaultValue": "VFD_Mida_Processed_20250101.parquet\""
-					}
-				},
-				"folder": {
-					"name": "Mida/Bookings"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "guid_pk",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_progressiveCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_code",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_status",
-						"type": "INT32"
-					},
-					{
-						"name": "invoiceRequired",
-						"type": "UTF8"
-					},
-					{
-						"name": "customer",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "visitDate",
-						"type": "DATE"
-					},
-					{
-						"name": "reservationPayment_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "parentPayment_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "sliced",
-						"type": "UTF8"
-					},
-					{
-						"name": "reservation_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "group_email",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentCondition",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "reservation_amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "reservation_amountTax",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "status",
-						"type": "INT32"
-					},
-					{
-						"name": "status_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "stamp",
-						"type": "UTF8"
-					},
-					{
-						"name": "notes",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "transactionType",
-						"type": "UTF8"
-					},
-					{
-						"name": "transactionType_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "paymentLimitDate",
-						"type": "DATE"
-					},
-					{
-						"name": "paymentDate",
-						"type": "DATE"
-					},
-					{
-						"name": "refund",
-						"type": "UTF8"
-					},
-					{
-						"name": "refunded",
-						"type": "UTF8"
-					},
-					{
-						"name": "convention_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "receiptCode",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "insertTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "updateTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "owner",
-						"type": "UTF8"
-					},
-					{
-						"name": "owner_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "sessionId",
-						"type": "UTF8"
-					},
-					{
-						"name": "terminal_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "terminalGroup_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "gateway_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "gateway_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "transactionID",
-						"type": "UTF8"
-					},
-					{
-						"name": "bankAccount_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "bankAccount_label",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "channel_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "channel_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "channelType",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "extra_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "priceList",
-						"type": "UTF8"
-					},
-					{
-						"name": "event",
-						"type": "UTF8"
-					},
-					{
-						"name": "detailType",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_text",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_count",
-						"type": "INT32"
-					},
-					{
-						"name": "paymentDetail_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "detail_payingPartecipants",
-						"type": "INT32"
-					},
-					{
-						"name": "detail_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "tickets_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "pax_quantity",
-						"type": "INT32"
-					},
-					{
-						"name": "costCenter_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "costCenter_label",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_receipt",
-						"type": "INT32"
-					},
-					{
-						"name": "object_taxCode",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_taxNotes",
-						"type": "UTF8"
-					},
-					{
-						"name": "object_amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "object_taxPercentage",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amount",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountNet",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPresale",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountSold",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPayed",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountPending",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "amountCanceled",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "externalId",
-						"type": "UTF8"
-					},
-					{
-						"name": "amountRefunded",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "invoiceSummary",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "eventCalendar_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "passDetail_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "paymentCostCenter_guid",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "organization_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "venue_guid",
-						"type": "UTF8"
-					},
-					{
-						"name": "olapUpdateTimestamp",
-						"type": "DATE"
-					},
-					{
-						"name": "row_id",
-						"type": "UTF8"
-					}
-				]
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_Mida_Seals_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "String"
-					},
-					"fileName": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Mida/Seals"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "processed"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
 			},
 			"dependsOn": []
 		},
@@ -1481,6 +616,683 @@
 				"schema": []
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Bookings_Folder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Bookings"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"sheetName": "Emissioni di ieri",
+					"firstRowAsHeader": true
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Emissioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Excel_History')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Validations_Binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"sheetName": "Vidimazioni di ieri",
+					"firstRowAsHeader": true
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Validations_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Vidimazioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Weather_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Visual Crossing/Weather"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Temp_Affluences_JSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Affluences"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "temp/affluences",
+						"fileSystem": "staging"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"data": {
+							"type": "object",
+							"properties": {
+								"results": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"day": {
+												"type": "string"
+											},
+											"entries": {
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"hour": {
+															"type": "string"
+														},
+														"occupancy": {
+															"type": "integer"
+														},
+														"entries": {
+															"type": "integer"
+														},
+														"exits": {
+															"type": "integer"
+														}
+													}
+												}
+											}
+										}
+									}
+								},
+								"site_id": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Batch_Historical_Processing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per processare automaticamente tutti i file storico con Copy Data diretta a production_bookings",
+				"activities": [
+					{
+						"name": "GetHistoricalFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.baseFolderPath",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ProcessFilesInOrder",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetHistoricalFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetHistoricalFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CheckIfPartFile",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@contains(item().name, '_part')",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Copy Historical File to Production",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "ExcelSource",
+														"additionalColumns": [
+															{
+																"name": "processing_timestamp",
+																"value": {
+																	"value": "@utcNow()",
+																	"type": "Expression"
+																}
+															},
+															{
+																"name": "source_file",
+																"value": {
+																	"value": "@item().name",
+																	"type": "Expression"
+																}
+															}
+														],
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": false,
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@pipeline().parameters.baseFolderPath",
+																"type": "Expression"
+															},
+															"fileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_SQL_Test_Bookings",
+														"type": "DatasetReference",
+														"parameters": {}
+													}
+												]
+											},
+											{
+												"name": "LogProcessedFile",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Copy Historical File to Production",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "currentFile",
+													"value": {
+														"value": "@concat('Processed: ', item().name, ' - Rows copied: ', activity('Copy Historical File to Production').output.rowsCopied, ' at ', utcNow())",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"baseFolderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Storico/Bookings"
+					}
+				},
+				"variables": {
+					"currentFile": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Batch"
+				},
+				"annotations": [
+					"Processamento automatico file storici con Copy Data diretta a production_bookings"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Folder')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Excel')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Copy_Single_Historical_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per copiare un singolo file storico specificato in test_bookings",
+				"activities": [
+					{
+						"name": "Copy Single File to Test Bookings",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"additionalColumns": [
+									{
+										"name": "processing_timestamp",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									},
+									{
+										"name": "source_file",
+										"value": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
+									}
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@pipeline().parameters.fileName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_SQL_Test_Bookings",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string",
+						"defaultValue": "Storico_-_Vendite_20241001_20241231_part01.xlsx"
+					},
+					"folderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Storico/Bookings"
+					}
+				},
+				"folder": {
+					"name": "Mida/Utilities"
+				},
+				"annotations": [
+					"Pipeline utility per processare singolo file storico specificato"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Bookings_Excel')]"
+			]
 		}
 	]
 }
