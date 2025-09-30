@@ -5532,7 +5532,7 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+											"referenceName": "VFD_DS_Raw_Mida_Validations_Excel_History",
 											"type": "DatasetReference",
 											"parameters": {
 												"folderPath": "Mida/Storico/Validazioni/",
@@ -5568,7 +5568,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Binary')]",
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Validations_Excel_History')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_SQL_Production_Validations')]"
 			]
 		},
@@ -8821,6 +8821,50 @@
 				"type": "Excel",
 				"typeProperties": {
 					"sheetName": "Vidimazioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Validations_Excel_History')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "sheet1",
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": {
