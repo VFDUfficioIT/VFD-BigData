@@ -8,26 +8,14 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_dummy",
-						"type": "DatasetReference"
-					},
 					"name": "DummySource"
 				},
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Historical_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SourceExistingHistorical"
 				}
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SinkTemp"
 				}
 			],
@@ -136,7 +124,6 @@
 				"     ),",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
 				"     data: 'dummy\\n1') ~> DummySource",
 				"source(output(",
 				"          guid_pk as string,",
@@ -225,9 +212,7 @@
 				"          operationTimestamp as timestamp",
 				"     ),",
 				"     allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SourceExistingHistorical",
+				"     validateSchema: false) ~> SourceExistingHistorical",
 				"DummySource derive(guid_pk = $guid_pk,",
 				"          reservation_progressiveCode = $reservation_progressiveCode,",
 				"          reservation_code = $reservation_code,",
@@ -403,14 +388,13 @@
 				"SourceExistingHistorical, SelectNewColumns union(byName: true)~> UnionByName",
 				"UnionByName sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
 				"     partitionFileNames:['temp_append_historical.parquet'],",
-				"     umask: 0022,",
-				"     preCommands: [],",
-				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> SinkTemp"
+				"     partitionBy('hash', 1),",
+				"     format: 'parquet',",
+				"     preCommands: [],",
+				"     postCommands: []) ~> SinkTemp"
 			]
 		}
 	}

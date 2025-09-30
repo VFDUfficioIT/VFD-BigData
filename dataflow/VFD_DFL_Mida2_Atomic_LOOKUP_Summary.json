@@ -8,19 +8,11 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SourceSummaryFile"
 				}
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SinkTemp"
 				}
 			],
@@ -48,9 +40,7 @@
 				"          visitDate as date",
 				"     ),",
 				"     allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SourceSummaryFile",
+				"     validateSchema: false) ~> SourceSummaryFile",
 				"SourceSummaryFile filter(row_id == $row_id) ~> FilterByRowId",
 				"FilterByRowId select(mapColumn(",
 				"          row_id,",
@@ -64,14 +54,13 @@
 				"     skipDuplicateMapOutputs: true) ~> SelectLookupFields",
 				"SelectLookupFields sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
 				"     partitionFileNames:['temp_lookup_summary.parquet'],",
-				"     umask: 0022,",
-				"     preCommands: [],",
-				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> SinkTemp"
+				"     partitionBy('hash', 1),",
+				"     format: 'parquet',",
+				"     preCommands: [],",
+				"     postCommands: []) ~> SinkTemp"
 			]
 		}
 	}

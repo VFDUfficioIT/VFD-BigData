@@ -18,10 +18,6 @@
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Validations_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SinkCurated"
 				}
 			],
@@ -63,12 +59,11 @@
 				"     skipDuplicateMapOutputs: false) ~> SelectFields",
 				"SelectFields sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
 				"     partitionFileNames:['VFD_DFL_Mida_Validations_Processed_Curated_Daily_output.parquet'],",
-				"     umask: 0022,",
+				"     partitionBy('hash', 1),",
+				"     format: 'parquet',",
 				"     preCommands: [],",
 				"     postCommands: [],",
-				"     partitionBy('hash', 1),",
 				"     compressionCodec: 'snappy') ~> SinkCurated"
 			]
 		}

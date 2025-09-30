@@ -356,16 +356,6 @@
 													"fileName": "@variables('fileName')"
 												}
 											}
-										],
-										"outputs": [
-											{
-												"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"folderPath": "@variables('folderPathVar')",
-													"fileName": "@replace(variables('fileName'), '.xlsx', '.parquet')"
-												}
-											}
 										]
 									}
 								]

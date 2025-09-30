@@ -15,19 +15,11 @@
 					"name": "DummySource"
 				},
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SourceExistingContent"
 				}
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SinkTemp"
 				}
 			],
@@ -83,9 +75,7 @@
 				"          visitDate as date",
 				"     ),",
 				"     allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SourceExistingContent",
+				"     validateSchema: false) ~> SourceExistingContent",
 				"DummySource derive(row_id = $row_id,",
 				"          reservation_code = $reservation_code,",
 				"          priceList = $priceList,",
@@ -112,14 +102,13 @@
 				"FilterOutOldRecord, SelectSummaryFields union(byName: true)~> UnionRecords",
 				"UnionRecords sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
 				"     partitionFileNames:['temp_update_summary.parquet'],",
-				"     umask: 0022,",
-				"     preCommands: [],",
-				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> SinkTemp"
+				"     partitionBy('hash', 1),",
+				"     format: 'parquet',",
+				"     preCommands: [],",
+				"     postCommands: []) ~> SinkTemp"
 			]
 		}
 	}

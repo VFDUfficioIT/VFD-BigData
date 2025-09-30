@@ -9,19 +9,11 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Processed_Mida_Bookings_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SourceProcessed"
 				}
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Bookings_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SinkCurated"
 				}
 			],
@@ -124,8 +116,6 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet',",
 				"     folderPath: folderPath,",
 				"     fileName: fileName) ~> SourceProcessed",
 				"SourceProcessed derive(adjusted_pax_quantity = iif(status == 6 || status == 7 || status == 101, pax_quantity * -1, pax_quantity),",
@@ -149,12 +139,11 @@
 				"     skipDuplicateMapOutputs: false) ~> SelectFields",
 				"SelectFields sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
 				"     partitionFileNames:['VFD_DFL_Mida_Bookings_Processed_Curated_Daily_output.parquet'],",
-				"     umask: 0022,",
+				"     partitionBy('hash', 1),",
+				"     format: 'parquet',",
 				"     preCommands: [],",
 				"     postCommands: [],",
-				"     partitionBy('hash', 1),",
 				"     fileName: 'VFD_DFL_Mida_Sales_Curated_output.parquet') ~> SinkCurated"
 			]
 		}

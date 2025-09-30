@@ -8,26 +8,14 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_dummy",
-						"type": "DatasetReference"
-					},
 					"name": "DummySource"
 				},
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Bookings_Summary_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SourceExistingContent"
 				}
 			],
 			"sinks": [
 				{
-					"dataset": {
-						"referenceName": "VFD_DS_Curated_Mida_Temp_Parquet",
-						"type": "DatasetReference"
-					},
 					"name": "SinkTemp"
 				}
 			],
@@ -59,7 +47,6 @@
 				"     ),",
 				"     allowSchemaDrift: false,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
 				"     data: 'dummy\\n1') ~> DummySource",
 				"source(output(",
 				"          row_id as string,",
@@ -73,9 +60,7 @@
 				"          visitDate as date",
 				"     ),",
 				"     allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
-				"     format: 'parquet') ~> SourceExistingContent",
+				"     validateSchema: false) ~> SourceExistingContent",
 				"DummySource derive(row_id = $row_id,",
 				"          reservation_code = $reservation_code,",
 				"          priceList = $priceList,",
@@ -101,14 +86,13 @@
 				"SourceExistingContent, SelectSummaryFields union(byName: true)~> UnionByName",
 				"UnionByName sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'parquet',",
 				"     partitionFileNames:['temp_append_summary.parquet'],",
-				"     umask: 0022,",
-				"     preCommands: [],",
-				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     partitionBy('hash', 1)) ~> SinkTemp"
+				"     partitionBy('hash', 1),",
+				"     format: 'parquet',",
+				"     preCommands: [],",
+				"     postCommands: []) ~> SinkTemp"
 			]
 		}
 	}
