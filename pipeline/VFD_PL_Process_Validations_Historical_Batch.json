@@ -111,7 +111,7 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "VFD_DS_Raw_Mida_Validations_Excel",
+									"referenceName": "VFD_DS_Raw_Mida_Validations_Excel_History",
 									"type": "DatasetReference",
 									"parameters": {
 										"folderPath": "Mida/Storico/Validazioni/",
