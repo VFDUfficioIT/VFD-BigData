@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "MIDA_SQL"
+			"name": "Mida/Bookings"
 		},
 		"annotations": [
 			"Production table historical - Audit trail append-only per tutte le elaborazioni bookings"

@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "MIDA_SQL"
+			"name": "Mida/Seals"
 		},
 		"annotations": [
 			"Production table seals - FK verso bookings con CASCADE DELETE - Solo INSERT"

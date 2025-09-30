@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "MIDA_SQL"
+			"name": "Mida/Validations"
 		},
 		"annotations": [
 			"Staging table per caricamento dati validations da RAW"

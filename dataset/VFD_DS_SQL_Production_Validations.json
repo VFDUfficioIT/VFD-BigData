@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "MIDA_SQL"
+			"name": "Mida/Validations"
 		},
 		"annotations": [
 			"Production table validations - Solo INSERT, nessuna logica DELETE"

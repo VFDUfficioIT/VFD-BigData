@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "MIDA_SQL"
+			"name": "Mida/Seals"
 		},
 		"annotations": [
 			"Staging table per caricamento dati seals da RAW"
