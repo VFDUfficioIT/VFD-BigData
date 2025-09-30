@@ -87,7 +87,7 @@
 			}
 		],
 		"folder": {
-			"name": "Mida/Batch"
+			"name": "MIDA_SQL/Batch"
 		},
 		"annotations": [
 			"Pipeline master per processing storico validations",

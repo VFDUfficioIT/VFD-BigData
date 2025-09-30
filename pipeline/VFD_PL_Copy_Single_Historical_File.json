@@ -82,7 +82,8 @@
 		],
 		"parameters": {
 			"fileName": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "Storico_-_Vendite_20241001_20241231_part01.xlsx"
 			},
 			"folderPath": {
 				"type": "string",
