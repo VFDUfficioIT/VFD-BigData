@@ -5492,22 +5492,6 @@
 									"typeProperties": {
 										"source": {
 											"type": "ExcelSource",
-											"additionalColumns": [
-												{
-													"name": "processing_timestamp",
-													"value": {
-														"value": "@utcNow()",
-														"type": "Expression"
-													}
-												},
-												{
-													"name": "source_file",
-													"value": {
-														"value": "@item().name",
-														"type": "Expression"
-													}
-												}
-											],
 											"storeSettings": {
 												"type": "AzureBlobFSReadSettings",
 												"recursive": true,
