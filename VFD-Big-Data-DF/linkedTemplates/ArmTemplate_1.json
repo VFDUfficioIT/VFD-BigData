@@ -30,7 +30,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "MIDA_SQL"
+					"name": "Mida/Validations"
 				},
 				"annotations": [
 					"Production table validations - Solo INSERT, nessuna logica DELETE"
@@ -54,7 +54,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "MIDA_SQL"
+					"name": "Mida/Bookings"
 				},
 				"annotations": [
 					"Staging table per caricamento dati bookings da RAW - 82 campi"
@@ -78,7 +78,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "MIDA_SQL"
+					"name": "Mida/Seals"
 				},
 				"annotations": [
 					"Staging table per caricamento dati seals da RAW"
@@ -102,7 +102,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "MIDA_SQL"
+					"name": "Mida/Validations"
 				},
 				"annotations": [
 					"Staging table per caricamento dati validations da RAW"
@@ -126,7 +126,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "MIDA_SQL"
+					"name": "Mida/Bookings"
 				},
 				"annotations": [
 					"Production table bookings - DELETE/INSERT per reservationCode con CASCADE su seals"
@@ -685,49 +685,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Mida_Users_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_Big_Data_DL",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderPath": {
-						"type": "string"
-					},
-					"fileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Mida/Users"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().fileName",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderPath",
-							"type": "Expression"
-						},
-						"fileSystem": "curated"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -971,6 +928,97 @@
 					{
 						"name": "traffic_MB",
 						"type": "Double"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_DuomoWiFi_Users_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					},
+					"month": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "WiFi/Processed"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('Wifi/users/', dataset().year, '/', dataset().month)",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "cid",
+						"type": "String"
+					},
+					{
+						"name": "username",
+						"type": "String"
+					},
+					{
+						"name": "firstName",
+						"type": "String"
+					},
+					{
+						"name": "lastName",
+						"type": "String"
+					},
+					{
+						"name": "email",
+						"type": "String"
+					},
+					{
+						"name": "gender",
+						"type": "String"
+					},
+					{
+						"name": "phone",
+						"type": "String"
+					},
+					{
+						"name": "birthDate",
+						"type": "String"
+					},
+					{
+						"name": "country",
+						"type": "String"
+					},
+					{
+						"name": "zipCode",
+						"type": "String"
+					},
+					{
+						"name": "wifiArea",
+						"type": "String"
 					}
 				]
 			},
