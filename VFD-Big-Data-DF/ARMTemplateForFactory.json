@@ -1188,7 +1188,7 @@
 					}
 				},
 				"folder": {
-					"name": "Mida/Batch"
+					"name": "MIDA_SQL/Batch"
 				},
 				"annotations": [
 					"Processamento automatico file storici con Copy Data diretta a production_bookings"
@@ -1290,7 +1290,8 @@
 				},
 				"parameters": {
 					"fileName": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "Storico_-_Vendite_20241001_20241231_part01.xlsx"
 					},
 					"folderPath": {
 						"type": "string",
@@ -12240,9 +12241,6 @@
 								"type": "AzureBlobFSReadSettings",
 								"recursive": false,
 								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
 							}
 						}
 					},
@@ -12266,30 +12264,78 @@
 							"isSequential": true,
 							"activities": [
 								{
-									"name": "Process Single Seals File",
-									"type": "ExecutePipeline",
+									"name": "Copy Seals File to Production",
+									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
 										"secureInput": false
 									},
 									"userProperties": [],
 									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Process_Seals_SQL",
-											"type": "PipelineReference"
+										"source": {
+											"type": "ExcelSource",
+											"additionalColumns": [
+												{
+													"name": "processing_timestamp",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "source_file",
+													"value": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											],
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											}
 										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"fileName": {
-												"value": "@item().name",
-												"type": "Expression"
-											},
-											"folderPath": {
-												"value": "Mida/Storico/Emissioni/",
-												"type": "Expression"
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
 											}
 										}
-									}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "Mida/Storico/Emissioni/",
+												"fileName": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_SQL_Production_Seals",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
 								}
 							]
 						}
@@ -12299,7 +12345,7 @@
 					"elapsedTimeMetric": {}
 				},
 				"folder": {
-					"name": "Mida/Batch"
+					"name": "Batch"
 				},
 				"annotations": [
 					"Pipeline master per processing storico seals",
@@ -12308,7 +12354,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Binary')]",
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Process_Seals_SQL')]"
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_SQL_Production_Seals')]"
 			]
 		},
 		{
@@ -12520,7 +12567,7 @@
 					"elapsedTimeMetric": {}
 				},
 				"folder": {
-					"name": "Mida/Batch"
+					"name": "MIDA_SQL/Batch"
 				},
 				"annotations": [
 					"Pipeline master per processing storico validations",

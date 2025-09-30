@@ -527,7 +527,7 @@
 					}
 				},
 				"folder": {
-					"name": "Mida/Batch"
+					"name": "MIDA_SQL/Batch"
 				},
 				"annotations": [
 					"Processamento automatico file storici con Copy Data diretta a production_bookings"
@@ -627,7 +627,8 @@
 				},
 				"parameters": {
 					"fileName": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "Storico_-_Vendite_20241001_20241231_part01.xlsx"
 					},
 					"folderPath": {
 						"type": "string",
@@ -2062,6 +2063,157 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Process_Seals_Historical_Batch')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline master per processare tutti i file storici seals in sequenza",
+				"activities": [
+					{
+						"name": "Get Files List",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": "Mida/Storico/Emissioni/",
+									"fileName": "*"
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Process Each File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Files List",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Files List').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy Seals File to Production",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ExcelSource",
+											"additionalColumns": [
+												{
+													"name": "processing_timestamp",
+													"value": {
+														"value": "@utcNow()",
+														"type": "Expression"
+													}
+												},
+												{
+													"name": "source_file",
+													"value": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											],
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											}
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
+											"type": "DatasetReference",
+											"parameters": {
+												"folderPath": "Mida/Storico/Emissioni/",
+												"fileName": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "VFD_DS_SQL_Production_Seals",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Batch"
+				},
+				"annotations": [
+					"Pipeline master per processing storico seals",
+					"Processa file in sequenza per mantenere ordine cronologico"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Binary')]",
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_Mida_Seals_Excel')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Process_Seals_SQL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2858,126 +3010,6 @@
 						"     skipDuplicateMapOutputs: true,",
 						"     partitionBy('hash', 1),",
 						"     compressionCodec: 'snappy') ~> SinkCuratedDaily"
-					]
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DFL_Affluences_JSON_to_Processed')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"folder": {
-					"name": "Affluences"
-				},
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Affluences_JSON",
-								"type": "DatasetReference"
-							},
-							"name": "SourceJSON"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
-								"type": "DatasetReference"
-							},
-							"name": "SinkProcessed"
-						}
-					],
-					"transformations": [
-						{
-							"name": "FlattenJSON"
-						},
-						{
-							"name": "ExpandEntries"
-						},
-						{
-							"name": "AddSiteName"
-						},
-						{
-							"name": "ConvertTypes"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     year as string,",
-						"     month as string,",
-						"     dateFormatted as string",
-						"}",
-						"source(output(",
-						"          data as (results as (day as string, entries as (hour as string, occupancy as integer, entries as integer, exits as integer)[])[], site_id as string)",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'documentPerLine',",
-						"     wildcardPaths:[(concat(\"/Affluences/\",$year,\"/\",$month,\"/VFD_Affluences_\",$dateFormatted,\"_*.json\"))]) ~> SourceJSON",
-						"SourceJSON foldDown(unroll(data.results, data.results),",
-						"     mapColumn(",
-						"          day = data.results.day,",
-						"          entries = data.results.entries,",
-						"          site_uuid = data.site_id",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> FlattenJSON",
-						"FlattenJSON foldDown(unroll(entries, entries),",
-						"     mapColumn(",
-						"          site_uuid,",
-						"          day,",
-						"          hour = entries.hour,",
-						"          occupancy = entries.occupancy,",
-						"          entries_count = entries.entries,",
-						"          exits_count = entries.exits",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> ExpandEntries",
-						"ExpandEntries derive(site_name = case(",
-						"     site_uuid == '5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307', 'Terrazze',",
-						"     site_uuid == 'ca2dae61-4a99-4cb7-8051-26cb852ea408', 'Ascensore Nord',",
-						"     site_uuid == 'aa6c22f1-84b6-441a-bbb0-bd429e63536d', 'Ascensore Sud',",
-						"     site_uuid == '8358df5f-0186-4a11-87ad-11fc19cda749', 'Salita a piedi',",
-						"     site_uuid == '639bc326-010a-402f-ba5f-3c75e2740d9d', 'Discesa a piedi',",
-						"     'Unknown'",
-						")) ~> AddSiteName",
-						"AddSiteName derive(date = toDate(day, 'yyyy-MM-dd'),",
-						"          site_id = site_uuid) ~> ConvertTypes",
-						"ConvertTypes sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     input(",
-						"          site_id as string,",
-						"          site_name as string,",
-						"          date as date,",
-						"          hour as string,",
-						"          occupancy as integer,",
-						"          entries as integer,",
-						"          exits as integer",
-						"     ),",
-						"     format: 'parquet',",
-						"     partitionFileNames:['VFD_DFL_Affluences_JSON_to_Processed_output.parquet'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     mapColumn(",
-						"          site_id,",
-						"          site_name,",
-						"          date,",
-						"          hour,",
-						"          occupancy,",
-						"          entries = entries_count,",
-						"          exits = exits_count",
-						"     ),",
-						"     partitionBy('hash', 1),",
-						"     folderPath: concat(\"Affluences/\", $year, \"/\", $month),",
-						"     compressionCodec: 'snappy') ~> SinkProcessed"
 					]
 				}
 			},
