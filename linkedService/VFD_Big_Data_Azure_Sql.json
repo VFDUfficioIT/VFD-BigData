@@ -12,6 +12,10 @@
 			"authenticationType": "SQL",
 			"userName": "user_vfdbigdataserversql",
 			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDJFMzU3RUUzLTEwQTctNEUyMy04MUYzLTQwRkY3RDkyMURCNF85NTQxMWIzOC1hMTU2LTQyMzItYmFmZi01YTllY2JiNTQ1NjgiDQp9"
+		},
+		"connectVia": {
+			"referenceName": "VFD-IR-DataflowExecution",
+			"type": "IntegrationRuntimeReference"
 		}
 	}
 }
