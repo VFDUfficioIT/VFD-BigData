@@ -7,6 +7,10 @@
 			"url": "https://explore.cloud4wi.com",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
+		},
+		"connectVia": {
+			"referenceName": "VFD-IR-DataflowExecution",
+			"type": "IntegrationRuntimeReference"
 		}
 	}
 }
