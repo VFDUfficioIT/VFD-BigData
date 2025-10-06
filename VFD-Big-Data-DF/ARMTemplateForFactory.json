@@ -1742,9 +1742,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -1934,9 +1934,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -2134,9 +2134,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -2345,6 +2345,7 @@
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Cloud4Wi_Connections_HTTP')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_DuomoWiFi_Connections_JSON')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Connections_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_DuomoWiFi_Connections_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Users_Raw_Processed')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_DuomoWiFi_Users_Parquet')]",
@@ -5784,9 +5785,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -6105,9 +6106,9 @@
 											}
 										},
 										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
+										"integrationRuntime": {
+											"referenceName": "VFD-IR-DataflowExecution",
+											"type": "IntegrationRuntimeReference"
 										},
 										"traceLevel": "Coarse"
 									}
@@ -6276,6 +6277,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Raw_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Weather_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Weather_Single_Row_To_Monthly')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Weather_Parquet')]"
@@ -8654,9 +8656,15 @@
 						"type": "SecureString",
 						"value": "[parameters('VFD_Big_Data_Azure_Sql_password')]"
 					}
+				},
+				"connectVia": {
+					"referenceName": "VFD-IR-DataflowExecution",
+					"type": "IntegrationRuntimeReference"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_Big_Data_DL')]",
@@ -8714,9 +8722,15 @@
 					"url": "[parameters('VFD_LS_Cloud4Wi_API_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "VFD-IR-DataflowExecution",
+					"type": "IntegrationRuntimeReference"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_LS_Mida_FtpServer')]",
@@ -8736,9 +8750,15 @@
 						"type": "SecureString",
 						"value": "[parameters('VFD_LS_Mida_FtpServer_password')]"
 					}
+				},
+				"connectVia": {
+					"referenceName": "VFD-IR-DataflowExecution",
+					"type": "IntegrationRuntimeReference"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_LS_VisualCrossing_API')]",
@@ -8752,9 +8772,15 @@
 					"url": "[parameters('VFD_LS_VisualCrossing_API_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "VFD-IR-DataflowExecution",
+					"type": "IntegrationRuntimeReference"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_LS_VisualCrossing_HTTP')]",
@@ -8767,9 +8793,15 @@
 					"url": "[parameters('VFD_LS_VisualCrossing_HTTP_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "VFD-IR-DataflowExecution",
+					"type": "IntegrationRuntimeReference"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Affluences_Daily')]",
