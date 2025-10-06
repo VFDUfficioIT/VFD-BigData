@@ -829,7 +829,7 @@
 						"typeProperties": {
 							"variableName": "currentDate",
 							"value": {
-								"value": "@formatDateTime('2025-06-07', 'yyyy-MM-dd')",
+								"value": "@formatDateTime(pipeline().parameters.startDate, 'yyyy-MM-dd')",
 								"type": "Expression"
 							}
 						}
@@ -846,7 +846,7 @@
 						"typeProperties": {
 							"variableName": "endDate",
 							"value": {
-								"value": "@formatDateTime('2025-06-09', 'yyyy-MM-dd')",
+								"value": "@formatDateTime(pipeline().parameters.endDate, 'yyyy-MM-dd')",
 								"type": "Expression"
 							}
 						}
@@ -968,6 +968,14 @@
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"startDate": {
+						"type": "string"
+					},
+					"endDate": {
+						"type": "string"
+					}
 				},
 				"variables": {
 					"currentDate": {
