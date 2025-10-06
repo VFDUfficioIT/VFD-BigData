@@ -27,10 +27,6 @@
 			"type": "string",
 			"defaultValue": "user_vfdbigdataserversql"
 		},
-		"VFD_LS_Affluences_API_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://data.affluences.com/v1/data"
-		},
 		"VFD_LS_Cloud4Wi_API_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://explore.cloud4wi.com"
@@ -74,21 +70,6 @@
 						"type": "SecureString",
 						"value": "[parameters('VFD_Big_Data_Azure_Sql_password')]"
 					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_LS_Affluences_API')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "RestService",
-				"typeProperties": {
-					"url": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]",
-					"enableServerCertificateValidation": true,
-					"authenticationType": "Anonymous"
 				}
 			},
 			"dependsOn": []
@@ -203,40 +184,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Affluences_API')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_Affluences_API",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"siteUUID": {
-						"type": "string"
-					},
-					"date": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "Affluences"
-				},
-				"annotations": [],
-				"type": "RestResource",
-				"typeProperties": {
-					"relativeUrl": {
-						"value": "@concat('historical/', dataset().siteUUID, '?date=', dataset().date)",
-						"type": "Expression"
-					}
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Affluences_API')]"
-			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Cloud4Wi_Connections_HTTP')]",
@@ -700,6 +647,58 @@
 				"typeProperties": {
 					"schema": "dbo",
 					"table": "production_seals"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_Azure_Sql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_SQL_Production_Validations')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_Azure_Sql",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Mida/Validations"
+				},
+				"annotations": [
+					"Production table validations - Solo INSERT, nessuna logica DELETE"
+				],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "production_validations"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_Azure_Sql')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_SQL_Staging_Bookings')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_Azure_Sql",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Mida/Bookings"
+				},
+				"annotations": [
+					"Staging table per caricamento dati bookings da RAW - 82 campi"
+				],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "staging_bookings"
 				}
 			},
 			"dependsOn": [

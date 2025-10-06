@@ -375,9 +375,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -533,9 +533,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -701,9 +701,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Coarse"
 						}
@@ -848,6 +848,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_JSON_to_Processed')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Processed_Affluences_Parquet')]",
 				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_Daily_to_Curated')]",
 				"[concat(variables('factoryId'), '/datasets/VFD_DS_Curated_Affluences_Daily_Parquet')]",
@@ -8692,9 +8693,15 @@
 					"url": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "VFD-IR-DataflowExecution",
+					"type": "IntegrationRuntimeReference"
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/VFD-IR-DataflowExecution')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_LS_Cloud4Wi_API')]",

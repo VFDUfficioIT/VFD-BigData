@@ -105,9 +105,6 @@
 					"VFD_Big_Data_Azure_Sql_properties_typeProperties_userName": {
 						"value": "[parameters('VFD_Big_Data_Azure_Sql_properties_typeProperties_userName')]"
 					},
-					"VFD_LS_Affluences_API_properties_typeProperties_url": {
-						"value": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]"
-					},
 					"VFD_LS_Cloud4Wi_API_properties_typeProperties_url": {
 						"value": "[parameters('VFD_LS_Cloud4Wi_API_properties_typeProperties_url')]"
 					},
@@ -146,6 +143,9 @@
 					},
 					"VFD_Big_Data_DL_properties_typeProperties_url": {
 						"value": "[parameters('VFD_Big_Data_DL_properties_typeProperties_url')]"
+					},
+					"VFD_LS_Affluences_API_properties_typeProperties_url": {
+						"value": "[parameters('VFD_LS_Affluences_API_properties_typeProperties_url')]"
 					}
 				}
 			},
