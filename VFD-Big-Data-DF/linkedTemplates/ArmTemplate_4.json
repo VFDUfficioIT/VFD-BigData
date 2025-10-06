@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
@@ -947,7 +947,7 @@
 									}
 								}
 							],
-							"timeout": "0.12:00:00"
+							"timeout": "07.00:00:00"
 						}
 					}
 				],
