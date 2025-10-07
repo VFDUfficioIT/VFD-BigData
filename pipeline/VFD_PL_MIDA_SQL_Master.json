@@ -66,8 +66,6 @@
 			{
 				"name": "ScanValidationsFTP",
 				"type": "GetMetadata",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"retry": 0,
@@ -569,8 +567,6 @@
 			{
 				"name": "ProcessValidationsFiles",
 				"type": "ForEach",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "ScanValidationsFTP",
