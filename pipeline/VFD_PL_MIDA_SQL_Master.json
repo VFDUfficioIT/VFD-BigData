@@ -19,9 +19,7 @@
 						"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
 						"type": "DatasetReference"
 					},
-					"fieldList": [
-						"childItems"
-					],
+					"fieldList": [],
 					"storeSettings": {
 						"type": "FtpReadSettings",
 						"recursive": true,
@@ -68,6 +66,8 @@
 			{
 				"name": "ScanValidationsFTP",
 				"type": "GetMetadata",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"retry": 0,
@@ -569,6 +569,8 @@
 			{
 				"name": "ProcessValidationsFiles",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "ScanValidationsFTP",
