@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_MIDA_SQL_Master_Seals",
 	"properties": {
-		"description": "Pipeline madre: scansiona 3 FTP folder, scarica file mancanti, chiama pipeline figlie",
+		"description": "Pipeline madre: scansiona FTP folder Seals, scarica file mancanti, chiama pipeline figlia",
 		"activities": [
 			{
 				"name": "ScanSealsFTP",
@@ -226,41 +226,41 @@
 												}
 											}
 										]
+									},
+									{
+										"name": "ProcessSealsPipeline",
+										"type": "ExecutePipeline",
+										"dependsOn": [
+											{
+												"activity": "DownloadSealsFromFTP",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"pipeline": {
+												"referenceName": "VFD_PL_Process_Seals_SQL",
+												"type": "PipelineReference"
+											},
+											"waitOnCompletion": true,
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('sealsFolderPath')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('sealsFileName')",
+													"type": "Expression"
+												}
+											}
+										}
 									}
 								]
-							}
-						},
-						{
-							"name": "ProcessSealsPipeline",
-							"type": "ExecutePipeline",
-							"dependsOn": [
-								{
-									"activity": "IfSealsNotExists",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "VFD_PL_Process_Seals_SQL",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"folderPath": {
-										"value": "@variables('sealsFolderPath')",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@variables('sealsFileName')",
-										"type": "Expression"
-									}
-								}
 							}
 						}
 					]
@@ -268,15 +268,6 @@
 			}
 		],
 		"variables": {
-			"bookingsFileName": {
-				"type": "String"
-			},
-			"bookingsDate": {
-				"type": "String"
-			},
-			"bookingsFolderPath": {
-				"type": "String"
-			},
 			"sealsFileName": {
 				"type": "String"
 			},
@@ -284,15 +275,6 @@
 				"type": "String"
 			},
 			"sealsFolderPath": {
-				"type": "String"
-			},
-			"validationsFileName": {
-				"type": "String"
-			},
-			"validationsDate": {
-				"type": "String"
-			},
-			"validationsFolderPath": {
 				"type": "String"
 			}
 		},

@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_MIDA_SQL_Master_Bookings",
 	"properties": {
-		"description": "Pipeline madre: scansiona 3 FTP folder, scarica file mancanti, chiama pipeline figlie",
+		"description": "Pipeline madre: scansiona FTP folder Bookings, scarica file mancanti, chiama pipeline figlia",
 		"activities": [
 			{
 				"name": "ScanBookingsFTP",
@@ -226,41 +226,41 @@
 												}
 											}
 										]
+									},
+									{
+										"name": "ProcessBookingsPipeline",
+										"type": "ExecutePipeline",
+										"dependsOn": [
+											{
+												"activity": "DownloadBookingsFromFTP",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"pipeline": {
+												"referenceName": "VFD_PL_Process_Bookings_SQL",
+												"type": "PipelineReference"
+											},
+											"waitOnCompletion": true,
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('bookingsFolderPath')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('bookingsFileName')",
+													"type": "Expression"
+												}
+											}
+										}
 									}
 								]
-							}
-						},
-						{
-							"name": "ProcessBookingsPipeline",
-							"type": "ExecutePipeline",
-							"dependsOn": [
-								{
-									"activity": "IfBookingsNotExists",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "VFD_PL_Process_Bookings_SQL",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"folderPath": {
-										"value": "@variables('bookingsFolderPath')",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@variables('bookingsFileName')",
-										"type": "Expression"
-									}
-								}
 							}
 						}
 					]
@@ -275,24 +275,6 @@
 				"type": "String"
 			},
 			"bookingsFolderPath": {
-				"type": "String"
-			},
-			"sealsFileName": {
-				"type": "String"
-			},
-			"sealsDate": {
-				"type": "String"
-			},
-			"sealsFolderPath": {
-				"type": "String"
-			},
-			"validationsFileName": {
-				"type": "String"
-			},
-			"validationsDate": {
-				"type": "String"
-			},
-			"validationsFolderPath": {
 				"type": "String"
 			}
 		},

@@ -1,7 +1,7 @@
 {
 	"name": "VFD_PL_MIDA_SQL_Master_Validations",
 	"properties": {
-		"description": "Pipeline madre: scansiona 3 FTP folder, scarica file mancanti, chiama pipeline figlie",
+		"description": "Pipeline madre: scansiona FTP folder Validations, scarica file mancanti, chiama pipeline figlia",
 		"activities": [
 			{
 				"name": "ScanValidationsFTP",
@@ -226,41 +226,41 @@
 												}
 											}
 										]
+									},
+									{
+										"name": "ProcessValidationsPipeline",
+										"type": "ExecutePipeline",
+										"dependsOn": [
+											{
+												"activity": "DownloadValidationsFromFTP",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"pipeline": {
+												"referenceName": "VFD_PL_Process_Validations_SQL",
+												"type": "PipelineReference"
+											},
+											"waitOnCompletion": true,
+											"parameters": {
+												"folderPath": {
+													"value": "@variables('validationsFolderPath')",
+													"type": "Expression"
+												},
+												"fileName": {
+													"value": "@variables('validationsFileName')",
+													"type": "Expression"
+												}
+											}
+										}
 									}
 								]
-							}
-						},
-						{
-							"name": "ProcessValidationsPipeline",
-							"type": "ExecutePipeline",
-							"dependsOn": [
-								{
-									"activity": "IfValidationsNotExists",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "VFD_PL_Process_Validations_SQL",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"folderPath": {
-										"value": "@variables('validationsFolderPath')",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@variables('validationsFileName')",
-										"type": "Expression"
-									}
-								}
 							}
 						}
 					]
@@ -268,24 +268,6 @@
 			}
 		],
 		"variables": {
-			"bookingsFileName": {
-				"type": "String"
-			},
-			"bookingsDate": {
-				"type": "String"
-			},
-			"bookingsFolderPath": {
-				"type": "String"
-			},
-			"sealsFileName": {
-				"type": "String"
-			},
-			"sealsDate": {
-				"type": "String"
-			},
-			"sealsFolderPath": {
-				"type": "String"
-			},
 			"validationsFileName": {
 				"type": "String"
 			},
