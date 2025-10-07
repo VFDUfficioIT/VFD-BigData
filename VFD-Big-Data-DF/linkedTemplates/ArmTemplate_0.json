@@ -4,20 +4,20 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_Azure_Sql_password": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'password' di 'VFD_Big_Data_Azure_Sql'"
+			"metadata": "Secure string for 'password' of 'VFD_Big_Data_Azure_Sql'"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
+			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
 			"type": "string",

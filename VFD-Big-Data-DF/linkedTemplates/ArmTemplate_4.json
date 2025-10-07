@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nome Data Factory",
+			"metadata": "Data Factory name",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_TRG_Weather_API_Daily_properties_VFD_PL_Weather_API_Daily_parameters_location": {
@@ -17,322 +17,11 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_MIDA_SQL_Master_Seals')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline madre: scansiona 3 FTP folder, scarica file mancanti, chiama pipeline figlie",
-				"activities": [
-					{
-						"name": "ScanSealsFTP",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ProcessSealsFiles",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "ScanSealsFTP",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ScanSealsFTP').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "SetSealsFileName",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsFileName",
-										"value": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "ParseSealsDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "SetSealsFileName",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsDate",
-										"value": {
-											"value": "@substring(variables('sealsFileName'), 25, 8)",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetSealsFolderPath",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ParseSealsDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsFolderPath",
-										"value": {
-											"value": "@concat('Mida/Seals/', substring(variables('sealsDate'), 0, 4), '/', substring(variables('sealsDate'), 4, 2))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "CheckSealsExists",
-									"type": "GetMetadata",
-									"dependsOn": [
-										{
-											"activity": "SetSealsFolderPath",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@variables('sealsFolderPath')",
-												"fileName": "@variables('sealsFileName')"
-											}
-										},
-										"fieldList": [
-											"exists"
-										],
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								},
-								{
-									"name": "IfSealsNotExists",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "CheckSealsExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@not(activity('CheckSealsExists').output.exists)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "DownloadSealsFromFTP",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "BinarySource",
-														"storeSettings": {
-															"type": "FtpReadSettings",
-															"recursive": false,
-															"useBinaryTransfer": true,
-															"disableChunking": false
-														},
-														"formatSettings": {
-															"type": "BinaryReadSettings"
-														}
-													},
-													"sink": {
-														"type": "BinarySink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														}
-													},
-													"enableStaging": false
-												},
-												"inputs": [
-													{
-														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"fileName": "@variables('sealsFileName')"
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"folderPath": "@variables('sealsFolderPath')",
-															"fileName": "@variables('sealsFileName')"
-														}
-													}
-												]
-											}
-										]
-									}
-								},
-								{
-									"name": "ProcessSealsPipeline",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "IfSealsNotExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Process_Seals_SQL",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"folderPath": {
-												"value": "@variables('sealsFolderPath')",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@variables('sealsFileName')",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"bookingsFileName": {
-						"type": "String"
-					},
-					"bookingsDate": {
-						"type": "String"
-					},
-					"bookingsFolderPath": {
-						"type": "String"
-					},
-					"sealsFileName": {
-						"type": "String"
-					},
-					"sealsDate": {
-						"type": "String"
-					},
-					"sealsFolderPath": {
-						"type": "String"
-					},
-					"validationsFileName": {
-						"type": "String"
-					},
-					"validationsDate": {
-						"type": "String"
-					},
-					"validationsFolderPath": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Mida"
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_MIDA_SQL_Master_Validations')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Pipeline madre: scansiona 3 FTP folder, scarica file mancanti, chiama pipeline figlie",
+				"description": "Pipeline madre: scansiona FTP folder Validations, scarica file mancanti, chiama pipeline figlia",
 				"activities": [
 					{
 						"name": "ScanValidationsFTP",
@@ -558,41 +247,41 @@
 														}
 													}
 												]
+											},
+											{
+												"name": "ProcessValidationsPipeline",
+												"type": "ExecutePipeline",
+												"dependsOn": [
+													{
+														"activity": "DownloadValidationsFromFTP",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "VFD_PL_Process_Validations_SQL",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"folderPath": {
+															"value": "@variables('validationsFolderPath')",
+															"type": "Expression"
+														},
+														"fileName": {
+															"value": "@variables('validationsFileName')",
+															"type": "Expression"
+														}
+													}
+												}
 											}
 										]
-									}
-								},
-								{
-									"name": "ProcessValidationsPipeline",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "IfValidationsNotExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "VFD_PL_Process_Validations_SQL",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"folderPath": {
-												"value": "@variables('validationsFolderPath')",
-												"type": "Expression"
-											},
-											"fileName": {
-												"value": "@variables('validationsFileName')",
-												"type": "Expression"
-											}
-										}
 									}
 								}
 							]
@@ -603,24 +292,6 @@
 					"elapsedTimeMetric": {}
 				},
 				"variables": {
-					"bookingsFileName": {
-						"type": "String"
-					},
-					"bookingsDate": {
-						"type": "String"
-					},
-					"bookingsFolderPath": {
-						"type": "String"
-					},
-					"sealsFileName": {
-						"type": "String"
-					},
-					"sealsDate": {
-						"type": "String"
-					},
-					"sealsFolderPath": {
-						"type": "String"
-					},
 					"validationsFileName": {
 						"type": "String"
 					},
@@ -1608,6 +1279,94 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_MIDA_SQL_Master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline master: orchestra le 3 pipeline figlie per Bookings, Seals e Validations",
+				"activities": [
+					{
+						"name": "Execute Bookings Master",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_MIDA_SQL_Master_Bookings",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute Seals Master",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Bookings Master",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_MIDA_SQL_Master_Seals",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute Validations Master",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Seals Master",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "VFD_PL_MIDA_SQL_Master_Validations",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Mida"
+				},
+				"annotations": [
+					"Pipeline orchestratore master per processing giornaliero MIDA",
+					"Esecuzione sequenziale: Bookings → Seals → Validations"
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_MIDA_SQL_Master_Validations')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Weather_API_Daily')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2056,7 +1815,9 @@
 					}
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/VFD_PL_MIDA_SQL_Master')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_TRG_Weather_API_Daily')]",
