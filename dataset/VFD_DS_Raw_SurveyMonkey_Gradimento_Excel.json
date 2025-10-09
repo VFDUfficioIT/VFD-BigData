@@ -1,5 +1,5 @@
 {
-	"name": "VFD_DS_Raw_SurveyMonkey_Excel",
+	"name": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "VFD_Big_Data_DL",
@@ -27,7 +27,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('SurveyMonkey/', dataset().year)",
+					"value": "@concat('SurveyMonkey/Gradimento', dataset().year)",
 					"type": "Expression"
 				},
 				"fileSystem": "raw"
