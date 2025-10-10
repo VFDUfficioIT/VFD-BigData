@@ -4369,6 +4369,7 @@
 										],
 										"storeSettings": {
 											"type": "AzureBlobFSReadSettings",
+											"recursive": true,
 											"enablePartitionDiscovery": false
 										},
 										"formatSettings": {
@@ -7754,7 +7755,8 @@
 					"sheetName": "Sheet",
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"folderPath": "SurveyMonkey/Gradimento/2025",
+						"fileName": "*.xlsx",
+						"folderPath": "SurveyMonkey/Gradimento/*",
 						"fileSystem": "raw"
 					}
 				},
