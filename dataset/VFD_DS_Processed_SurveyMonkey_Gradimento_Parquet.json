@@ -22,10 +22,13 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@dataset().fileName",
+					"value": "@concat(dataset().fileName, '.parquet')",
 					"type": "Expression"
 				},
-				"folderPath": "@concat('SurveyMonkey/Gradimento', dataset().year)",
+				"folderPath": {
+					"value": "@concat('SurveyMonkey/Gradimento/', dataset().year)\n",
+					"type": "Expression"
+				},
 				"fileSystem": "processed"
 			},
 			"compressionCodec": "snappy"
