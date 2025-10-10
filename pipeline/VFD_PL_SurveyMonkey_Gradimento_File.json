@@ -3,7 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "ScanRawFiles",
+				"name": "CheckIfProcessedExists",
+				"description": "Chiedere ad ADF “esiste quel file Parquet?”",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -16,25 +17,31 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
-						"type": "DatasetReference"
+						"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"year": "@pipeline().parameters.year",
+							"fileName": "@pipeline().parameters.fileName"
+						}
 					},
 					"fieldList": [
-						"columnCount"
+						"exists"
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
-						"recursive": true,
 						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "ParquetReadSettings"
 					}
 				}
 			},
 			{
-				"name": "ForEachRawFile",
-				"type": "ForEach",
+				"name": "IfNotExists",
+				"type": "IfCondition",
 				"dependsOn": [
 					{
-						"activity": "ScanRawFiles",
+						"activity": "CheckIfProcessedExists",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -42,63 +49,16 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
-					"items": {
-						"value": "@activity('ScanRawFiles').output.childItems",
+					"expression": {
+						"value": "@not(activity('CheckIfProcessedExists').output.exists)\n",
 						"type": "Expression"
 					},
-					"activities": [
+					"ifTrueActivities": [
 						{
-							"name": "SetYear",
-							"type": "SetVariable",
+							"name": "CopyRawToProcessed",
+							"description": "Leggere il file Excel e scrivere un Parquet",
+							"type": "Copy",
 							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "year",
-								"value": {
-									"value": "@last(split(item().path, '/'))",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "SetFileName",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SetYear",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "fileName",
-								"value": {
-									"value": "@replace(item().name, '.xlsx', '')\n",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "CheckIfProcessedExists",
-							"type": "GetMetadata",
-							"dependsOn": [
-								{
-									"activity": "SetFileName",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -108,124 +68,49 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"dataset": {
+								"source": {
+									"type": "ExcelSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
 									"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"year": {
-											"value": "@pipeline().parameters.year",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@variables('fileName')",
-											"type": "Expression"
-										}
+										"year": "@pipeline().parameters.year",
+										"fileName": "@pipeline().parameters.fileName"
 									}
-								},
-								"fieldList": [
-									"exists"
-								],
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
 								}
-							}
-						},
-						{
-							"name": "IfProcessedNotExists",
-							"type": "IfCondition",
-							"dependsOn": [
-								{
-									"activity": "CheckIfProcessedExists",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"userProperties": [],
-							"typeProperties": {
-								"expression": {
-									"value": "@not(activity('CheckIfProcessedExists').output.exists)",
-									"type": "Expression"
-								},
-								"ifTrueActivities": [
-									{
-										"name": "CopyRawToProcessed",
-										"type": "Copy",
-										"dependsOn": [],
-										"policy": {
-											"timeout": "0.12:00:00",
-											"retry": 0,
-											"retryIntervalInSeconds": 30,
-											"secureOutput": false,
-											"secureInput": false
-										},
-										"userProperties": [],
-										"typeProperties": {
-											"source": {
-												"type": "ExcelSource",
-												"storeSettings": {
-													"type": "AzureBlobFSReadSettings",
-													"recursive": true,
-													"wildcardFolderPath": {
-														"value": "@concat('SurveyMonkey/Gradimento/', pipeline().parameters.year)",
-														"type": "Expression"
-													},
-													"wildcardFileName": {
-														"value": "@item().name",
-														"type": "Expression"
-													},
-													"enablePartitionDiscovery": false
-												}
-											},
-											"sink": {
-												"type": "ParquetSink",
-												"storeSettings": {
-													"type": "AzureBlobFSWriteSettings"
-												},
-												"formatSettings": {
-													"type": "ParquetWriteSettings"
-												}
-											},
-											"enableStaging": false,
-											"translator": {
-												"type": "TabularTranslator",
-												"typeConversion": true,
-												"typeConversionSettings": {
-													"allowDataTruncation": true,
-													"treatBooleanAsNumber": false
-												}
-											}
-										},
-										"inputs": [
-											{
-												"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
-												"type": "DatasetReference"
-											}
-										],
-										"outputs": [
-											{
-												"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
-												"type": "DatasetReference",
-												"parameters": {
-													"year": {
-														"value": "@variables('year')",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@variables('fileName')",
-														"type": "Expression"
-													}
-												}
-											}
-										]
-									}
-								]
-							}
+							]
 						}
 					]
 				}
@@ -233,6 +118,9 @@
 		],
 		"parameters": {
 			"year": {
+				"type": "string"
+			},
+			"fileName": {
 				"type": "string"
 			}
 		},

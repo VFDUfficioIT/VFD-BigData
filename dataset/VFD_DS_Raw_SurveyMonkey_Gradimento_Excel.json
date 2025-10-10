@@ -14,8 +14,8 @@
 			"sheetName": "Sheet",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "*.xlsx",
-				"folderPath": "SurveyMonkey/Gradimento/*",
+				"fileName": "Questionario di gradimento-2025-09.xlsx",
+				"folderPath": "SurveyMonkey/Gradimento/2025",
 				"fileSystem": "raw"
 			}
 		},

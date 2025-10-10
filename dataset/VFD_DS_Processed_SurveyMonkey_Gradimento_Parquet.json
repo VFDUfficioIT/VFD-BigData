@@ -22,11 +22,11 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@concat(dataset().fileName, '.parquet')",
+					"value": "@concat(dataset().fileName,'.parquet')",
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('SurveyMonkey/Gradimento/', dataset().year)\n",
+					"value": "@concat('SurveyMonkey/Gradimento/',dataset().year)",
 					"type": "Expression"
 				},
 				"fileSystem": "processed"
