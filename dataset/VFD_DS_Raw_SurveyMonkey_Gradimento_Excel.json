@@ -11,6 +11,7 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
+			"sheetName": "Sheet",
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"folderPath": "SurveyMonkey/Gradimento/2025",
