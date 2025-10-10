@@ -13,7 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "SurveyMonkey/Gradimento",
+				"folderPath": "SurveyMonkey/Gradimento/2025",
 				"fileSystem": "raw"
 			}
 		},
