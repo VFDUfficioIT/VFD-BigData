@@ -5,31 +5,15 @@
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"year": {
-				"type": "string"
-			},
-			"fileName": {
-				"type": "string"
-			}
-		},
 		"folder": {
 			"name": "SurveyMonkey/Gradimento"
 		},
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "Sheet",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@dataset().fileName",
-					"type": "Expression"
-				},
-				"folderPath": {
-					"value": "@concat('SurveyMonkey/Gradimento', dataset().year)",
-					"type": "Expression"
-				},
+				"folderPath": "SurveyMonkey/Gradimento",
 				"fileSystem": "raw"
 			}
 		},
