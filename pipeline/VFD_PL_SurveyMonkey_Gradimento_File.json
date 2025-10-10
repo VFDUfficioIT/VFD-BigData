@@ -59,7 +59,7 @@
 							"typeProperties": {
 								"variableName": "year",
 								"value": {
-									"value": "@item().path",
+									"value": "@last(split(item().path, '/'))",
 									"type": "Expression"
 								}
 							}
@@ -83,7 +83,7 @@
 							"typeProperties": {
 								"variableName": "fileName",
 								"value": {
-									"value": "@replace(item().name, '.xlsx', '')",
+									"value": "@replace(item().name, '.xlsx', '')\n",
 									"type": "Expression"
 								}
 							}
@@ -113,7 +113,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"year": {
-											"value": "@variables('year')",
+											"value": "@pipeline().parameters.year",
 											"type": "Expression"
 										},
 										"fileName": {
@@ -172,7 +172,7 @@
 													"type": "AzureBlobFSReadSettings",
 													"recursive": true,
 													"wildcardFolderPath": {
-														"value": "@concat('SurveyMonkey/Gradimento/', variables('year'))",
+														"value": "@concat('SurveyMonkey/Gradimento/', pipeline().parameters.year)",
 														"type": "Expression"
 													},
 													"wildcardFileName": {
@@ -238,6 +238,9 @@
 		},
 		"variables": {
 			"fileName": {
+				"type": "String"
+			},
+			"year": {
 				"type": "String"
 			}
 		},
