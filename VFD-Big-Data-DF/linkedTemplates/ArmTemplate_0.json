@@ -4,20 +4,20 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_Azure_Sql_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_Big_Data_Azure_Sql'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_Big_Data_Azure_Sql'"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
 			"type": "string",
@@ -857,6 +857,49 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_SurveyMonkey_Gradimento_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "SurveyMonkey/Gradimento"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('SurveyMonkey/Gradimento', dataset().year)",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -929,32 +972,6 @@
 					},
 					"sheetName": "export",
 					"firstRowAsHeader": true
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/VFD_LS_Mida_FtpServer')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_DS_Mida_Bookings_FTPServer_Folder')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "VFD_LS_Mida_FtpServer",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Mida/Bookings"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "FtpServerLocation",
-						"fileName": "*.xlsx",
-						"folderPath": "vendite"
-					}
 				}
 			},
 			"dependsOn": [

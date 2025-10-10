@@ -4,20 +4,20 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		},
 		"VFD_Big_Data_Azure_Sql_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_Big_Data_Azure_Sql'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_Big_Data_Azure_Sql'"
 		},
 		"VFD_Big_Data_DL_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'VFD_Big_Data_DL'"
+			"metadata": "Stringa sicura per 'accountKey' di 'VFD_Big_Data_DL'"
 		},
 		"VFD_LS_Mida_FtpServer_password": {
 			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'VFD_LS_Mida_FtpServer'"
+			"metadata": "Stringa sicura per 'password' di 'VFD_LS_Mida_FtpServer'"
 		},
 		"VFD_Big_Data_Azure_Sql_properties_typeProperties_server": {
 			"type": "string",
@@ -4238,6 +4238,96 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_SurveyMonkey_Gradimento_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Set variable1",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "year",
+										"value": "2025"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"year": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "SurveyMonkey"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/VFD_DS_Raw_SurveyMonkey_Gradimento_Excel')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Utils_AccessAreas_Raw_Curated')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -6038,6 +6128,49 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_SurveyMonkey_Gradimento_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "SurveyMonkey/Gradimento"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('SurveyMonkey/Gradimento', dataset().year)",
+							"type": "Expression"
+						},
+						"fileSystem": "curated"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Curated_Weather_Parquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -6594,6 +6727,49 @@
 						},
 						"folderPath": {
 							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "processed"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"year": {
+						"type": "string"
+					},
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "SurveyMonkey/Gradimento"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('SurveyMonkey/Gradimento', dataset().year)",
 							"type": "Expression"
 						},
 						"fileSystem": "processed"
@@ -7386,6 +7562,34 @@
 						"fileSystem": "raw"
 					},
 					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/VFD_Big_Data_DL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_SurveyMonkey_Gradimento_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SurveyMonkey/Gradimento"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "SurveyMonkey/Gradimento/2025",
+						"fileSystem": "raw"
+					}
 				},
 				"schema": []
 			},

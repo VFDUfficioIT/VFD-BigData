@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -12,6 +12,361 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/TestPL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "TestDFL",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"integrationRuntime": {
+								"referenceName": "VFD-IR-DataflowExecution",
+								"type": "IntegrationRuntimeReference"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Batch_Historical_Processing')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per processare automaticamente tutti i file storico con Copy Data diretta a production_bookings",
+				"activities": [
+					{
+						"name": "GetHistoricalFiles",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.baseFolderPath",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": false,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ProcessFilesInOrder",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "GetHistoricalFiles",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetHistoricalFiles').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CheckIfPartFile",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@contains(item().name, '_part')",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Copy Historical File to Production",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "ExcelSource",
+														"additionalColumns": [
+															{
+																"name": "processing_timestamp",
+																"value": {
+																	"value": "@utcNow()",
+																	"type": "Expression"
+																}
+															},
+															{
+																"name": "source_file",
+																"value": {
+																	"value": "@item().name",
+																	"type": "Expression"
+																}
+															}
+														],
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": false,
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+														"type": "DatasetReference",
+														"parameters": {
+															"folderPath": {
+																"value": "@pipeline().parameters.baseFolderPath",
+																"type": "Expression"
+															},
+															"fileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "VFD_DS_SQL_Test_Bookings",
+														"type": "DatasetReference",
+														"parameters": {}
+													}
+												]
+											},
+											{
+												"name": "LogProcessedFile",
+												"type": "SetVariable",
+												"dependsOn": [
+													{
+														"activity": "Copy Historical File to Production",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "currentFile",
+													"value": {
+														"value": "@concat('Processed: ', item().name, ' - Rows copied: ', activity('Copy Historical File to Production').output.rowsCopied, ' at ', utcNow())",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"baseFolderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Storico/Bookings"
+					}
+				},
+				"variables": {
+					"currentFile": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Batch"
+				},
+				"annotations": [
+					"Processamento automatico file storici con Copy Data diretta a production_bookings"
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_Copy_Single_Historical_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Pipeline per copiare un singolo file storico specificato in test_bookings",
+				"activities": [
+					{
+						"name": "Copy Single File to Test Bookings",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"additionalColumns": [
+									{
+										"name": "processing_timestamp",
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										}
+									},
+									{
+										"name": "source_file",
+										"value": {
+											"value": "@pipeline().parameters.fileName",
+											"type": "Expression"
+										}
+									}
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderPath": {
+										"value": "@pipeline().parameters.folderPath",
+										"type": "Expression"
+									},
+									"fileName": {
+										"value": "@pipeline().parameters.fileName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "VFD_DS_SQL_Test_Bookings",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string",
+						"defaultValue": "Storico_-_Vendite_20241001_20241231_part01.xlsx"
+					},
+					"folderPath": {
+						"type": "string",
+						"defaultValue": "Mida/Storico/Bookings"
+					}
+				},
+				"folder": {
+					"name": "Mida/Utilities"
+				},
+				"annotations": [
+					"Pipeline utility per processare singolo file storico specificato"
+				]
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_PL_Explore_Seals_Folder')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -710,6 +1065,94 @@
 				},
 				"folder": {
 					"name": "Mida"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_PL_SurveyMonkey_Gradimento_File')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Set variable1",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "year",
+										"value": "2025"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"year": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "SurveyMonkey"
 				},
 				"annotations": []
 			},
@@ -1949,2234 +2392,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Affluences_Daily_v2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline v2 per acquisire i dati giornalieri Affluences con architettura Raw->Processed->Curated",
-				"activities": [
-					{
-						"name": "SetProcessDate",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "processDate",
-							"value": {
-								"value": "@if(empty(pipeline().parameters.date), formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd'), pipeline().parameters.date)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "SetYear",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "SetProcessDate",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "year",
-							"value": {
-								"value": "@substring(variables('processDate'), 0, 4)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "SetMonth",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "SetYear",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "month",
-							"value": {
-								"value": "@substring(variables('processDate'), 5, 2)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "SetDateFormatted",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "SetMonth",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "dateFormatted",
-							"value": {
-								"value": "@replace(variables('processDate'), '-', '')",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "SetYearMonth",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "SetDateFormatted",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "yearMonth",
-							"value": {
-								"value": "@concat(variables('year'), variables('month'))",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "ForEachSite",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "SetYearMonth",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@createArray(json('{\"name\":\"Terrazze\",\"uuid\":\"5a2757bc-e1c6-4d5e-9db3-edfc4e9c9307\"}'), json('{\"name\":\"AscensoreNord\",\"uuid\":\"ca2dae61-4a99-4cb7-8051-26cb852ea408\"}'), json('{\"name\":\"AscensoreSud\",\"uuid\":\"aa6c22f1-84b6-441a-bbb0-bd429e63536d\"}'), json('{\"name\":\"SalitaPiedi\",\"uuid\":\"8358df5f-0186-4a11-87ad-11fc19cda749\"}'), json('{\"name\":\"DiscesaPiedi\",\"uuid\":\"639bc326-010a-402f-ba5f-3c75e2740d9d\"}'), json('{\"name\":\"Camminamento Nord\",\"uuid\":\"7aa7cba8-5304-4004-9f6e-d2682171f1d6\"}'),\njson('{\"name\":\"Camminamento Sud\",\"uuid\":\"a0c0589a-99c2-4362-8738-08dc197493f7\"}'),\njson('{\"name\":\"Biglietteria - Sala delle Colonne (interna)\",\"uuid\":\"505bc53f-c1c7-405c-b8bb-ce9cf3d09ee2\"}'),\njson('{\"name\":\"Interno Cattedrale\",\"uuid\":\"0348a0da-4dd2-4f27-a05f-48af4403c4d7\"}'),\njson('{\"name\":\"Retrocoro\",\"uuid\":\"7a77ed7f-a721-49b0-bdb6-b971bb356ef8\"}'),\njson('{\"name\":\"Controfacciata Sud\",\"uuid\":\"15ebae77-84f6-4531-bbf8-aeb93f3a42ff\"}'),\njson('{\"name\":\"Controfacciata Nord\",\"uuid\":\"5515cda5-6aca-4e01-99d1-28f18d29a23b\"}'),\njson('{\"name\":\"Totale sito - Duomo di Milano\",\"uuid\":\"37f04685-c7f5-47dc-9503-6aeeb96670ce\"}'),\njson('{\"name\":\"4e - Facciata - Portone estremo Nord\",\"uuid\":\"439ec300-cc77-4741-9797-8b4e6f99a5d7\"}'),\njson('{\"name\":\"4d - Facciata - Portone mediano Nord\",\"uuid\":\"271a2467-e84a-41b2-9365-e50195c6f140\"}'),\njson('{\"name\":\"4c - Facciata - Portone centrale\",\"uuid\":\"bfbd2f6d-5ab0-4227-8ea9-8fbca8532ca2\"}'),\njson('{\"name\":\"4b - Facciata - Portone mediano Sud\",\"uuid\":\"7ee3fc1b-7e88-4893-ae2a-da8ac24e145c\"}'),\njson('{\"name\":\"4a - Facciata - Portone estremo Sud\",\"uuid\":\"356ff213-0101-4736-a9d4-41d6e028814f\"}'),\njson('{\"name\":\"8b - Portina uscita visitatori\",\"uuid\":\"bafb1070-294a-4e2e-946c-d442864f8b0b\"}'),\njson('{\"name\":\"8a - Portina ingresso fedeli\",\"uuid\":\"a9c1ddc4-ab1d-4db5-b9cd-e62545fc36df\"}'),\njson('{\"name\":\"Terrazza Centrale\",\"uuid\":\"f83757c5-3cb6-42db-8693-31b3dec5f34f\"}'),\njson('{\"name\":\"Cattedrale Fedeli\",\"uuid\":\"cec6caef-3c29-44ed-af84-15357f3a1d6d\"}'),\njson('{\"name\":\"Cattedrale Visitatori (con biglietto)\",\"uuid\":\"43a31887-e907-4d30-959a-dddf2b9d30bd\"}'),\njson('{\"name\":\"Entrate Camminamento Nord - Retrocoro uscita\",\"uuid\":\"281187e6-8430-42ee-8b42-7cacc4a1049b\"}'), json('{\"name\":\"ATTESA - ASCENSORE SUD\",\"uuid\":\"58914401-0e45-42b0-b4aa-795fff056eb2\"}'),\njson('{\"name\":\"ATTESA - ASCENSORE NORD\",\"uuid\":\"abd51dae-b178-4135-bd70-e57dd8cef99a\"}'),\njson('{\"name\":\"ATTESA - SALITA A PIEDI\",\"uuid\":\"cd8c3b53-98e2-4794-90d8-4e0a20f8270e\"}'),\njson('{\"name\":\"ATTESA - ACCESSO AL DUOMO\",\"uuid\":\"c3a83ec1-a1f5-4ed5-ad2a-00df3767a380\"}'), json('{\"name\":\"ATTESA BIGLIETTERIA (fila esterna)\",\"uuid\":\"2aba3fc3-2c00-4af6-bf12-64521f50f884\"}'),\njson('{\"name\":\"ATTESA BIGLIETTERIA\",\"uuid\":\"605fa1ca-fc2e-43be-9c6e-5865f2a38419\"}'), json('{\"name\":\"ATTESA - MUSEO DEL DUOMO\",\"uuid\":\"6775d267-82b6-46e7-897f-63ed58bd8542\"}'))",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 15,
-							"activities": [
-								{
-									"name": "CallAPI",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "7.00:00:00",
-										"retry": 2,
-										"retryIntervalInSeconds": 30
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "RestSource",
-											"httpRequestTimeout": "00:01:40",
-											"requestInterval": "00.00:00:00.010",
-											"requestMethod": "GET"
-										},
-										"sink": {
-											"type": "JsonSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "JsonWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "VFD_DS_Affluences_API",
-											"type": "DatasetReference",
-											"parameters": {
-												"siteUUID": {
-													"value": "@item().uuid",
-													"type": "Expression"
-												},
-												"date": {
-													"value": "@variables('processDate')",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "VFD_DS_Raw_Affluences_JSON",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": {
-													"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-													"type": "Expression"
-												},
-												"fileName": {
-													"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '_', item().uuid, '.json')",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								}
-							]
-						}
-					},
-					{
-						"name": "TransformToProcessed",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "ForEachSite",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "VFD_DFL_Affluences_JSON_to_Processed",
-								"type": "DataFlowReference",
-								"parameters": {
-									"year": {
-										"value": "'@{variables('year')}'",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "'@{variables('month')}'",
-										"type": "Expression"
-									},
-									"dateFormatted": {
-										"value": "'@{variables('dateFormatted')}'",
-										"type": "Expression"
-									}
-								},
-								"datasetParameters": {
-									"SourceJSON": {
-										"folderPath": {
-											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '_*.json')",
-											"type": "Expression"
-										}
-									},
-									"SinkProcessed": {
-										"folderPath": {
-											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-											"type": "Expression"
-										},
-										"fileName": "VFD_DFL_Affluences_JSON_to_Processed_output.parquet"
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Coarse"
-						}
-					},
-					{
-						"name": "CopyProcessedToFinal",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "TransformToProcessed",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_Affluences_JSON_to_Processed_output.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '.parquet')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "DeleteProcessedTemp",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "CopyProcessedToFinal",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_Affluences_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_Affluences_JSON_to_Processed_output.parquet"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false
-							}
-						}
-					},
-					{
-						"name": "CreateCuratedDaily",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "DeleteProcessedTemp",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "VFD_DFL_Affluences_Daily_to_Curated",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"SourceProcessed": {
-										"folderPath": {
-											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '.parquet')",
-											"type": "Expression"
-										}
-									},
-									"SinkCuratedDaily": {
-										"folderPath": {
-											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-											"type": "Expression"
-										},
-										"fileName": "VFD_DFL_Affluences_Daily_to_Curated_output.parquet"
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Coarse"
-						}
-					},
-					{
-						"name": "CopyCuratedDailyToFinal",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "CreateCuratedDaily",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_Affluences_Daily_to_Curated_output.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Affluences_Daily_', variables('dateFormatted'), '.parquet')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "DeleteCuratedDailyTemp",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "CopyCuratedDailyToFinal",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Affluences_Daily_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_Affluences_Daily_to_Curated_output.parquet"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false
-							}
-						}
-					},
-					{
-						"name": "UpdateMonthlyAggregation",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "DeleteCuratedDailyTemp",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "VFD_DFL_Affluences_Monthly_Aggregation",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"SourceNewData": {
-										"folderPath": {
-											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('VFD_Affluences_', variables('dateFormatted'), '.parquet')",
-											"type": "Expression"
-										}
-									},
-									"SourceExistingMonthly": {
-										"folderPath": {
-											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('VFD_Affluences_Monthly_', variables('yearMonth'), '.parquet')",
-											"type": "Expression"
-										}
-									},
-									"SinkMonthly": {
-										"folderPath": {
-											"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-											"type": "Expression"
-										},
-										"fileName": "VFD_DFL_Affluences_Monthly_Aggregation_output.parquet"
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Coarse"
-						}
-					},
-					{
-						"name": "CopyMonthlyToFinal",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "UpdateMonthlyAggregation",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_Affluences_Monthly_Aggregation_output.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Affluences_Monthly_', variables('yearMonth'), '.parquet')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "DeleteMonthlyTemp",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "CopyMonthlyToFinal",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_Affluences_Monthly_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@concat('Affluences/', variables('year'), '/', variables('month'))",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_Affluences_Monthly_Aggregation_output.parquet"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"date": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"processDate": {
-						"type": "String"
-					},
-					"year": {
-						"type": "String"
-					},
-					"month": {
-						"type": "String"
-					},
-					"dateFormatted": {
-						"type": "String"
-					},
-					"yearMonth": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Affluences"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_JSON_to_Processed')]",
-				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_Daily_to_Curated')]",
-				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_Affluences_Monthly_Aggregation')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_DuomoWiFi_Extract_Transform')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline principale per l'estrazione e trasformazione dei dati WiFi del Duomo",
-				"activities": [
-					{
-						"name": "ExtractConnections",
-						"description": "Estrae le connessioni WiFi dall'API Cloud4Wi",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "AuthRequest",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:10:00",
-							"retry": 3,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "HttpReadSettings",
-									"requestMethod": "GET",
-									"additionalHeaders": {
-										"value": "Authorization: Bearer @{activity('AuthRequest').output.token}",
-										"type": "Expression"
-									},
-									"requestTimeout": "00:01:40"
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"sink": {
-								"type": "JsonSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "JsonWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Cloud4Wi_Connections_HTTP",
-								"type": "DatasetReference",
-								"parameters": {
-									"dateStart": {
-										"value": "@pipeline().parameters.p_dateStart",
-										"type": "Expression"
-									},
-									"dateStop": {
-										"value": "@pipeline().parameters.p_dateStop",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Raw_DuomoWiFi_Connections_JSON",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.json')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "LookupUsernames",
-						"description": "Estrae la lista di username unici dal file delle connessioni",
-						"type": "Lookup",
-						"dependsOn": [
-							{
-								"activity": "ExtractConnections",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:05:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_DuomoWiFi_Connections_JSON",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)\n",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)\n",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', \n    substring(pipeline().parameters.p_dateStart, 0, 4),\n    substring(pipeline().parameters.p_dateStart, 5, 2), \n    substring(pipeline().parameters.p_dateStart, 8, 2),\n    '.json')",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEachUsername",
-						"description": "Itera su ogni username per estrarre i dati utente",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "LookupUsernames",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('LookupUsernames').output.value[0].connections",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 10,
-							"activities": [
-								{
-									"name": "ExtractUserData",
-									"description": "Estrae i dati di un singolo utente",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.00:10:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "JsonSource",
-											"storeSettings": {
-												"type": "HttpReadSettings",
-												"requestMethod": "GET",
-												"additionalHeaders": {
-													"value": "Authorization: Bearer @{activity('AuthRequest').output.token}",
-													"type": "Expression"
-												},
-												"requestTimeout": "00:01:40"
-											},
-											"formatSettings": {
-												"type": "JsonReadSettings"
-											}
-										},
-										"sink": {
-											"type": "JsonSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "JsonWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "VFD_DS_Cloud4Wi_Users_HTTP",
-											"type": "DatasetReference",
-											"parameters": {
-												"username": {
-													"value": "@item().customerId",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "VFD_DS_Raw_DuomoWiFi_Users_JSON",
-											"type": "DatasetReference",
-											"parameters": {
-												"fileName": {
-													"value": "@concat('VFD_Wifi_user_', item().username, '.json')",
-													"type": "Expression"
-												},
-												"year": {
-													"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-													"type": "Expression"
-												},
-												"month": {
-													"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								}
-							]
-						}
-					},
-					{
-						"name": "TransformConnectionsRawToProcessed",
-						"description": "Trasforma le connessioni da JSON Raw a Parquet Processed",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "ForEachUsername",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:30:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"SourceConnectionsJSON": {
-										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-											"type": "Expression"
-										},
-										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.json')",
-											"type": "Expression"
-										}
-									},
-									"SinkConnectionsParquet": {
-										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-											"type": "Expression"
-										},
-										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-											"type": "Expression"
-										},
-										"fileName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet"
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Coarse"
-						}
-					},
-					{
-						"name": "CopyConnectionsProcessedToFinal",
-						"description": "Copia il file temporaneo al nome finale",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "TransformConnectionsRawToProcessed",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:10:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "DeleteTempConnectionsFile",
-						"description": "Elimina il file temporaneo delle connessioni",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "CopyConnectionsProcessedToFinal",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:05:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Connections_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_DuomoWiFi_Connections_Raw_Processed_output.parquet"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							}
-						}
-					},
-					{
-						"name": "TransformUsersRawToProcessed",
-						"description": "Consolida tutti i file JSON degli utenti in un singolo Parquet",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "DeleteTempConnectionsFile",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:30:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed",
-								"type": "DataFlowReference",
-								"parameters": {
-									"year": {
-										"value": "'@{substring(pipeline().parameters.p_dateStart, 0, 4)}'",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "'@{substring(pipeline().parameters.p_dateStart, 5, 2)}'",
-										"type": "Expression"
-									}
-								},
-								"datasetParameters": {
-									"SourceUsersJSON": {
-										"fileName": "dummy.json",
-										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-											"type": "Expression"
-										},
-										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-											"type": "Expression"
-										}
-									},
-									"SinkUsersParquet": {
-										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-											"type": "Expression"
-										},
-										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-											"type": "Expression"
-										},
-										"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Coarse"
-						}
-					},
-					{
-						"name": "CopyUsersProcessedToFinal",
-						"description": "Copia il file temporaneo degli utenti al nome finale",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "TransformUsersRawToProcessed",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:10:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "DeleteTempUsersFile",
-						"description": "Elimina il file temporaneo degli utenti",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "CopyUsersProcessedToFinal",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:05:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Processed_DuomoWiFi_Users_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_DuomoWiFi_Users_Raw_Processed_output.parquet"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							}
-						}
-					},
-					{
-						"name": "TransformProcessedToCurated",
-						"description": "Esegue join tra connessioni e utenti per dataset finale arricchito",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "DeleteTempUsersFile",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:30:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "VFD_DFL_DuomoWiFi_Processed_Curated",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"SourceConnections": {
-										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-											"type": "Expression"
-										},
-										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
-											"type": "Expression"
-										}
-									},
-									"SourceUsers": {
-										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-											"type": "Expression"
-										},
-										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@concat('VFD_Wifi_Users_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
-											"type": "Expression"
-										}
-									},
-									"SinkEnrichedData": {
-										"year": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-											"type": "Expression"
-										},
-										"month": {
-											"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-											"type": "Expression"
-										},
-										"fileName": "VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet"
-									}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Coarse"
-						}
-					},
-					{
-						"name": "CopyCuratedToFinal",
-						"description": "Copia il file temporaneo arricchito al nome finale",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "TransformProcessedToCurated",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:10:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ParquetSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Curated_DuomoWiFi_Enriched_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_Curated_DuomoWiFi_Enriched_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@concat('VFD_Wifi_connections_', substring(pipeline().parameters.p_dateStart, 0, 4), substring(pipeline().parameters.p_dateStart, 5, 2), substring(pipeline().parameters.p_dateStart, 8, 2), '.parquet')",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "DeleteTempEnrichedFile",
-						"description": "Elimina il file temporaneo arricchito",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "CopyCuratedToFinal",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:05:00",
-							"retry": 1,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Curated_DuomoWiFi_Enriched_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"year": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 0, 4)",
-										"type": "Expression"
-									},
-									"month": {
-										"value": "@substring(pipeline().parameters.p_dateStart, 5, 2)",
-										"type": "Expression"
-									},
-									"fileName": "VFD_DFL_DuomoWiFi_Processed_Curated_output.parquet"
-								}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							}
-						}
-					},
-					{
-						"name": "AuthRequest",
-						"type": "WebActivity",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "POST",
-							"headers": {},
-							"url": "https://explore.cloud4wi.com/v1/sts/login/services",
-							"body": {
-								"clientKey": "ck-ffe407c5-e967-44db-a6b0-d6c178b6ee08",
-								"clientSecret": "CWCVPKZCNDYTVKPBZTDSENQKJLLCPKGH"
-							}
-						}
-					},
-					{
-						"name": "LogoutRequest",
-						"description": "Richiesta di logout per annullare il token, il body è impostato con dei valori solamente perché DataFactory non accetta un body vuoto in una richiesta post",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "DeleteTempEnrichedFile",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "POST",
-							"headers": {
-								"Authorization": {
-									"value": "Bearer @{activity('AuthRequest').output.token}",
-									"type": "Expression"
-								}
-							},
-							"url": "https://explore.cloud4wi.com/v1/sts/logout",
-							"body": {
-								"Sample": "Sample"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"p_dateStart": {
-						"type": "string",
-						"defaultValue": "2025-06-26"
-					},
-					"p_dateStop": {
-						"type": "string",
-						"defaultValue": "2025-06-26"
-					}
-				},
-				"folder": {
-					"name": "WiFi"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Connections_Raw_Processed')]",
-				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Users_Raw_Processed')]",
-				"[concat(variables('factoryId'), '/dataflows/VFD_DFL_DuomoWiFi_Processed_Curated')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_MIDA_SQL_Master_Bookings')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline madre: scansiona FTP folder Bookings, scarica file mancanti, chiama pipeline figlia",
-				"activities": [
-					{
-						"name": "ScanBookingsFTP",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ProcessBookingsFiles",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "ScanBookingsFTP",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ScanBookingsFTP').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "SetBookingsFileName",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "bookingsFileName",
-										"value": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "ParseBookingsDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "SetBookingsFileName",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "bookingsDate",
-										"value": {
-											"value": "@substring(variables('bookingsFileName'), 37, 8)",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetBookingsFolderPath",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ParseBookingsDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "bookingsFolderPath",
-										"value": {
-											"value": "@concat('Mida/Bookings/', substring(variables('bookingsDate'), 0, 4), '/', substring(variables('bookingsDate'), 4, 2))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "CheckBookingsExists",
-									"type": "GetMetadata",
-									"dependsOn": [
-										{
-											"activity": "SetBookingsFolderPath",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@variables('bookingsFolderPath')",
-												"fileName": "@variables('bookingsFileName')"
-											}
-										},
-										"fieldList": [
-											"exists"
-										],
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								},
-								{
-									"name": "IfBookingsNotExists",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "CheckBookingsExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@not(activity('CheckBookingsExists').output.exists)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "DownloadBookingsFromFTP",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "BinarySource",
-														"storeSettings": {
-															"type": "FtpReadSettings",
-															"recursive": false,
-															"useBinaryTransfer": true,
-															"disableChunking": false
-														},
-														"formatSettings": {
-															"type": "BinaryReadSettings"
-														}
-													},
-													"sink": {
-														"type": "BinarySink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														}
-													},
-													"enableStaging": false
-												},
-												"inputs": [
-													{
-														"referenceName": "VFD_DS_Mida_Bookings_FTPServer_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"fileName": "@variables('bookingsFileName')"
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "VFD_DS_Raw_Mida_Bookings_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"folderPath": "@variables('bookingsFolderPath')",
-															"fileName": "@variables('bookingsFileName')"
-														}
-													}
-												]
-											},
-											{
-												"name": "ProcessBookingsPipeline",
-												"type": "ExecutePipeline",
-												"dependsOn": [
-													{
-														"activity": "DownloadBookingsFromFTP",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"pipeline": {
-														"referenceName": "VFD_PL_Process_Bookings_SQL",
-														"type": "PipelineReference"
-													},
-													"waitOnCompletion": true,
-													"parameters": {
-														"folderPath": {
-															"value": "@variables('bookingsFolderPath')",
-															"type": "Expression"
-														},
-														"fileName": {
-															"value": "@variables('bookingsFileName')",
-															"type": "Expression"
-														}
-													}
-												}
-											}
-										]
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"bookingsFileName": {
-						"type": "String"
-					},
-					"bookingsDate": {
-						"type": "String"
-					},
-					"bookingsFolderPath": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Mida"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Process_Bookings_SQL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_MIDA_SQL_Master_Seals')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline madre: scansiona FTP folder Seals, scarica file mancanti, chiama pipeline figlia",
-				"activities": [
-					{
-						"name": "ScanSealsFTP",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Mida_Seals_FTPServer_Folder",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "FtpReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false,
-								"useBinaryTransfer": true,
-								"disableChunking": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ProcessSealsFiles",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "ScanSealsFTP",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ScanSealsFTP').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "SetSealsFileName",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsFileName",
-										"value": {
-											"value": "@item().name",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "ParseSealsDate",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "SetSealsFileName",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsDate",
-										"value": {
-											"value": "@substring(variables('sealsFileName'), 25, 8)",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "SetSealsFolderPath",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "ParseSealsDate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "sealsFolderPath",
-										"value": {
-											"value": "@concat('Mida/Seals/', substring(variables('sealsDate'), 0, 4), '/', substring(variables('sealsDate'), 4, 2))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "CheckSealsExists",
-									"type": "GetMetadata",
-									"dependsOn": [
-										{
-											"activity": "SetSealsFolderPath",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "VFD_DS_Raw_Mida_Seals_Excel",
-											"type": "DatasetReference",
-											"parameters": {
-												"folderPath": "@variables('sealsFolderPath')",
-												"fileName": "@variables('sealsFileName')"
-											}
-										},
-										"fieldList": [
-											"exists"
-										],
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								},
-								{
-									"name": "IfSealsNotExists",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "CheckSealsExists",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@not(activity('CheckSealsExists').output.exists)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "DownloadSealsFromFTP",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "BinarySource",
-														"storeSettings": {
-															"type": "FtpReadSettings",
-															"recursive": false,
-															"useBinaryTransfer": true,
-															"disableChunking": false
-														},
-														"formatSettings": {
-															"type": "BinaryReadSettings"
-														}
-													},
-													"sink": {
-														"type": "BinarySink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														}
-													},
-													"enableStaging": false
-												},
-												"inputs": [
-													{
-														"referenceName": "VFD_DS_Mida_Seals_FTPServer_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"fileName": "@variables('sealsFileName')"
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "VFD_DS_Raw_Mida_Seals_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"folderPath": "@variables('sealsFolderPath')",
-															"fileName": "@variables('sealsFileName')"
-														}
-													}
-												]
-											},
-											{
-												"name": "ProcessSealsPipeline",
-												"type": "ExecutePipeline",
-												"dependsOn": [
-													{
-														"activity": "DownloadSealsFromFTP",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"pipeline": {
-														"referenceName": "VFD_PL_Process_Seals_SQL",
-														"type": "PipelineReference"
-													},
-													"waitOnCompletion": true,
-													"parameters": {
-														"folderPath": {
-															"value": "@variables('sealsFolderPath')",
-															"type": "Expression"
-														},
-														"fileName": {
-															"value": "@variables('sealsFileName')",
-															"type": "Expression"
-														}
-													}
-												}
-											}
-										]
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"sealsFileName": {
-						"type": "String"
-					},
-					"sealsDate": {
-						"type": "String"
-					},
-					"sealsFolderPath": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Mida"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/VFD_PL_Process_Seals_SQL')]"
-			]
 		}
 	]
 }

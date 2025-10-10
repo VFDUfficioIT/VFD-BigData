@@ -4,7 +4,7 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Data Factory name",
+			"metadata": "Nome Data Factory",
 			"defaultValue": "VFD-Big-Data-DF"
 		}
 	},
@@ -12,6 +12,89 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"sheetName": "Emissioni di ieri",
+					"firstRowAsHeader": true
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderPath": {
+						"type": "String"
+					},
+					"fileName": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Mida/Seals"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Emissioni",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderPath",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_Mida_Seals_Excel_History')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
@@ -174,6 +257,32 @@
 						"fileSystem": "raw"
 					},
 					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VFD_DS_Raw_SurveyMonkey_Gradimento_Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "VFD_Big_Data_DL",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SurveyMonkey/Gradimento"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "SurveyMonkey/Gradimento/2025",
+						"fileSystem": "raw"
+					}
 				},
 				"schema": []
 			},
@@ -626,367 +735,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/TestPL')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Data flow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "TestDFL",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {},
-									"sink1": {}
-								}
-							},
-							"staging": {},
-							"integrationRuntime": {
-								"referenceName": "VFD-IR-DataflowExecution",
-								"type": "IntegrationRuntimeReference"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/TestDFL')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Batch_Historical_Processing')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline per processare automaticamente tutti i file storico con Copy Data diretta a production_bookings",
-				"activities": [
-					{
-						"name": "GetHistoricalFiles",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "VFD_DS_Raw_Mida_Bookings_Folder",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@pipeline().parameters.baseFolderPath",
-										"type": "Expression"
-									}
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": false,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ProcessFilesInOrder",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "GetHistoricalFiles",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetHistoricalFiles').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "CheckIfPartFile",
-									"type": "IfCondition",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@contains(item().name, '_part')",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "Copy Historical File to Production",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 0,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "ExcelSource",
-														"additionalColumns": [
-															{
-																"name": "processing_timestamp",
-																"value": {
-																	"value": "@utcNow()",
-																	"type": "Expression"
-																}
-															},
-															{
-																"name": "source_file",
-																"value": {
-																	"value": "@item().name",
-																	"type": "Expression"
-																}
-															}
-														],
-														"storeSettings": {
-															"type": "AzureBlobFSReadSettings",
-															"recursive": true,
-															"enablePartitionDiscovery": false
-														}
-													},
-													"sink": {
-														"type": "AzureSqlSink",
-														"writeBehavior": "insert",
-														"sqlWriterUseTableLock": false,
-														"disableMetricsCollection": false
-													},
-													"enableStaging": false,
-													"translator": {
-														"type": "TabularTranslator",
-														"typeConversion": true,
-														"typeConversionSettings": {
-															"allowDataTruncation": true,
-															"treatBooleanAsNumber": false
-														}
-													}
-												},
-												"inputs": [
-													{
-														"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
-														"type": "DatasetReference",
-														"parameters": {
-															"folderPath": {
-																"value": "@pipeline().parameters.baseFolderPath",
-																"type": "Expression"
-															},
-															"fileName": {
-																"value": "@item().name",
-																"type": "Expression"
-															}
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "VFD_DS_SQL_Test_Bookings",
-														"type": "DatasetReference",
-														"parameters": {}
-													}
-												]
-											},
-											{
-												"name": "LogProcessedFile",
-												"type": "SetVariable",
-												"dependsOn": [
-													{
-														"activity": "Copy Historical File to Production",
-														"dependencyConditions": [
-															"Succeeded"
-														]
-													}
-												],
-												"policy": {
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"variableName": "currentFile",
-													"value": {
-														"value": "@concat('Processed: ', item().name, ' - Rows copied: ', activity('Copy Historical File to Production').output.rowsCopied, ' at ', utcNow())",
-														"type": "Expression"
-													}
-												}
-											}
-										]
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"baseFolderPath": {
-						"type": "string",
-						"defaultValue": "Mida/Storico/Bookings"
-					}
-				},
-				"variables": {
-					"currentFile": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Mida/Batch"
-				},
-				"annotations": [
-					"Processamento automatico file storici con Copy Data diretta a production_bookings"
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_SQL_Test_Bookings')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/VFD_PL_Copy_Single_Historical_File')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Pipeline per copiare un singolo file storico specificato in test_bookings",
-				"activities": [
-					{
-						"name": "Copy Single File to Test Bookings",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ExcelSource",
-								"additionalColumns": [
-									{
-										"name": "processing_timestamp",
-										"value": {
-											"value": "@utcNow()",
-											"type": "Expression"
-										}
-									},
-									{
-										"name": "source_file",
-										"value": {
-											"value": "@pipeline().parameters.fileName",
-											"type": "Expression"
-										}
-									}
-								],
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								}
-							},
-							"sink": {
-								"type": "AzureSqlSink",
-								"writeBehavior": "insert",
-								"sqlWriterUseTableLock": false,
-								"disableMetricsCollection": false
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "VFD_DS_Raw_Mida_Bookings_Excel",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderPath": {
-										"value": "@pipeline().parameters.folderPath",
-										"type": "Expression"
-									},
-									"fileName": {
-										"value": "@pipeline().parameters.fileName",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "VFD_DS_SQL_Test_Bookings",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"fileName": {
-						"type": "string",
-						"defaultValue": "Storico_-_Vendite_20241001_20241231_part01.xlsx"
-					},
-					"folderPath": {
-						"type": "string",
-						"defaultValue": "Mida/Storico/Bookings"
-					}
-				},
-				"folder": {
-					"name": "Mida/Utilities"
-				},
-				"annotations": [
-					"Pipeline utility per processare singolo file storico specificato"
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/VFD_DS_SQL_Test_Bookings')]"
-			]
 		}
 	]
 }
