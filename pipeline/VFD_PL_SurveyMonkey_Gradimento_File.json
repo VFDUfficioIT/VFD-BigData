@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Metadata1",
+				"name": "ScanRawFiles",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -24,16 +24,17 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					}
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "ForEachRawFile",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get Metadata1",
+						"activity": "ScanRawFiles",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -42,12 +43,12 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Metadata1').output.childItems",
+						"value": "@activity('ScanRawFiles').output.childItems",
 						"type": "Expression"
 					},
 					"activities": [
 						{
-							"name": "Set variable1",
+							"name": "SetYear",
 							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
@@ -57,7 +58,172 @@
 							"userProperties": [],
 							"typeProperties": {
 								"variableName": "year",
-								"value": "2025"
+								"value": {
+									"value": "@item().path",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetFileName",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "SetYear",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "fileName",
+								"value": {
+									"value": "@replace(item().name, '.xlsx', '')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "CheckIfProcessedExists",
+							"type": "GetMetadata",
+							"dependsOn": [
+								{
+									"activity": "SetFileName",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"year": {
+											"value": "@variables('year')",
+											"type": "Expression"
+										},
+										"fileName": {
+											"value": "@variables('fileName')",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							}
+						},
+						{
+							"name": "IfProcessedNotExists",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "CheckIfProcessedExists",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@not(activity('CheckIfProcessedExists').output.exists)",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "CopyRawToProcessed",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "ExcelSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": true,
+													"wildcardFolderPath": {
+														"value": "@concat('SurveyMonkey/Gradimento/', variables('year'))",
+														"type": "Expression"
+													},
+													"wildcardFileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													},
+													"enablePartitionDiscovery": false
+												}
+											},
+											"sink": {
+												"type": "ParquetSink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings"
+												},
+												"formatSettings": {
+													"type": "ParquetWriteSettings"
+												}
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
+												"type": "DatasetReference"
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
+												"type": "DatasetReference",
+												"parameters": {
+													"year": {
+														"value": "@variables('year')",
+														"type": "Expression"
+													},
+													"fileName": {
+														"value": "@variables('fileName')",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								]
 							}
 						}
 					]
