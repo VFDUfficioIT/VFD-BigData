@@ -20,7 +20,7 @@
 						"type": "DatasetReference"
 					},
 					"fieldList": [
-						"childItems"
+						"columnCount"
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
@@ -231,10 +231,12 @@
 				}
 			}
 		],
-		"variables": {
+		"parameters": {
 			"year": {
-				"type": "String"
-			},
+				"type": "string"
+			}
+		},
+		"variables": {
 			"fileName": {
 				"type": "String"
 			}
