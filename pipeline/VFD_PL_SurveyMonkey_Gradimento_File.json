@@ -17,11 +17,7 @@
 				"typeProperties": {
 					"dataset": {
 						"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
-						"type": "DatasetReference",
-						"parameters": {
-							"year": "*",
-							"fileName": "*"
-						}
+						"type": "DatasetReference"
 					},
 					"fieldList": [
 						"childItems"
