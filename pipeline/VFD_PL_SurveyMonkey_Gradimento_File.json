@@ -17,7 +17,11 @@
 				"typeProperties": {
 					"dataset": {
 						"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"year": "*",
+							"fileName": "*"
+						}
 					},
 					"fieldList": [
 						"childItems"
@@ -127,6 +131,9 @@
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
 									"recursive": true
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							}
 						},
