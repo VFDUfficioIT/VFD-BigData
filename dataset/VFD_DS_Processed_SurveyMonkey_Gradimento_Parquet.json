@@ -1,6 +1,10 @@
 {
 	"name": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
 	"properties": {
+		"linkedServiceName": {
+			"referenceName": "VFD_Big_Data_DL",
+			"type": "LinkedServiceReference"
+		},
 		"parameters": {
 			"year": {
 				"type": "String"
@@ -8,6 +12,9 @@
 			"fileName": {
 				"type": "String"
 			}
+		},
+		"folder": {
+			"name": "SurveyMonkey/Gradimento"
 		},
 		"annotations": [],
 		"type": "Parquet",
