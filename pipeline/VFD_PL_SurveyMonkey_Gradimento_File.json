@@ -124,6 +124,9 @@
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
 									"recursive": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
 								}
 							}
 						},

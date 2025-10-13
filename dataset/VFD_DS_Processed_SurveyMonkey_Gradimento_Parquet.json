@@ -1,20 +1,13 @@
 {
 	"name": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
 	"properties": {
-		"linkedServiceName": {
-			"referenceName": "VFD_Big_Data_DL",
-			"type": "LinkedServiceReference"
-		},
 		"parameters": {
 			"year": {
-				"type": "string"
+				"type": "String"
 			},
 			"fileName": {
-				"type": "string"
+				"type": "String"
 			}
-		},
-		"folder": {
-			"name": "SurveyMonkey/Gradimento"
 		},
 		"annotations": [],
 		"type": "Parquet",
@@ -22,11 +15,11 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@concat(dataset().fileName,'.parquet')",
+					"value": "@concat(dataset().fileName, '.parquet')",
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('SurveyMonkey/Gradimento/',dataset().year)",
+					"value": "@concat('SurveyMonkey/Gradimento/', dataset().year)",
 					"type": "Expression"
 				},
 				"fileSystem": "processed"

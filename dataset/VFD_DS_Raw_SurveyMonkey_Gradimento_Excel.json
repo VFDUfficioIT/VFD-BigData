@@ -6,11 +6,11 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"fileName": {
-				"type": "string"
-			},
 			"year": {
-				"type": "string"
+				"type": "String"
+			},
+			"fileName": {
+				"type": "String"
 			}
 		},
 		"folder": {
@@ -19,15 +19,16 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
+			"sheetName": "Sheet",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@dataset().FileName",
+				"folderPath": {
+					"value": "@concat('SurveyMonkey/Gradimento/', dataset().year)",
 					"type": "Expression"
 				},
-				"folderPath": "SurveyMonkey/Gradimento",
 				"fileSystem": "raw"
-			}
+			},
+			"firstRowAsHeader": true
 		},
 		"schema": []
 	}
