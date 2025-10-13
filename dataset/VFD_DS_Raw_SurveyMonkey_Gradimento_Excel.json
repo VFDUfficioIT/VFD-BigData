@@ -11,11 +11,9 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "Sheet",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "Questionario di gradimento-2025-09.xlsx",
-				"folderPath": "SurveyMonkey/Gradimento/2025",
+				"folderPath": "SurveyMonkey/Gradimento",
 				"fileSystem": "raw"
 			}
 		},
