@@ -5,6 +5,14 @@
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			},
+			"year": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "SurveyMonkey/Gradimento"
 		},
@@ -13,6 +21,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
 				"folderPath": "SurveyMonkey/Gradimento",
 				"fileSystem": "raw"
 			}
