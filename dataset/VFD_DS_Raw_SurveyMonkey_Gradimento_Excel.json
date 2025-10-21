@@ -5,14 +5,6 @@
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"pYear": {
-				"type": "String"
-			},
-			"pFileName": {
-				"type": "String"
-			}
-		},
 		"folder": {
 			"name": "SurveyMonkey/Gradimento"
 		},
@@ -23,10 +15,14 @@
 			"location": {
 				"type": "AzureBlobStorageLocation",
 				"fileName": {
-					"value": "@{dataset().pFileName}",
+					"value": "*.xlsx",
 					"type": "Expression"
 				},
-				"folderPath": "raw/SurveyMonkey/Gradimento/@{dataset().pYear}"
+				"folderPath": {
+					"value": "SurveyMonkey/Gradimento/*",
+					"type": "Expression"
+				},
+				"container": "raw"
 			},
 			"firstRowAsHeader": true
 		},
