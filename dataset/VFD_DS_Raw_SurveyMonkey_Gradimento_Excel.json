@@ -5,12 +5,6 @@
 			"referenceName": "VFD_Big_Data_DL",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"year": {
-				"type": "string",
-				"defaultValue": "2025"
-			}
-		},
 		"folder": {
 			"name": "SurveyMonkey/Gradimento"
 		},
@@ -25,12 +19,12 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('raw/SurveyMonkey/Gradimento/', dataset().year, '/*.xlsx')",
+					"value": "SurveyMonkey/Gradimento/*",
 					"type": "Expression"
 				},
 				"container": "raw"
 			},
-			"firstRowAsHeader": true
+			"firstRowAsHeader": false
 		},
 		"schema": []
 	}

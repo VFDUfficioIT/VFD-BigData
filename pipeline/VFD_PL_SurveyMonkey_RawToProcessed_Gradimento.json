@@ -120,6 +120,14 @@
 												"storeSettings": {
 													"type": "AzureBlobFSReadSettings",
 													"recursive": true,
+													"wildcardFolderPath": {
+														"value": "@concat('SurveyMonkey/Gradimento/',variables('year'))",
+														"type": "Expression"
+													},
+													"wildcardFileName": {
+														"value": "@variables('fileName')",
+														"type": "Expression"
+													},
 													"enablePartitionDiscovery": false
 												}
 											},
@@ -186,8 +194,14 @@
 									"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"pYear": "@variables('fileName')",
-										"pFileName": "@variables('year')"
+										"pYear": {
+											"value": "@variables('year')",
+											"type": "Expression"
+										},
+										"pFileName": {
+											"value": "@variables('fileName')",
+											"type": "Expression"
+										}
 									}
 								},
 								"fieldList": [
