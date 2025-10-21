@@ -6,10 +6,10 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"year": {
+			"pYear": {
 				"type": "String"
 			},
-			"fileName": {
+			"pFileName": {
 				"type": "String"
 			}
 		},
@@ -22,8 +22,9 @@
 			"sheetName": "Sheet",
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": "@{dataset().pFileName}",
 				"folderPath": {
-					"value": "@concat('SurveyMonkey/Gradimento/', dataset().year)",
+					"value": "SurveyMonkey/Gradimento/@{dataset().pYear}",
 					"type": "Expression"
 				},
 				"fileSystem": "raw"
