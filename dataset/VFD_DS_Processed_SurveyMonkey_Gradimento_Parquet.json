@@ -6,10 +6,10 @@
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"year": {
+			"pYear": {
 				"type": "String"
 			},
-			"fileName": {
+			"pFileName": {
 				"type": "String"
 			}
 		},
@@ -20,16 +20,15 @@
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobFSLocation",
+				"type": "AzureBlobStorageLocation",
 				"fileName": {
-					"value": "@concat(dataset().fileName, '.parquet')",
+					"value": "@{dataset().pFileName}",
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('SurveyMonkey/Gradimento/', dataset().year)",
+					"value": "processed/SurveyMonkey/Gradimento/@{dataset().pYear}",
 					"type": "Expression"
-				},
-				"fileSystem": "processed"
+				}
 			},
 			"compressionCodec": "snappy"
 		},

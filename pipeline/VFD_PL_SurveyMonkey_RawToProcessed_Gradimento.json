@@ -1,10 +1,9 @@
 {
-	"name": "VFD_PL_SurveyMonkey_Gradimento_File",
+	"name": "VFD_PL_SurveyMonkey_RawToProcessed_Gradimento",
 	"properties": {
 		"activities": [
 			{
-				"name": "ScanRawFiles",
-				"description": "Ottiene l'elenco di tutti i file Excel nelle sottocartelle",
+				"name": "GM_ListYears_Raw",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -21,19 +20,39 @@
 					},
 					"fieldList": [
 						"childItems"
-					],
-					"storeSettings": {
-						"type": "AzureBlobFSReadSettings",
-						"recursive": true
+					]
+				}
+			},
+			{
+				"name": "Set_vAllFiles_Init",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "GM_ListYears_Raw",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "vAllFiles",
+					"value": {
+						"value": "@array([])",
+						"type": "Expression"
 					}
 				}
 			},
 			{
-				"name": "ForEachRawFile",
+				"name": "FE_Years",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "ScanRawFiles",
+						"activity": "Set_vAllFiles_Init",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -42,63 +61,79 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('ScanRawFiles').output.childItems",
+						"value": "@select(activity('GM_ListYears_Raw').output.childItems, item().name)",
 						"type": "Expression"
 					},
 					"activities": [
 						{
-							"name": "SetYear",
-							"type": "SetVariable",
+							"name": "GM_ListFiles_Raw_Year",
+							"type": "GetMetadata",
 							"dependsOn": [],
 							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
 								"secureOutput": false,
 								"secureInput": false
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"variableName": "year",
-								"value": {
-									"value": "@split(item().name, '/')[0]",
-									"type": "Expression"
-								}
+								"dataset": {
+									"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
+									"type": "DatasetReference",
+									"parameters": {
+										"pYear": "@{item()}"
+									}
+								},
+								"fieldList": [
+									"childItems"
+								]
 							}
 						},
 						{
-							"name": "SetFileName",
-							"type": "SetVariable",
+							"name": "AppendFilesToGlobal",
+							"type": "AppendVariable",
 							"dependsOn": [
 								{
-									"activity": "SetYear",
+									"activity": "GM_ListFiles_Raw_Year",
 									"dependencyConditions": [
 										"Succeeded"
 									]
 								}
 							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
 							"userProperties": [],
 							"typeProperties": {
-								"variableName": "fileName",
+								"variableName": "vAllFiles",
 								"value": {
-									"value": "@last(split(item().name, '/'))",
+									"value": "@array(select(activity('GM_ListFiles_Raw_Year').output.childItems, concat(item().name, '|', string(item('FE_Years').iterationValue))))",
 									"type": "Expression"
 								}
 							}
-						},
+						}
+					]
+				}
+			},
+			{
+				"name": "FE_AllFiles",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "FE_Years",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('vAllFiles')",
+						"type": "Expression"
+					},
+					"activities": [
 						{
-							"name": "CheckIfProcessedExists",
-							"description": "Verifica se il file Parquet esiste già in processed",
+							"name": "GM_Exists_Processed",
 							"type": "GetMetadata",
-							"dependsOn": [
-								{
-									"activity": "SetFileName",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"retry": 0,
 								"retryIntervalInSeconds": 30,
@@ -111,34 +146,21 @@
 									"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"year": {
-											"value": "@variables('year')",
-											"type": "Expression"
-										},
-										"fileName": {
-											"value": "@replace(variables('fileName'), '.xlsx', '')",
-											"type": "Expression"
-										}
+										"pYear": "@{split(item(), '|')[1]}",
+										"pFileName": "@{replace(split(item(), '|')[0], '.xlsx', '.parquet')}"
 									}
 								},
 								"fieldList": [
 									"exists"
-								],
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true
-								},
-								"formatSettings": {
-									"type": "ParquetReadSettings"
-								}
+								]
 							}
 						},
 						{
-							"name": "IfProcessedNotExists",
+							"name": "IF_NotExists",
 							"type": "IfCondition",
 							"dependsOn": [
 								{
-									"activity": "CheckIfProcessedExists",
+									"activity": "GM_Exists_Processed",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -147,12 +169,12 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@not(activity('CheckIfProcessedExists').output.exists)",
+									"value": "@equals(activity('GM_Exists_Processed').output.exists, false)",
 									"type": "Expression"
 								},
 								"ifTrueActivities": [
 									{
-										"name": "CopyRawToProcessed",
+										"name": "Copy_RawToProcessed",
 										"type": "Copy",
 										"dependsOn": [],
 										"policy": {
@@ -165,43 +187,21 @@
 										"typeProperties": {
 											"source": {
 												"type": "ExcelSource",
-												"storeSettings": {
-													"type": "AzureBlobFSReadSettings",
-													"recursive": false
-												}
+												"sheetName": "sheet",
+												"firstRowAsHeader": true
 											},
 											"sink": {
-												"type": "ParquetSink",
-												"storeSettings": {
-													"type": "AzureBlobFSWriteSettings"
-												},
-												"formatSettings": {
-													"type": "ParquetWriteSettings"
-												}
+												"type": "ParquetSink"
 											},
-											"enableStaging": false,
-											"translator": {
-												"type": "TabularTranslator",
-												"typeConversion": true,
-												"typeConversionSettings": {
-													"allowDataTruncation": true,
-													"treatBooleanAsNumber": false
-												}
-											}
+											"enableStaging": false
 										},
 										"inputs": [
 											{
 												"referenceName": "VFD_DS_Raw_SurveyMonkey_Gradimento_Excel",
 												"type": "DatasetReference",
 												"parameters": {
-													"year": {
-														"value": "@variables('year')",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@variables('fileName')",
-														"type": "Expression"
-													}
+													"pYear": "@{split(item(), '|')[1]}",
+													"pFileName": "@{split(item(), '|')[0]}"
 												}
 											}
 										],
@@ -210,14 +210,8 @@
 												"referenceName": "VFD_DS_Processed_SurveyMonkey_Gradimento_Parquet",
 												"type": "DatasetReference",
 												"parameters": {
-													"year": {
-														"value": "@variables('year')",
-														"type": "Expression"
-													},
-													"fileName": {
-														"value": "@replace(variables('fileName'), '.xlsx', '')",
-														"type": "Expression"
-													}
+													"pYear": "@{split(item(), '|')[1]}",
+													"pFileName": "@{replace(split(item(), '|')[0], '.xlsx', '.parquet')}"
 												}
 											}
 										]
@@ -230,15 +224,9 @@
 			}
 		],
 		"variables": {
-			"year": {
-				"type": "String"
-			},
-			"fileName": {
-				"type": "String"
+			"vAllFiles": {
+				"type": "Array"
 			}
-		},
-		"folder": {
-			"name": "SurveyMonkey"
 		},
 		"annotations": []
 	}

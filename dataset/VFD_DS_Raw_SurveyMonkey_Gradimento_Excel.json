@@ -21,13 +21,12 @@
 		"typeProperties": {
 			"sheetName": "Sheet",
 			"location": {
-				"type": "AzureBlobFSLocation",
-				"fileName": "@{dataset().pFileName}",
-				"folderPath": {
-					"value": "SurveyMonkey/Gradimento/@{dataset().pYear}",
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@{dataset().pFileName}",
 					"type": "Expression"
 				},
-				"fileSystem": "raw"
+				"folderPath": "raw/SurveyMonkey/Gradimento/@{dataset().pYear}"
 			},
 			"firstRowAsHeader": true
 		},
