@@ -26,9 +26,10 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "processed/SurveyMonkey/Gradimento/@{dataset().pYear}",
+					"value": "SurveyMonkey/Gradimento/@{dataset().pYear}",
 					"type": "Expression"
-				}
+				},
+				"container": "processed"
 			},
 			"compressionCodec": "snappy"
 		},
