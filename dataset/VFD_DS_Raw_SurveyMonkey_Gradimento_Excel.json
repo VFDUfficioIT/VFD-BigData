@@ -23,8 +23,7 @@
 					"type": "Expression"
 				},
 				"container": "raw"
-			},
-			"firstRowAsHeader": false
+			}
 		},
 		"schema": [
 			{
